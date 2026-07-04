@@ -150,6 +150,43 @@ export default function DashboardPage() {
     }
   };
 
+  const handleClearAndSeed = () => {
+    if (confirm("Hapus data lama dan seed ulang dengan data terbaru?")) {
+      setIsSeeding(true);
+      setAlert({ show: false, type: "info", message: "" });
+      
+      try {
+        // Clear old data first
+        LocalDB.clearAll();
+        
+        // Seed new data
+        const result = seedDatabase();
+        if (result.success) {
+          setAlert({
+            show: true,
+            type: "success",
+            message: `Data fresh berhasil di-seed! ${result.stats?.teachers} guru, ${result.stats?.classes} kelas, ${result.stats?.subjects} mapel.`,
+          });
+          loadStats();
+        } else {
+          setAlert({
+            show: true,
+            type: "error",
+            message: `Gagal seed: ${result.message}`,
+          });
+        }
+      } catch (error) {
+        setAlert({
+          show: true,
+          type: "error",
+          message: `Error: ${error instanceof Error ? error.message : "Unknown error"}`,
+        });
+      } finally {
+        setIsSeeding(false);
+      }
+    }
+  };
+
   return (
     <>
       <LoadingScreen show={isInitialLoading} message="Memuat dashboard..." />
@@ -158,12 +195,20 @@ export default function DashboardPage() {
         {/* Action Buttons */}
         <div className="mb-6 flex flex-wrap gap-3 justify-end">
           <Button
-            variant="secondary"
+            variant="danger"
             onClick={handleClearAll}
             disabled={!stats?.school}
             size="sm"
           >
             Hapus Semua Data
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={handleClearAndSeed}
+            isLoading={isSeeding}
+            size="sm"
+          >
+            Clear & Seed Fresh
           </Button>
           <Button onClick={handleSeed} isLoading={isSeeding} size="sm">
             {stats?.school ? "Re-seed Database" : "Seed Database"}
