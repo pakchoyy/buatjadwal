@@ -9,11 +9,11 @@ import { Day } from "./types";
 // ==================== SCHOOL DATA ====================
 
 const SCHOOL_DATA = {
-  name: "SMP NEGERI 1 BATUMARMAR",
-  address: "Jl. Raya Tamberu Desa Blaban Batumarmar",
-  district: "KABUPATEN PAMEKASAN",
-  email: "smpn1batumarmar@gmail.com",
-  academicYear: "2025-2026",
+  name: "SDN MBG NUSANTARA",
+  address: "Jl. Raya Mulus Sekali",
+  district: "KABUPATEN JAYA",
+  email: "mbgjaya@gmail.com",
+  academicYear: "2026-2027",
   semester: "Ganjil",
 };
 

@@ -56,7 +56,7 @@ export default function Modal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
+    <div className="fixed inset-0 z-[400] overflow-y-auto">
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
@@ -64,7 +64,7 @@ export default function Modal({
       ></div>
 
       {/* Modal */}
-      <div className="flex min-h-full items-center justify-center p-4">
+      <div className="flex min-h-full items-start md:items-center justify-center p-4 pt-20 md:pt-4">
         <div
           className={`relative bg-white rounded-lg shadow-xl w-full ${sizeClasses[size]} transform transition-all`}
           onClick={(e) => e.stopPropagation()}
@@ -93,7 +93,7 @@ export default function Modal({
           </div>
 
           {/* Content */}
-          <div className="p-6">{children}</div>
+          <div className="p-6 max-h-[calc(100vh-160px)] overflow-y-auto">{children}</div>
         </div>
       </div>
     </div>
