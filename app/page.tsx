@@ -108,16 +108,28 @@ export default function DashboardPage() {
   };
 
   const handleSeed = () => {
+    const existingSchool = LocalDB.getSchool();
+    
+    // If data exists, ask user to confirm clear + reseed
+    if (existingSchool && !confirm("Hapus data lama dan isi ulang?")) {
+      return; // User cancelled
+    }
+    
     setIsSeeding(true);
     setAlert({ show: false, type: "info", message: "" });
 
     try {
+      // Clear existing data if any
+      if (existingSchool) {
+        LocalDB.clearAll();
+      }
+      
       const result = seedDatabase();
       if (result.success) {
         setAlert({
           show: true,
           type: "success",
-          message: `${result.message}. Data berhasil dimuat: ${result.stats?.teachers} guru, ${result.stats?.classes} kelas, ${result.stats?.subjects} mapel.`,
+          message: `Data berhasil dimuat: ${result.stats?.teachers} guru, ${result.stats?.classes} kelas, ${result.stats?.subjects} mapel.`,
         });
         loadStats();
       } else {
@@ -131,7 +143,7 @@ export default function DashboardPage() {
       setAlert({
         show: true,
         type: "error",
-        message: `Error: ${error instanceof Error ? error.message : "Unknown error"}`,
+        message: `Error: ${error instanceof Error ? error.message : "Terjadi kesalahan"}`,
       });
     } finally {
       setIsSeeding(false);
@@ -150,70 +162,39 @@ export default function DashboardPage() {
     }
   };
 
-  const handleClearAndSeed = () => {
-    if (confirm("Hapus data lama dan seed ulang dengan data terbaru?")) {
-      setIsSeeding(true);
-      setAlert({ show: false, type: "info", message: "" });
-      
-      try {
-        // Clear old data first
-        LocalDB.clearAll();
-        
-        // Seed new data
-        const result = seedDatabase();
-        if (result.success) {
-          setAlert({
-            show: true,
-            type: "success",
-            message: `Data fresh berhasil di-seed! ${result.stats?.teachers} guru, ${result.stats?.classes} kelas, ${result.stats?.subjects} mapel.`,
-          });
-          loadStats();
-        } else {
-          setAlert({
-            show: true,
-            type: "error",
-            message: `Gagal seed: ${result.message}`,
-          });
-        }
-      } catch (error) {
-        setAlert({
-          show: true,
-          type: "error",
-          message: `Error: ${error instanceof Error ? error.message : "Unknown error"}`,
-        });
-      } finally {
-        setIsSeeding(false);
-      }
-    }
-  };
+
 
   return (
     <>
       <LoadingScreen show={isInitialLoading} message="Memuat dashboard..." />
 
       <div className="p-4 md:p-6">
-        {/* Action Buttons */}
-        <div className="mb-6 flex flex-wrap gap-3 justify-end">
-          <Button
-            variant="danger"
-            onClick={handleClearAll}
-            disabled={!stats?.school}
-            size="sm"
-          >
-            Hapus Semua Data
-          </Button>
-          <Button
-            variant="secondary"
-            onClick={handleClearAndSeed}
-            isLoading={isSeeding}
-            size="sm"
-          >
-            Clear & Seed Fresh
-          </Button>
+        {/* Main Action Button */}
+        <div className="mb-4 flex justify-end">
           <Button onClick={handleSeed} isLoading={isSeeding} size="sm">
-            {stats?.school ? "Re-seed Database" : "Seed Database"}
+            {stats?.school ? "Perbarui Data Sample" : "Isi Data Sample"}
           </Button>
         </div>
+
+        {/* Advanced Options (Collapsible) */}
+        <details className="mb-6">
+          <summary className="text-sm text-gray-500 cursor-pointer hover:text-gray-700 select-none">
+            ⚙️ Advanced Options
+          </summary>
+          <div className="mt-3 p-4 bg-gray-50 rounded-lg border border-gray-200">
+            <Button 
+              variant="danger" 
+              onClick={handleClearAll}
+              disabled={!stats?.school}
+              size="sm"
+            >
+              Hapus Semua Data
+            </Button>
+            <p className="text-xs text-gray-500 mt-2">
+              Menghapus semua data (sekolah, kelas, guru, mata pelajaran, jadwal)
+            </p>
+          </div>
+        </details>
         {/* Alert */}
         {alert.show && (
           <div className="mb-6">
