@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Force Clear Data - BGY Jadwal</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0ea5a0, #0d7a8a, #2d6a7f);
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      max-width: 500px;
+      text-align: center;
+    }
+    h1 {
+      color: #0ea5a0;
+      margin-bottom: 20px;
+    }
+    button {
+      background: #dc2626;
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      font-size: 16px;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      margin: 10px;
+    }
+    button:hover {
+      background: #b91c1c;
+    }
+    .success {
+      background: #16a34a;
+    }
+    .success:hover {
+      background: #15803d;
+    }
+    #status {
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 8px;
+      display: none;
+    }
+    .status-success {
+      background: #dcfce7;
+      color: #14532d;
+      border: 2px solid #16a34a;
+    }
+    .status-error {
+      background: #fee2e2;
+      color: #7f1d1d;
+      border: 2px solid #dc2626;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔥 Force Clear Data</h1>
+    <p>Halaman ini akan menghapus SEMUA data lokal dan cache browser untuk memastikan aplikasi load data terbaru.</p>
+    
+    <button onclick="clearEverything()">Clear Everything & Reload</button>
+    <br>
+    <button class="success" onclick="goToDashboard()">Back to Dashboard</button>
+    
+    <div id="status"></div>
+  </div>
+
+  <script>
+    function clearEverything() {
+      const status = document.getElementById('status');
+      
+      try {
+        // 1. Clear localStorage
+        localStorage.clear();
+        
+        // 2. Clear sessionStorage
+        sessionStorage.clear();
+        
+        // 3. Clear cookies
+        document.cookie.split(";").forEach(function(c) { 
+          document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+        });
+        
+        // 4. Clear cache if available
+        if ('caches' in window) {
+          caches.keys().then(function(names) {
+            for (let name of names) caches.delete(name);
+          });
+        }
+        
+        status.style.display = 'block';
+        status.className = 'status-success';
+        status.innerHTML = '✅ All data cleared! Reloading in 2 seconds...';
+        
+        // Reload after 2 seconds
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 2000);
+        
+      } catch (error) {
+        status.style.display = 'block';
+        status.className = 'status-error';
+        status.innerHTML = '❌ Error: ' + error.message;
+      }
+    }
+    
+    function goToDashboard() {
+      window.location.href = '/';
+    }
+  </script>
+</body>
+</html>
