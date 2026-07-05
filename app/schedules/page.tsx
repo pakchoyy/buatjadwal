@@ -4,6 +4,7 @@
 
 "use client";
 
+import Image from "next/image";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
@@ -93,8 +94,8 @@ export default function SchedulesPage() {
       <div className="p-4 md:p-6 pb-0 print:hidden">
         <div className="flex justify-end">
           <div className="flex flex-wrap gap-3">
-            <Button variant="secondary" onClick={printSchedule} size="sm">Print</Button>
-            <Button onClick={exportScheduleToPdf} size="sm">Export PDF</Button>
+            <Button variant="secondary" onClick={() => printSchedule("landscape")} size="sm">Print</Button>
+            <Button onClick={() => exportScheduleToPdf("landscape")} size="sm">Export PDF</Button>
             <Button variant="success" onClick={handleExportExcel} size="sm">Export Excel</Button>
             <Button variant="secondary" onClick={() => router.push("/schedules/teacher")} size="sm">
               Jadwal per Guru
@@ -122,6 +123,7 @@ export default function SchedulesPage() {
 
         <div className="hidden print:block mb-4 text-center">
           <div className="print-header">
+            <Image src="/guru-cibisd2.png" alt="BGY" width={56} height={56} className="mx-auto mb-3 rounded-lg" />
             <h1 className="text-xl font-bold text-gray-900">Jadwal Umum</h1>
             <p className="text-sm text-gray-700">{school?.name || "-"}</p>
             <p className="text-sm text-gray-700">

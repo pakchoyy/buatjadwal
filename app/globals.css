@@ -114,7 +114,6 @@ body {
 
 @media print {
   @page {
-    size: landscape;
     margin: 10mm;
   }
 
@@ -224,6 +223,15 @@ body {
   .schedule-table-dense th,
   .schedule-table-dense td {
     padding: 3px !important;
+  }
+
+  .schedule-table-portrait {
+    font-size: 9px !important;
+  }
+
+  .schedule-table-portrait th,
+  .schedule-table-portrait td {
+    padding: 4px 3px !important;
   }
 
   .schedule-table td div,

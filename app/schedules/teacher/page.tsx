@@ -4,6 +4,7 @@
 
 "use client";
 
+import Image from "next/image";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
@@ -115,10 +116,10 @@ export default function TeacherSchedulePage() {
       {/* Action buttons */}
       <div className="p-4 md:p-6 pb-0 print:hidden">
         <div className="flex flex-wrap gap-3 justify-end">
-          <Button variant="secondary" onClick={printSchedule} disabled={!selectedTeacherId} size="sm">
+          <Button variant="secondary" onClick={() => printSchedule("portrait")} disabled={!selectedTeacherId} size="sm">
             Print
           </Button>
-          <Button onClick={exportScheduleToPdf} disabled={!selectedTeacherId} size="sm" title="Buka dialog print lalu pilih Save as PDF">
+          <Button onClick={() => exportScheduleToPdf("portrait")} disabled={!selectedTeacherId} size="sm" title="Buka dialog print lalu pilih Save as PDF">
             Export PDF
           </Button>
           <Button variant="success" onClick={handleExportExcel} disabled={!selectedTeacherId} size="sm">
@@ -151,6 +152,7 @@ export default function TeacherSchedulePage() {
           <>
             <div className="hidden print:block mb-4 text-center">
               <div className="print-header">
+                <Image src="/guru-cibisd2.png" alt="BGY" width={56} height={56} className="mx-auto mb-3 rounded-lg" />
                 <h1 className="text-xl font-bold text-gray-900">Jadwal per Guru</h1>
                 <p className="text-sm text-gray-700">{school?.name || "-"}</p>
                 <p className="text-sm text-gray-700">
@@ -177,7 +179,7 @@ export default function TeacherSchedulePage() {
               </div>
             ) : (
               <div className="print-area bg-white rounded-lg shadow-sm overflow-x-auto">
-                <table className="schedule-table min-w-full divide-y divide-gray-200">
+                <table className="schedule-table schedule-table-portrait min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
