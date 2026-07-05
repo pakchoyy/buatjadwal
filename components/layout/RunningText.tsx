@@ -11,7 +11,7 @@ interface RunningTextProps {
 
 export default function RunningText({
   messages,
-  speed = 60, // 3x lebih lambat dari default 20s
+  speed = 120, // 2x lebih lambat dari sebelumnya (60s -> 120s)
 }: RunningTextProps) {
   const displayText = messages.join(' • ');
 

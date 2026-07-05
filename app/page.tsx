@@ -24,36 +24,42 @@ import {
 const GUIDES = [
   {
     num: "1",
+    icon: Zap,
+    title: "Mulai dengan Data Contoh",
+    desc: "Bingung memulai? Klik tombol 'Isi Data Contoh' di atas untuk mengisi database dengan data sekolah sample. Data ini bisa dihapus kapan saja dengan tombol 'Hapus Semua Data'."
+  },
+  {
+    num: "2",
     icon: School,
     title: "Isi Data Sekolah",
     desc: "Buka menu Sekolah dan isi nama sekolah, alamat, dan tahun ajaran. Data ini akan muncul di semua jadwal yang di-generate."
   },
   {
-    num: "2", 
+    num: "3", 
     icon: Users,
     title: "Tambah Data Master",
     desc: "Buka menu Guru untuk menambah daftar guru. Lalu buka Kelas untuk menambah kelas (misal: 7A, 8B, 9C). Terakhir, buka Mata Pelajaran untuk menambah mapel yang diajarkan."
   },
   {
-    num: "3",
+    num: "4",
     icon: Clock,
     title: "Buat Slot Waktu",
     desc: "Buka menu Slot Waktu. Buat jadwal per hari (Senin-Jumat). Contoh: Jam 1 (07:00-07:45), Jam 2 (07:45-08:30), dst. Tandai slot istirahat jika ada."
   },
   {
-    num: "4",
+    num: "5",
     icon: ClipboardList,
     title: "Buat Alokasi Mengajar",
     desc: "Buka menu Alokasi Mengajar. Tetapkan Guru mengajar Mapel tertentu di Kelas tertentu. Contoh: Pak Budi mengajar Matematika di kelas 7A (jam/minggu: 4)."
   },
   {
-    num: "5",
+    num: "6",
     icon: Zap,
     title: "Generate Jadwal Otomatis",
     desc: "Buka menu Generate Jadwal. Sistem akan otomatis menyusun jadwal berdasarkan alokasi mengajar tanpa bentrok guru atau kelas. Jadwal langsung tersimpan."
   },
   {
-    num: "6",
+    num: "7",
     icon: Calendar,
     title: "Lihat & Export Jadwal",
     desc: "Buka menu Lihat Jadwal untuk melihat jadwal lengkap. Filter per Kelas atau per Guru. Export ke JSON untuk backup atau cetak."
@@ -169,32 +175,41 @@ export default function DashboardPage() {
       <LoadingScreen show={isInitialLoading} message="Memuat dashboard..." />
 
       <div className="p-4 md:p-6">
-        {/* Main Action Button */}
-        <div className="mb-4 flex justify-end">
-          <Button onClick={handleSeed} isLoading={isSeeding} size="sm">
-            {stats?.school ? "Perbarui Data Sample" : "Isi Data Sample"}
-          </Button>
-        </div>
-
-        {/* Advanced Options (Collapsible) */}
-        <details className="mb-6">
-          <summary className="text-sm text-gray-500 cursor-pointer hover:text-gray-700 select-none">
-            ⚙️ Advanced Options
-          </summary>
-          <div className="mt-3 p-4 bg-gray-50 rounded-lg border border-gray-200">
+        {/* Action Buttons with Helper Text */}
+        <div className="mb-6 flex flex-col items-center gap-4">
+          {/* Isi Data Contoh */}
+          <div className="text-center w-full max-w-md">
             <Button 
-              variant="danger" 
+              onClick={handleSeed} 
+              isLoading={isSeeding}
+              size="md"
+              className="w-full md:w-auto"
+            >
+              <Zap size={16} className="mr-2" />
+              Isi Data Contoh
+            </Button>
+            <p className="text-xs text-gray-500 mt-2">
+              Isi database dengan data sample
+            </p>
+          </div>
+          
+          {/* Hapus Semua Data */}
+          <div className="text-center w-full max-w-md">
+            <Button 
+              variant="danger"
               onClick={handleClearAll}
               disabled={!stats?.school}
-              size="sm"
+              size="md"
+              className="w-full md:w-auto"
             >
+              <Zap size={16} className="mr-2" />
               Hapus Semua Data
             </Button>
             <p className="text-xs text-gray-500 mt-2">
-              Menghapus semua data (sekolah, kelas, guru, mata pelajaran, jadwal)
+              Hapus seluruh data dari sistem
             </p>
           </div>
-        </details>
+        </div>
         {/* Alert */}
         {alert.show && (
           <div className="mb-6">

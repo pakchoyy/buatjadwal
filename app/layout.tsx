@@ -46,10 +46,10 @@ export default function RootLayout({
         <div className="hidden lg:block">
           <RunningText
             messages={[
-              "Selamat datang di Bantu Guru Yuk — Jadwal Pelajaran",
-              "Generate jadwal otomatis tanpa bentrok guru dan kelas",
-              "Export jadwal ke JSON untuk backup data Anda",
-              "Lihat jadwal per guru, per kelas, atau jadwal umum",
+              "Generate jadwal otomatis",
+              "Tanpa bentrok guru dan kelas",
+              "Export ke JSON",
+              "Lihat per guru atau per kelas",
             ]}
           />
         </div>
