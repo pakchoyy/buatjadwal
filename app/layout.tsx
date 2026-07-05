@@ -48,7 +48,7 @@ export default function RootLayout({
             messages={[
               "Generate jadwal otomatis",
               "Tanpa bentrok guru dan kelas",
-              "Export ke JSON",
+              "Export PDF dan Excel",
               "Lihat per guru atau per kelas",
             ]}
           />

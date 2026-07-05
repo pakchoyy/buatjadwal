@@ -62,7 +62,7 @@ const GUIDES = [
     num: "7",
     icon: Calendar,
     title: "Lihat & Export Jadwal",
-    desc: "Buka menu Lihat Jadwal untuk melihat jadwal lengkap. Filter per Kelas atau per Guru. Export ke JSON untuk backup atau cetak."
+    desc: "Buka menu Lihat Jadwal untuk melihat jadwal lengkap. Filter per Kelas atau per Guru, lalu print, export PDF, atau export Excel."
   }
 ];
 

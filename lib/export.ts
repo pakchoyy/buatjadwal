@@ -1,222 +1,177 @@
 /**
- * Export Functions - Export jadwal ke berbagai format
+ * Export Functions - Export jadwal ke PDF/Excel-friendly formats
  */
 
+import * as XLSX from "xlsx";
 import { LocalDB } from "./db";
 import { getAllScheduleEntries } from "./scheduler";
-import {
-  DAYS,
-  DAY_LABELS,
-  Day,
-} from "./types";
+import { DAYS, DAY_LABELS, Day } from "./types";
 
-/**
- * Export all data to JSON
- */
-export function exportAllDataToJson(schoolId: string): string {
-  const school = LocalDB.getSchool();
-  const classes = LocalDB.listClasses(schoolId);
-  const teachers = LocalDB.listTeachers(schoolId);
-  const subjects = LocalDB.listSubjects(schoolId);
-  const timeSlots = LocalDB.listTimeSlots(schoolId);
-  const allocations = LocalDB.listTeachingAllocations(schoolId);
-  const scheduleEntries = getAllScheduleEntries(schoolId);
+type SheetRow = Array<string | number | undefined | null>;
 
-  const exportData = {
-    school,
-    classes,
-    teachers,
-    subjects,
-    timeSlots,
-    teachingAllocations: allocations,
-    scheduleEntries,
-    exportedAt: new Date().toISOString(),
-  };
-
-  return JSON.stringify(exportData, null, 2);
+function sanitizeFilename(value: string): string {
+  return value.replace(/[^a-z0-9-_]+/gi, "_").replace(/^_+|_+$/g, "") || "jadwal";
 }
 
-/**
- * Download JSON file
- */
-export function downloadJson(filename: string, data: string): void {
-  const blob = new Blob([data], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = filename;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
+function downloadWorkbook(filename: string, rows: SheetRow[], sheetName: string): void {
+  const workbook = XLSX.utils.book_new();
+  const worksheet = XLSX.utils.aoa_to_sheet(rows);
+  const totalColumns = rows.reduce((max, row) => Math.max(max, row.length), 0);
+
+  worksheet["!cols"] = Array.from({ length: totalColumns }, (_, columnIndex) => {
+    const maxWidth = rows.reduce((width, row) => {
+      const cell = row[columnIndex];
+      return Math.max(width, String(cell ?? "").length);
+    }, 10);
+
+    return { wch: Math.min(Math.max(maxWidth + 2, 12), 36) };
+  });
+
+  XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+  XLSX.writeFile(workbook, filename);
 }
 
-/**
- * Export jadwal per kelas ke JSON
- */
-export function exportClassScheduleToJson(
-  schoolId: string,
-  classId: string
-): string {
+export function printSchedule(): void {
+  window.print();
+}
+
+export function exportScheduleToPdf(): void {
+  window.print();
+}
+
+export function exportClassScheduleToXlsx(schoolId: string, classId: string): void {
   const school = LocalDB.getSchool();
   const cls = LocalDB.getClass(classId);
   const teachers = LocalDB.listTeachers(schoolId);
   const subjects = LocalDB.listSubjects(schoolId);
   const timeSlots = LocalDB.listTimeSlots(schoolId);
   const scheduleEntries = getAllScheduleEntries(schoolId).filter(
-    (e) => e.classId === classId
+    (entry) => entry.classId === classId
   );
 
-  // Build readable schedule
-  const schedule: any = {};
-  DAYS.forEach((day) => {
-    schedule[DAY_LABELS[day]] = [];
+  const slotNumbers = Array.from(
+    new Set(timeSlots.filter((slot) => !slot.isBreak).map((slot) => slot.slotNumber))
+  ).sort((a, b) => a - b);
+
+  const rows: SheetRow[] = [
+    ["Sekolah", school?.name || ""],
+    ["Kelas", cls?.name || ""],
+    ["Tahun Ajaran", school?.academicYear || ""],
+    ["Semester", school?.semester || ""],
+    ["Dicetak", new Date().toLocaleString("id-ID")],
+    [],
+    ["Jam", ...DAYS.map((day) => DAY_LABELS[day])],
+  ];
+
+  slotNumbers.forEach((slotNumber) => {
+    rows.push([
+      `Jam ${slotNumber}`,
+      ...DAYS.map((day) => {
+        const slot = timeSlots.find(
+          (item) => item.day === day && item.slotNumber === slotNumber && !item.isBreak
+        );
+        if (!slot) return "";
+
+        const entry = scheduleEntries.find((item) => item.timeSlotId === slot.id);
+        if (!entry) return "-";
+
+        const subject = subjects.find((item) => item.id === entry.subjectId);
+        const teacher = teachers.find((item) => item.id === entry.teacherId);
+        return `${subject?.name || "-"} - ${teacher?.name || "-"}`;
+      }),
+    ]);
   });
 
-  scheduleEntries.forEach((entry) => {
-    const slot = timeSlots.find((s) => s.id === entry.timeSlotId);
-    const teacher = teachers.find((t) => t.id === entry.teacherId);
-    const subject = subjects.find((s) => s.id === entry.subjectId);
-
-    if (slot) {
-      schedule[DAY_LABELS[slot.day]].push({
-        slot: slot.slotNumber,
-        time: `${slot.startTime}-${slot.endTime}`,
-        subject: subject?.name || "-",
-        teacher: teacher?.name || "-",
-      });
-    }
-  });
-
-  // Sort by slot number
-  Object.keys(schedule).forEach((day) => {
-    schedule[day].sort((a: any, b: any) => a.slot - b.slot);
-  });
-
-  const exportData = {
-    school: school?.name,
-    class: cls?.name,
-    academicYear: school?.academicYear,
-    semester: school?.semester,
-    schedule,
-    exportedAt: new Date().toISOString(),
-  };
-
-  return JSON.stringify(exportData, null, 2);
+  const className = sanitizeFilename(cls?.name || "kelas");
+  downloadWorkbook(`Jadwal_Kelas_${className}_${Date.now()}.xlsx`, rows, "Jadwal Kelas");
 }
 
-/**
- * Export jadwal per guru ke JSON
- */
-export function exportTeacherScheduleToJson(
-  schoolId: string,
-  teacherId: string
-): string {
+export function exportTeacherScheduleToXlsx(schoolId: string, teacherId: string): void {
   const school = LocalDB.getSchool();
   const teacher = LocalDB.getTeacher(teacherId);
   const classes = LocalDB.listClasses(schoolId);
   const subjects = LocalDB.listSubjects(schoolId);
   const timeSlots = LocalDB.listTimeSlots(schoolId);
   const scheduleEntries = getAllScheduleEntries(schoolId).filter(
-    (e) => e.teacherId === teacherId
+    (entry) => entry.teacherId === teacherId
   );
 
-  // Build readable schedule
-  const schedule: any = {};
-  DAYS.forEach((day) => {
-    schedule[DAY_LABELS[day]] = [];
+  const slotNumbers = Array.from(
+    new Set(timeSlots.filter((slot) => !slot.isBreak).map((slot) => slot.slotNumber))
+  ).sort((a, b) => a - b);
+
+  const rows: SheetRow[] = [
+    ["Sekolah", school?.name || ""],
+    ["Guru", teacher?.name || ""],
+    ["Kode", teacher?.code || ""],
+    ["Tahun Ajaran", school?.academicYear || ""],
+    ["Semester", school?.semester || ""],
+    ["Dicetak", new Date().toLocaleString("id-ID")],
+    [],
+    ["Jam", ...DAYS.map((day) => DAY_LABELS[day])],
+  ];
+
+  slotNumbers.forEach((slotNumber) => {
+    rows.push([
+      `Jam ${slotNumber}`,
+      ...DAYS.map((day) => {
+        const slot = timeSlots.find(
+          (item) => item.day === day && item.slotNumber === slotNumber && !item.isBreak
+        );
+        if (!slot) return "";
+
+        const entry = scheduleEntries.find((item) => item.timeSlotId === slot.id);
+        if (!entry) return "-";
+
+        const subject = subjects.find((item) => item.id === entry.subjectId);
+        const cls = classes.find((item) => item.id === entry.classId);
+        return `${subject?.name || "-"} - ${cls?.name || "-"}`;
+      }),
+    ]);
   });
 
-  scheduleEntries.forEach((entry) => {
-    const slot = timeSlots.find((s) => s.id === entry.timeSlotId);
-    const cls = classes.find((c) => c.id === entry.classId);
-    const subject = subjects.find((s) => s.id === entry.subjectId);
-
-    if (slot) {
-      schedule[DAY_LABELS[slot.day]].push({
-        slot: slot.slotNumber,
-        time: `${slot.startTime}-${slot.endTime}`,
-        subject: subject?.name || "-",
-        class: cls?.name || "-",
-      });
-    }
-  });
-
-  // Sort by slot number
-  Object.keys(schedule).forEach((day) => {
-    schedule[day].sort((a: any, b: any) => a.slot - b.slot);
-  });
-
-  const exportData = {
-    school: school?.name,
-    teacher: {
-      code: teacher?.code,
-      name: teacher?.name,
-    },
-    academicYear: school?.academicYear,
-    semester: school?.semester,
-    totalHours: scheduleEntries.length,
-    schedule,
-    exportedAt: new Date().toISOString(),
-  };
-
-  return JSON.stringify(exportData, null, 2);
+  const teacherName = sanitizeFilename(teacher?.name || "guru");
+  downloadWorkbook(`Jadwal_Guru_${teacherName}_${Date.now()}.xlsx`, rows, "Jadwal Guru");
 }
 
-/**
- * Export jadwal umum (semua kelas) ke JSON
- */
-export function exportAllSchedulesToJson(schoolId: string, day: Day): string {
+export function exportAllSchedulesToXlsx(schoolId: string, day: Day): void {
   const school = LocalDB.getSchool();
-  const classes = LocalDB.listClasses(schoolId);
+  const classes = LocalDB.listClasses(schoolId).sort((a, b) => a.name.localeCompare(b.name));
   const teachers = LocalDB.listTeachers(schoolId);
   const subjects = LocalDB.listSubjects(schoolId);
-  const timeSlots = LocalDB.listTimeSlots(schoolId).filter(
-    (s) => s.day === day && !s.isBreak
-  );
+  const timeSlots = LocalDB.listTimeSlots(schoolId)
+    .filter((slot) => slot.day === day)
+    .sort((a, b) => a.slotNumber - b.slotNumber);
   const scheduleEntries = getAllScheduleEntries(schoolId);
 
-  // Build matrix
-  const matrix: any[] = [];
+  const rows: SheetRow[] = [
+    ["Sekolah", school?.name || ""],
+    ["Hari", DAY_LABELS[day]],
+    ["Tahun Ajaran", school?.academicYear || ""],
+    ["Semester", school?.semester || ""],
+    ["Dicetak", new Date().toLocaleString("id-ID")],
+    [],
+    ["Jam", "Waktu", ...classes.map((cls) => cls.name)],
+  ];
 
-  timeSlots
-    .sort((a, b) => a.slotNumber - b.slotNumber)
-    .forEach((slot) => {
-      const row: any = {
-        slot: slot.slotNumber,
-        time: `${slot.startTime}-${slot.endTime}`,
-      };
+  timeSlots.forEach((slot) => {
+    rows.push([
+      `Jam ${slot.slotNumber}`,
+      `${slot.startTime}-${slot.endTime}`,
+      ...classes.map((cls) => {
+        if (slot.isBreak) return "Istirahat";
 
-      classes
-        .sort((a, b) => a.name.localeCompare(b.name))
-        .forEach((cls) => {
-          const entry = scheduleEntries.find(
-            (e) => e.timeSlotId === slot.id && e.classId === cls.id
-          );
+        const entry = scheduleEntries.find(
+          (item) => item.timeSlotId === slot.id && item.classId === cls.id
+        );
+        if (!entry) return "-";
 
-          if (entry) {
-            const teacher = teachers.find((t) => t.id === entry.teacherId);
-            const subject = subjects.find((s) => s.id === entry.subjectId);
-            row[cls.name] = {
-              subject: subject?.name || "-",
-              teacher: teacher?.name || "-",
-            };
-          } else {
-            row[cls.name] = "-";
-          }
-        });
+        const subject = subjects.find((item) => item.id === entry.subjectId);
+        const teacher = teachers.find((item) => item.id === entry.teacherId);
+        return `${subject?.name || "-"} - ${teacher?.name || "-"}`;
+      }),
+    ]);
+  });
 
-      matrix.push(row);
-    });
-
-  const exportData = {
-    school: school?.name,
-    day: DAY_LABELS[day],
-    academicYear: school?.academicYear,
-    semester: school?.semester,
-    schedule: matrix,
-    exportedAt: new Date().toISOString(),
-  };
-
-  return JSON.stringify(exportData, null, 2);
+  downloadWorkbook(`Jadwal_${sanitizeFilename(DAY_LABELS[day])}_${Date.now()}.xlsx`, rows, "Jadwal Umum");
 }

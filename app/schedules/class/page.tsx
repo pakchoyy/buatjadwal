@@ -10,13 +10,15 @@ import Button from "@/components/ui/Button";
 import Select from "@/components/ui/Select";
 import { LocalDB } from "@/lib/db";
 import { getScheduleByClass } from "@/lib/scheduler";
-import { exportClassScheduleToJson, downloadJson } from "@/lib/export";
+import { exportClassScheduleToXlsx, exportScheduleToPdf, printSchedule } from "@/lib/export";
+import { formatDateTime } from "@/lib/utils";
 import {
   ScheduleEntry,
   TimeSlot,
   Teacher,
   Subject,
   Class,
+  School,
   DAYS,
   DAY_LABELS,
   Day,
@@ -30,6 +32,8 @@ export default function ClassSchedulePage() {
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [school, setSchool] = useState<School | null>(null);
+  const printedAt = formatDateTime(Date.now());
 
   useEffect(() => {
     loadData();
@@ -46,6 +50,7 @@ export default function ClassSchedulePage() {
     const school = LocalDB.getSchool();
     if (!school) return;
 
+    setSchool(school);
     const classesList = LocalDB.listClasses(school.id);
     setClasses(classesList);
     setTimeSlots(LocalDB.listTimeSlots(school.id));
@@ -89,14 +94,11 @@ export default function ClassSchedulePage() {
 
   const selectedClass = classes.find((c) => c.id === selectedClassId);
 
-  const handleExport = () => {
+  const handleExportExcel = () => {
     const school = LocalDB.getSchool();
     if (!school || !selectedClassId) return;
 
-    const jsonData = exportClassScheduleToJson(school.id, selectedClassId);
-    const className = selectedClass?.name || "class";
-    const filename = `Jadwal_Kelas_${className}_${new Date().getTime()}.json`;
-    downloadJson(filename, jsonData);
+    exportClassScheduleToXlsx(school.id, selectedClassId);
   };
 
   // Get unique slot numbers for display
@@ -111,10 +113,16 @@ export default function ClassSchedulePage() {
   return (
     <>
       {/* Action buttons */}
-      <div className="p-4 md:p-6 pb-0">
+      <div className="p-4 md:p-6 pb-0 print:hidden">
         <div className="flex flex-wrap gap-3 justify-end">
-          <Button onClick={handleExport} disabled={!selectedClassId} size="sm">
-            Export JSON
+          <Button variant="secondary" onClick={printSchedule} disabled={!selectedClassId} size="sm">
+            Print
+          </Button>
+          <Button onClick={exportScheduleToPdf} disabled={!selectedClassId} size="sm" title="Buka dialog print lalu pilih Save as PDF">
+            Export PDF
+          </Button>
+          <Button variant="success" onClick={handleExportExcel} disabled={!selectedClassId} size="sm">
+            Export Excel
           </Button>
           <Button variant="secondary" onClick={() => router.push("/schedules")} size="sm">
             Jadwal Umum
@@ -127,7 +135,7 @@ export default function ClassSchedulePage() {
 
       <div className="p-4 md:p-6">
         {/* Class Selector */}
-        <div className="mb-6 max-w-md">
+        <div className="mb-6 max-w-md print:hidden">
           <Select
             label="Pilih Kelas"
             value={selectedClassId}
@@ -141,8 +149,19 @@ export default function ClassSchedulePage() {
 
         {selectedClass && (
           <>
+            <div className="hidden print:block mb-4 text-center">
+              <div className="print-header">
+                <h1 className="text-xl font-bold text-gray-900">Jadwal per Kelas</h1>
+                <p className="text-sm text-gray-700">{school?.name || "-"}</p>
+                <p className="text-sm text-gray-700">
+                  Kelas {selectedClass.name} | Tingkat {selectedClass.grade} | Tahun Ajaran {school?.academicYear || "-"} | Semester {school?.semester || "-"}
+                </p>
+                <p className="text-xs text-gray-600">Dicetak: {printedAt}</p>
+              </div>
+            </div>
+
             {/* Class Info */}
-            <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <div className="print-title bg-white rounded-lg shadow-sm p-6 mb-6 print:hidden">
               <h3 className="text-lg font-semibold text-gray-900">
                 Kelas {selectedClass.name}
               </h3>
@@ -157,8 +176,8 @@ export default function ClassSchedulePage() {
                 <p className="text-gray-500">Kelas ini belum memiliki jadwal</p>
               </div>
             ) : (
-              <div className="bg-white rounded-lg shadow-sm overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
+              <div className="print-area bg-white rounded-lg shadow-sm overflow-x-auto">
+                <table className="schedule-table min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -223,13 +242,6 @@ export default function ClassSchedulePage() {
                 </table>
               </div>
             )}
-
-            {/* Print Button */}
-            <div className="mt-6 flex justify-end">
-              <Button variant="secondary" onClick={() => window.print()}>
-                Print Jadwal
-              </Button>
-            </div>
           </>
         )}
       </div>

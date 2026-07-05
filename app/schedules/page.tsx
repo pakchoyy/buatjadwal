@@ -16,12 +16,13 @@ import {
   Class,
   Teacher,
   Subject,
+  School,
   DAYS,
   DAY_LABELS,
   Day,
 } from "@/lib/types";
 import { getDayLabel } from "@/lib/utils";
-import { exportAllSchedulesToJson, downloadJson } from "@/lib/export";
+import { exportAllSchedulesToXlsx, exportScheduleToPdf, printSchedule } from "@/lib/export";
 
 export default function SchedulesPage() {
   const router = useRouter();
@@ -30,15 +31,21 @@ export default function SchedulesPage() {
   const [classes, setClasses] = useState<Class[]>([]);
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [school, setSchool] = useState<School | null>(null);
   const [selectedDay, setSelectedDay] = useState<Day>("monday");
+  const printedAt = new Date().toLocaleString("id-ID", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 
-  const handleExport = () => {
-    const school = LocalDB.getSchool();
-    if (!school) return;
+  const handleExportExcel = () => {
+    const currentSchool = LocalDB.getSchool();
+    if (!currentSchool) return;
 
-    const jsonData = exportAllSchedulesToJson(school.id, selectedDay);
-    const filename = `Jadwal_${getDayLabel(selectedDay)}_${new Date().getTime()}.json`;
-    downloadJson(filename, jsonData);
+    exportAllSchedulesToXlsx(currentSchool.id, selectedDay);
   };
 
   useEffect(() => {
@@ -49,6 +56,7 @@ export default function SchedulesPage() {
     const school = LocalDB.getSchool();
     if (!school) return;
 
+    setSchool(school);
     setScheduleEntries(getAllScheduleEntries(school.id));
     setTimeSlots(LocalDB.listTimeSlots(school.id));
     setClasses(LocalDB.listClasses(school.id));
@@ -82,10 +90,12 @@ export default function SchedulesPage() {
   return (
     <>
       {/* Action button */}
-      <div className="p-4 md:p-6 pb-0">
+      <div className="p-4 md:p-6 pb-0 print:hidden">
         <div className="flex justify-end">
           <div className="flex flex-wrap gap-3">
-            <Button onClick={handleExport} size="sm">Export JSON</Button>
+            <Button variant="secondary" onClick={printSchedule} size="sm">Print</Button>
+            <Button onClick={exportScheduleToPdf} size="sm">Export PDF</Button>
+            <Button variant="success" onClick={handleExportExcel} size="sm">Export Excel</Button>
             <Button variant="secondary" onClick={() => router.push("/schedules/teacher")} size="sm">
               Jadwal per Guru
             </Button>
@@ -98,7 +108,7 @@ export default function SchedulesPage() {
 
       <div className="p-4 md:p-6">
         {/* Day Selector */}
-        <div className="mb-6 max-w-xs">
+        <div className="mb-6 max-w-xs print:hidden">
           <Select
             label="Pilih Hari"
             value={selectedDay}
@@ -110,9 +120,20 @@ export default function SchedulesPage() {
           />
         </div>
 
+        <div className="hidden print:block mb-4 text-center">
+          <div className="print-header">
+            <h1 className="text-xl font-bold text-gray-900">Jadwal Umum</h1>
+            <p className="text-sm text-gray-700">{school?.name || "-"}</p>
+            <p className="text-sm text-gray-700">
+              Hari {getDayLabel(selectedDay)} | Tahun Ajaran {school?.academicYear || "-"} | Semester {school?.semester || "-"}
+            </p>
+            <p className="text-xs text-gray-600">Dicetak: {printedAt}</p>
+          </div>
+        </div>
+
         {/* Schedule Matrix */}
-        <div className="bg-white rounded-lg shadow-sm overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
+        <div className="print-area bg-white rounded-lg shadow-sm overflow-x-auto">
+          <table className="schedule-table schedule-table-dense min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky left-0 bg-gray-50">
@@ -167,7 +188,7 @@ export default function SchedulesPage() {
           </table>
         </div>
 
-        <div className="mt-4 text-sm text-gray-500">
+        <div className="mt-4 text-sm text-gray-500 print:hidden">
           Menampilkan jadwal untuk hari {getDayLabel(selectedDay)} - {sortedClasses.length} kelas
         </div>
       </div>
