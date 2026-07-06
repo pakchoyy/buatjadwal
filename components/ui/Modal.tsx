@@ -68,16 +68,16 @@ export default function Modal({
       >
         <div className="rounded-2xl bg-white shadow-2xl">
           {/* Header */}
-          {(title || showClose) && (
+          {title && (
             <div className="flex items-center justify-between border-b border-gray-200 px-4 py-2">
-              {title && <h2 className="text-sm font-bold text-gray-900">{title}</h2>}
+              <h2 className="text-sm font-bold text-gray-900">{title}</h2>
               {showClose && (
                 <button
                   onClick={onClose}
-                  className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+                  className="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
                   aria-label="Close modal"
                 >
-                  <X size={20} />
+                  <X size={16} />
                 </button>
               )}
             </div>

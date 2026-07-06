@@ -13,6 +13,7 @@ export async function POST(req: NextRequest) {
     console.log("[WEBHOOK] Received MAYAR webhook:", {
       event: payload?.event,
       hasSignature: !!signature,
+      fullPayload: JSON.stringify(payload).substring(0, 500),
     });
 
     // Verify webhook signature
@@ -34,8 +35,12 @@ export async function POST(req: NextRequest) {
       status: webhookData.data.status,
     });
 
-    // Handle payment.received event
-    if (webhookData.event === "payment.received" && webhookData.data.status) {
+    // Handle any successful payment event from MAYAR
+    const event = webhookData.event.toLowerCase();
+    const isPaymentEvent = event.includes("payment");
+    const isSuccessEvent = event.includes("received") || event.includes("success") || webhookData.data.status === true;
+
+    if (isPaymentEvent && isSuccessEvent) {
       const { amount } = webhookData.data;
 
       // Find matching transaction by amount and recent timestamp
@@ -85,12 +90,12 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Handle other events if needed
-    console.log(`[WEBHOOK] Event ${webhookData.event} received but not processed`);
+    // Handle other events
+    console.log(`[WEBHOOK] Event "${webhookData.event}" received but not processed as payment. Returning success to acknowledge.`);
 
     return NextResponse.json({
       success: true,
-      message: "Webhook received",
+      message: "Webhook received (not processed)",
     });
   } catch (error) {
     console.error("[WEBHOOK] Error processing webhook:", error);

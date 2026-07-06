@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Clock } from "lucide-react";
+import { Clock, X } from "lucide-react";
 import Button from "@/components/ui/Button";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
@@ -134,12 +134,15 @@ export default function QRISDisplay({
       {/* Instructions */}
       <div className="rounded-lg bg-blue-50 p-3">
         <p className="text-center text-xs text-blue-800">
-          Scan dengan aplikasi e-wallet (Gopay, OVO, Dana, LinkAja, ShopeePay, dll)
+          Scan dengan aplikasi e-wallet (Gopay, OVO, Dana, ShopeePay, dll)
         </p>
       </div>
 
       {/* Cancel Button */}
-      <div className="flex justify-center">
+      <div className="flex items-center justify-center gap-2">
+        <button onClick={onCancel} className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors" aria-label="Tutup">
+          <X size={16} />
+        </button>
         <Button onClick={onCancel} variant="secondary" size="sm">
           Batalkan
         </Button>

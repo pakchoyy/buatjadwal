@@ -120,7 +120,6 @@ export default function PaymentModal({
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
-      showClose={true}
       size="md"
     >
       {loading ? (

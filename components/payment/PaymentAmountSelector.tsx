@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle2, Heart } from "lucide-react";
+import { CheckCircle2, Heart, X } from "lucide-react";
 import Button from "@/components/ui/Button";
 
 interface PaymentAmountSelectorProps {
@@ -155,13 +155,18 @@ export default function PaymentAmountSelector({
       </div>
 
       {/* Actions */}
-      <div className="flex gap-2">
-        <Button onClick={onCancel} variant="secondary" size="sm" className="flex-1">
-          Kembali
-        </Button>
-        <Button onClick={handleContinue} variant="primary" size="sm" className="flex-1">
-          Lanjutkan →
-        </Button>
+      <div className="flex items-center gap-2">
+        <button onClick={onCancel} className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors" aria-label="Tutup">
+          <X size={16} />
+        </button>
+        <div className="flex-1 flex gap-2">
+          <Button onClick={onCancel} variant="secondary" size="sm" className="flex-1">
+            Kembali
+          </Button>
+          <Button onClick={handleContinue} variant="primary" size="sm" className="flex-1">
+            Lanjutkan →
+          </Button>
+        </div>
       </div>
     </div>
   );
