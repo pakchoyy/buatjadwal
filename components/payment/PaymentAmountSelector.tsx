@@ -16,24 +16,26 @@ export default function PaymentAmountSelector({
 }: PaymentAmountSelectorProps) {
   const [selectedAmount, setSelectedAmount] = useState<number>(10000);
   const [customAmount, setCustomAmount] = useState<string>("");
+  const [isCustomSelected, setIsCustomSelected] = useState(false);
   const [error, setError] = useState<string>("");
 
   const presetAmounts = [
-    { value: 10000, label: "Rp10.000", recommended: true },
-    { value: 25000, label: "Rp25.000" },
-    { value: 50000, label: "Rp50.000" },
+    { value: 10000, label: "Rp10.000" },
+    { value: 20000, label: "Rp20.000" },
+    { value: 30000, label: "Rp30.000" },
   ];
 
   const handlePresetSelect = (amount: number) => {
     setSelectedAmount(amount);
     setCustomAmount("");
+    setIsCustomSelected(false);
     setError("");
   };
 
   const handleCustomAmountChange = (value: string) => {
-    // Only allow numbers
     const numericValue = value.replace(/\D/g, "");
     setCustomAmount(numericValue);
+    setIsCustomSelected(true);
     setError("");
 
     if (numericValue) {
@@ -107,9 +109,6 @@ export default function PaymentAmountSelector({
               />
               <span className="ml-3 flex-1 text-base font-medium text-gray-900">
                 {preset.label}
-                {preset.recommended && (
-                  <span className="ml-2 text-xs text-teal-600">(Recommended)</span>
-                )}
               </span>
             </label>
           ))}
@@ -119,8 +118,9 @@ export default function PaymentAmountSelector({
             <input
               type="radio"
               name="amount"
-              checked={!!customAmount}
+              checked={isCustomSelected}
               onChange={() => {
+                setIsCustomSelected(true);
                 setCustomAmount("");
                 setSelectedAmount(minAmount);
               }}

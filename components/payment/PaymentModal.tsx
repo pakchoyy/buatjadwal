@@ -121,7 +121,7 @@ export default function PaymentModal({
       isOpen={isOpen}
       onClose={handleClose}
       showClose={step === "amount" || step === "error" || step === "expired"}
-      size="lg"
+      size="md"
     >
       {step === "amount" && (
         <PaymentAmountSelector
