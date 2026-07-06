@@ -255,6 +255,9 @@ export default function TimeSlotsPage() {
         <div className="mt-4 text-sm text-gray-500">
           Total: {timeSlots.length} slot waktu
         </div>
+        <div className="mt-3 rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-800">
+          💡 <strong>Tip:</strong> Tambah hari Sabtu jika sekolah Anda ada kegiatan sampai Sabtu.
+        </div>
       </div>
 
       {/* Form Modal */}

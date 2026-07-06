@@ -134,8 +134,8 @@ export default function SchedulesPage() {
           </div>
           <div className="grid gap-3 text-sm text-teal-900 md:grid-cols-3">
             <div>
-              <p className="font-semibold">1. Pilih hari</p>
-              <p className="mt-1 text-teal-700">Gunakan filter hari untuk melihat jadwal Senin sampai Sabtu sesuai slot yang tersedia.</p>
+              <p className="font-semibold">1. Pilih jenis jadwal</p>
+              <p className="mt-1 text-teal-700">Gunakan card &quot;Jadwal per Guru&quot; untuk jadwal mengajar satu guru, &quot;Jadwal per Kelas&quot; untuk jadwal lengkap satu kelas, atau &quot;Jadwal Umum&quot; (halaman ini) untuk semua kelas. Pilih hari untuk melihat jadwal Senin sampai Sabtu sesuai slot yang tersedia.</p>
             </div>
             <div>
               <p className="font-semibold">2. Cek bentrok</p>
@@ -143,7 +143,7 @@ export default function SchedulesPage() {
             </div>
             <div>
               <p className="font-semibold">3. Export jadwal</p>
-              <p className="mt-1 text-teal-700">Gunakan tombol PDF atau Excel untuk menyimpan jadwal per hari yang sedang dipilih.</p>
+              <p className="mt-1 text-teal-700">Klik &quot;Export PDF&quot; untuk cetak atau &quot;Export Excel&quot; untuk edit lebih lanjut.</p>
             </div>
           </div>
         </div>

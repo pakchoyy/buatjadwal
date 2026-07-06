@@ -49,7 +49,7 @@ const GUIDES = [
     num: "4",
     icon: Clock,
     title: "Buat Slot Waktu",
-    desc: "Buka menu Slot Waktu. Buat jadwal per hari (Senin-Jumat). Contoh: Jam 1 (07:00-07:45), Jam 2 (07:45-08:30), dst. Tandai slot istirahat jika ada."
+    desc: "Buka menu Slot Waktu. Buat jadwal per hari (Senin-Jumat). Tambah hari Sabtu jika sekolah Anda ada kegiatan sampai Sabtu. Contoh: Jam 1 (07:00-07:45), Jam 2 (07:45-08:30), dst. Tandai slot istirahat jika ada."
   },
   {
     num: "5",
