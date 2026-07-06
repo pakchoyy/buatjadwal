@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Clock, X, ShieldCheck } from "lucide-react";
+import { Clock, X, ShieldCheck, Download } from "lucide-react";
 import Button from "@/components/ui/Button";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
@@ -107,6 +107,23 @@ export default function QRISDisplay({
     return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
+  const handleDownloadQRIS = async () => {
+    try {
+      const response = await fetch(qrisUrl);
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `qris-donasi-${amount}.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch {
+      window.open(qrisUrl, "_blank");
+    }
+  };
+
   return (
     <div className="space-y-3">
       {/* Title */}
@@ -128,6 +145,15 @@ export default function QRISDisplay({
             className="h-44 w-44 object-contain"
           />
         </div>
+      </div>
+      <div className="text-center -mt-1">
+        <button
+          onClick={handleDownloadQRIS}
+          className="inline-flex items-center gap-1 text-[10px] text-gray-400 hover:text-teal-600 transition-colors"
+        >
+          <Download size={12} />
+          Simpan gambar QRIS
+        </button>
       </div>
 
       {/* Timer */}
