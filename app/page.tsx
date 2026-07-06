@@ -190,41 +190,45 @@ export default function DashboardPage() {
       <LoadingScreen show={isInitialLoading} message="Memuat dashboard..." />
 
       <div className="p-4 md:p-6">
-        {/* Action Buttons with Helper Text */}
-        <div className="mb-6 flex flex-col items-center gap-4">
-          {/* Isi Data Contoh */}
-          <div className="text-center w-full max-w-md">
-            <Button 
-              onClick={handleSeed} 
-              isLoading={isSeeding}
-              size="md"
-              className="w-full md:w-auto"
-            >
-              <BookCopy size={16} />
-              Isi Data Contoh
-            </Button>
-            <p className="text-xs text-gray-500 mt-2">
-              Isi database dengan data sample
-            </p>
+        {/* Quick Actions Section */}
+        <section className="mb-6">
+          <div className="mb-3 flex items-center gap-2">
+            <Zap size={20} className="text-[#0ea5a0]" />
+            <h2 className="text-xl font-bold text-[var(--text)]">Aksi Cepat</h2>
           </div>
-          
-          {/* Hapus Semua Data */}
-          <div className="text-center w-full max-w-md">
-            <Button 
-              variant="danger"
-              onClick={handleClearAll}
-              disabled={!stats?.school}
-              size="md"
-              className="w-full md:w-auto"
-            >
-              <Trash2 size={16} />
-              Hapus Semua Data
-            </Button>
-            <p className="text-xs text-gray-500 mt-2">
-              Hapus seluruh data dari sistem
-            </p>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card-bg)] p-5 text-center shadow-[var(--shadow)]">
+              <Button
+                onClick={handleSeed}
+                isLoading={isSeeding}
+                size="md"
+                className="w-full md:w-auto"
+              >
+                <BookCopy size={16} />
+                Isi Data Contoh
+              </Button>
+              <p className="mt-2 text-xs text-gray-500">
+                Isi database dengan data contoh Senin-Jumat.
+              </p>
+            </div>
+
+            <div className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card-bg)] p-5 text-center shadow-[var(--shadow)]">
+              <Button
+                variant="danger"
+                onClick={handleClearAll}
+                disabled={!stats?.school}
+                size="md"
+                className="w-full md:w-auto"
+              >
+                <Trash2 size={16} />
+                Hapus Semua Data
+              </Button>
+              <p className="mt-2 text-xs text-gray-500">
+                Hapus seluruh data dari sistem.
+              </p>
+            </div>
           </div>
-        </div>
+        </section>
         {/* Alert */}
         {alert.show && (
           <div className="mb-6">
@@ -237,7 +241,7 @@ export default function DashboardPage() {
         )}
 
         {/* Petunjuk Penggunaan Section */}
-        <div className="bg-[var(--card-bg)] rounded-[var(--radius)] shadow-[var(--shadow)] p-6 mb-6 border border-[var(--border)]">
+        <section className="bg-[var(--card-bg)] rounded-[var(--radius)] shadow-[var(--shadow)] p-6 mb-6 border border-[var(--border)]">
           {/* Header */}
           <div className="flex items-center gap-2 mb-4">
             <BookOpen size={20} className="text-[#0ea5a0]" />
@@ -283,13 +287,18 @@ export default function DashboardPage() {
               );
             })}
           </div>
-        </div>
+        </section>
 
         {/* Stats Cards */}
         {stats && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-            {/* School Card */}
-            <div className="bg-[var(--card-bg)] rounded-[var(--radius)] shadow-[var(--shadow)] p-6 border border-[var(--border)]">
+          <section className="mb-6">
+            <div className="mb-3 flex items-center gap-2">
+              <ClipboardList size={20} className="text-[#0ea5a0]" />
+              <h2 className="text-xl font-bold text-[var(--text)]">Ringkasan Data</h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+              {/* School Card */}
+              <div className="bg-[var(--card-bg)] rounded-[var(--radius)] shadow-[var(--shadow)] p-6 border border-[var(--border)]">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-500">Sekolah</p>
@@ -301,10 +310,10 @@ export default function DashboardPage() {
                   <Building2 className="w-6 h-6 text-blue-600" />
                 </div>
               </div>
-            </div>
+              </div>
 
-            {/* Classes Card */}
-            <div className="bg-[var(--card-bg)] rounded-[var(--radius)] shadow-[var(--shadow)] p-6 border border-[var(--border)]">
+              {/* Classes Card */}
+              <div className="bg-[var(--card-bg)] rounded-[var(--radius)] shadow-[var(--shadow)] p-6 border border-[var(--border)]">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-500">Kelas</p>
@@ -316,10 +325,10 @@ export default function DashboardPage() {
                   <GraduationCap className="w-6 h-6 text-green-600" />
                 </div>
               </div>
-            </div>
+              </div>
 
-            {/* Teachers Card */}
-            <div className="bg-[var(--card-bg)] rounded-[var(--radius)] shadow-[var(--shadow)] p-6 border border-[var(--border)]">
+              {/* Teachers Card */}
+              <div className="bg-[var(--card-bg)] rounded-[var(--radius)] shadow-[var(--shadow)] p-6 border border-[var(--border)]">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-500">Guru</p>
@@ -331,10 +340,10 @@ export default function DashboardPage() {
                   <Users className="w-6 h-6 text-purple-600" />
                 </div>
               </div>
-            </div>
+              </div>
 
-            {/* Subjects Card */}
-            <div className="bg-[var(--card-bg)] rounded-[var(--radius)] shadow-[var(--shadow)] p-6 border border-[var(--border)]">
+              {/* Subjects Card */}
+              <div className="bg-[var(--card-bg)] rounded-[var(--radius)] shadow-[var(--shadow)] p-6 border border-[var(--border)]">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-500">
@@ -348,10 +357,10 @@ export default function DashboardPage() {
                   <BookOpen className="w-6 h-6 text-yellow-600" />
                 </div>
               </div>
-            </div>
+              </div>
 
-            {/* Time Slots Card */}
-            <div className="bg-[var(--card-bg)] rounded-[var(--radius)] shadow-[var(--shadow)] p-6 border border-[var(--border)]">
+              {/* Time Slots Card */}
+              <div className="bg-[var(--card-bg)] rounded-[var(--radius)] shadow-[var(--shadow)] p-6 border border-[var(--border)]">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-500">
@@ -365,10 +374,10 @@ export default function DashboardPage() {
                   <Clock className="w-6 h-6 text-red-600" />
                 </div>
               </div>
-            </div>
+              </div>
 
-            {/* Teaching Allocations Card */}
-            <div className="bg-[var(--card-bg)] rounded-[var(--radius)] shadow-[var(--shadow)] p-6 border border-[var(--border)]">
+              {/* Teaching Allocations Card */}
+              <div className="bg-[var(--card-bg)] rounded-[var(--radius)] shadow-[var(--shadow)] p-6 border border-[var(--border)]">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-500">
@@ -382,16 +391,17 @@ export default function DashboardPage() {
                   <ClipboardList className="w-6 h-6 text-indigo-600" />
                 </div>
               </div>
+              </div>
             </div>
-          </div>
+          </section>
         )}
 
         {/* Quick Links */}
         {stats?.school && (
-          <div className="mt-6 bg-[var(--card-bg)] rounded-[var(--radius)] shadow-[var(--shadow)] p-6 border border-[var(--border)]">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Quick Actions
-            </h3>
+          <section className="bg-[var(--card-bg)] rounded-[var(--radius)] shadow-[var(--shadow)] p-6 border border-[var(--border)]">
+            <h2 className="text-xl font-bold text-[var(--text)] mb-4">
+              Kelola Data
+            </h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <Link
                 href="/classes"
@@ -433,7 +443,7 @@ export default function DashboardPage() {
                 </span>
               </Link>
             </div>
-          </div>
+          </section>
         )}
       </div>
     </>

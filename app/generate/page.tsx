@@ -109,6 +109,30 @@ export default function GeneratePage() {
           </div>
         )}
 
+        {/* Loading Overlay */}
+        {isGenerating && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-white/25 backdrop-blur-[1px]"
+            role="status"
+            aria-live="polite"
+          >
+            <div className="flex flex-col items-center rounded-3xl border border-white/70 bg-white/65 px-8 py-7 text-center shadow-2xl">
+              <img
+                src="/guru-cibisd2.png"
+                alt="Bantu Guru Yuk"
+                className="mb-4 h-20 w-20 rounded-2xl animate-pulse"
+              />
+              <p className="text-base font-bold text-gray-900">
+                Menyusun jadwal otomatis...
+              </p>
+              <p className="mt-1 text-sm text-gray-600">
+                Mohon tunggu sebentar, sistem sedang mencari slot terbaik.
+              </p>
+              <div className="mt-5 h-6 w-6 animate-spin rounded-full border-[3px] border-teal-100 border-t-teal-600"></div>
+            </div>
+          </div>
+        )}
+
         {/* Info Card */}
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
           <h2 className="text-xl font-bold text-gray-900 mb-4">

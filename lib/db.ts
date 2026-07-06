@@ -139,10 +139,22 @@ export class LocalDB {
     const classes = this.listClasses(id);
     const teachers = this.listTeachers(id);
     const subjects = this.listSubjects(id);
+    const timeSlots = this.listTimeSlots(id);
+    const allocations = this.listTeachingAllocations(id);
+    const schedules = this.get<ScheduleEntry>(this.KEYS.SCHEDULE_ENTRIES).filter(
+      (entry) => entry.schoolId === id
+    );
 
-    if (classes.length > 0 || teachers.length > 0 || subjects.length > 0) {
+    if (
+      classes.length > 0 ||
+      teachers.length > 0 ||
+      subjects.length > 0 ||
+      timeSlots.length > 0 ||
+      allocations.length > 0 ||
+      schedules.length > 0
+    ) {
       throw new Error(
-        `Tidak dapat menghapus sekolah. Masih ada ${classes.length} kelas, ${teachers.length} guru, dan ${subjects.length} mata pelajaran. Hapus semua data terkait terlebih dahulu.`
+        `Tidak dapat menghapus sekolah. Masih ada ${classes.length} kelas, ${teachers.length} guru, ${subjects.length} mata pelajaran, ${timeSlots.length} slot waktu, ${allocations.length} alokasi, dan ${schedules.length} jadwal. Hapus data terkait terlebih dahulu.`
       );
     }
 

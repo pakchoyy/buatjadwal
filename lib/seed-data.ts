@@ -145,7 +145,7 @@ const SUBJECTS_DATA = [
   { code: "C5", name: "Bahasa Korea" },
 ];
 
-// ==================== TIME SLOTS DATA (70 slots total) ====================
+// ==================== TIME SLOTS DATA (58 slots total) ====================
 
 /**
  * Helper untuk generate time slots
@@ -165,7 +165,7 @@ function generateTimeSlots(): Array<{
     isBreak: boolean;
   }> = [];
 
-  // Pattern untuk Senin-Kamis & Sabtu (12 slots)
+  // Pattern untuk Senin-Kamis (12 slots)
   const regularDaySlots = [
     { slot: 1, start: "07:00", end: "07:45", isBreak: false },
     { slot: 2, start: "07:45", end: "08:30", isBreak: false },
@@ -195,7 +195,7 @@ function generateTimeSlots(): Array<{
     { slot: 10, start: "13:15", end: "14:00", isBreak: false },
   ];
 
-  const regularDays: Day[] = ["monday", "tuesday", "wednesday", "thursday", "saturday"];
+  const regularDays: Day[] = ["monday", "tuesday", "wednesday", "thursday"];
 
   // Generate untuk hari regular
   regularDays.forEach((day) => {

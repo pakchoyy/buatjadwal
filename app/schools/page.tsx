@@ -5,11 +5,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Building2, Pencil, Plus, School as SchoolIcon } from "lucide-react";
+import { Building2, Pencil, Plus, School as SchoolIcon, Trash2 } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
 import Input from "@/components/ui/Input";
 import Alert from "@/components/ui/Alert";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import { LocalDB } from "@/lib/db";
 import { School, AlertState, SchoolFormData } from "@/lib/types";
 
@@ -31,6 +32,7 @@ export default function SchoolsPage() {
     message: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   useEffect(() => {
     loadSchool();
@@ -104,15 +106,42 @@ export default function SchoolsPage() {
     }
   };
 
+  const handleDelete = () => {
+    if (!school) return;
+
+    try {
+      LocalDB.deleteSchool(school.id);
+      setDeleteDialogOpen(false);
+      loadSchool();
+      setAlert({
+        show: true,
+        type: "success",
+        message: "Data sekolah berhasil dihapus",
+      });
+    } catch (error) {
+      setAlert({
+        show: true,
+        type: "error",
+        message: error instanceof Error ? error.message : "Terjadi kesalahan",
+      });
+    }
+  };
+
   return (
     <>
       {/* Action button */}
       <div className="p-4 md:p-6 pb-0">
-        <div className="flex justify-center">
+        <div className="flex flex-wrap justify-center gap-3">
           <Button onClick={school ? handleEdit : handleCreate} size="sm">
             {school ? <Pencil size={16} /> : <Plus size={16} />}
             {school ? "Edit Sekolah" : "Tambah Sekolah"}
           </Button>
+          {school && (
+            <Button variant="danger" onClick={() => setDeleteDialogOpen(true)} size="sm">
+              <Trash2 size={16} />
+              Hapus Sekolah
+            </Button>
+          )}
         </div>
       </div>
 
@@ -261,6 +290,17 @@ export default function SchoolsPage() {
           </div>
         </form>
       </Modal>
+
+      <ConfirmDialog
+        isOpen={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+        onConfirm={handleDelete}
+        title="Konfirmasi Hapus"
+        message="Apakah Anda yakin ingin menghapus data sekolah ini?"
+        warning="Sekolah hanya bisa dihapus jika tidak ada kelas, guru, mapel, slot waktu, alokasi, atau jadwal yang masih terhubung."
+        confirmText="Hapus Sekolah"
+        confirmVariant="danger"
+      />
     </>
   );
 }

@@ -5,6 +5,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
 import Input from "@/components/ui/Input";
@@ -144,7 +145,8 @@ export default function SubjectsPage() {
       <div className="p-4 md:p-6 pb-0">
         <div className="flex justify-end">
           <Button onClick={handleCreate}>
-            + Tambah Mata Pelajaran
+            <Plus size={16} />
+            Tambah Mapel
           </Button>
         </div>
       </div>
@@ -206,18 +208,24 @@ export default function SubjectsPage() {
                       {subject.name}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button
-                        onClick={() => handleEdit(subject)}
-                        className="text-blue-600 hover:text-blue-900 mr-4"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => setDeleteDialog({ isOpen: true, subjectId: subject.id })}
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        Hapus
-                      </button>
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => handleEdit(subject)}
+                          className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors"
+                          title="Edit mata pelajaran"
+                        >
+                          <Pencil size={14} />
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => setDeleteDialog({ isOpen: true, subjectId: subject.id })}
+                          className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-red-700 bg-red-50 hover:bg-red-100 transition-colors"
+                          title="Hapus mata pelajaran"
+                        >
+                          <Trash2 size={14} />
+                          Hapus
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}

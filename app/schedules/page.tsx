@@ -7,7 +7,7 @@
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { CalendarRange, FileSpreadsheet, FileText, GraduationCap, Users } from "lucide-react";
+import { CalendarRange, FileSpreadsheet, FileText, GraduationCap, Info, Users } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Select from "@/components/ui/Select";
 import { LocalDB } from "@/lib/db";
@@ -126,6 +126,28 @@ export default function SchedulesPage() {
       </div>
 
       <div className="p-4 md:p-6">
+        {/* Usage Info */}
+        <div className="mb-6 rounded-lg border border-teal-100 bg-teal-50 p-5 shadow-sm print:hidden">
+          <div className="mb-3 flex items-center gap-2 text-teal-800">
+            <Info size={18} />
+            <h2 className="text-lg font-bold">Cara Pakai Lihat Jadwal</h2>
+          </div>
+          <div className="grid gap-3 text-sm text-teal-900 md:grid-cols-3">
+            <div>
+              <p className="font-semibold">1. Pilih hari</p>
+              <p className="mt-1 text-teal-700">Gunakan filter hari untuk melihat jadwal Senin sampai Sabtu sesuai slot yang tersedia.</p>
+            </div>
+            <div>
+              <p className="font-semibold">2. Cek bentrok</p>
+              <p className="mt-1 text-teal-700">Tabel menampilkan jadwal semua kelas agar mudah mengecek guru dan mapel di jam yang sama.</p>
+            </div>
+            <div>
+              <p className="font-semibold">3. Export jadwal</p>
+              <p className="mt-1 text-teal-700">Gunakan tombol PDF atau Excel untuk menyimpan jadwal per hari yang sedang dipilih.</p>
+            </div>
+          </div>
+        </div>
+
         {/* Day Selector */}
         <div className="mb-6 max-w-xs mx-auto">
           <Select
