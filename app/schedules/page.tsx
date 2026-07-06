@@ -14,6 +14,7 @@ import { getAllScheduleEntries, getScheduleByClass, getScheduleByTeacher } from 
 import {
   exportAllSchedulesToPdf,
   exportAllSchedulesToXlsx,
+  exportAllSchedulesToXlsxMultiSheet,
   exportClassScheduleToPdf,
   exportClassScheduleToXlsx,
   exportTeacherScheduleToPdf,
@@ -129,6 +130,11 @@ export default function UnifiedSchedulesPage() {
     }
   };
 
+  const handleExportAllDaysExcel = () => {
+    if (!school) return;
+    exportAllSchedulesToXlsxMultiSheet(school.id);
+  };
+
   const selectedTeacher = teachers.find((t) => t.id === selectedTeacherId);
   const selectedClass = classes.find((c) => c.id === selectedClassId);
 
@@ -166,15 +172,28 @@ export default function UnifiedSchedulesPage() {
         {/* Sticky Header: Export + Hint + Cards */}
         <div className="sticky top-0 z-40 bg-white pb-4 shadow-sm print:static print:shadow-none">
           {/* Export Buttons */}
-          <div className="mb-4 flex flex-wrap justify-center gap-3">
-            <Button onClick={handleExportPdf} size="sm">
-              <FileText size={16} />
-              Export PDF
-            </Button>
-            <Button variant="success" onClick={handleExportExcel} size="sm">
-              <FileSpreadsheet size={16} />
-              Export Excel
-            </Button>
+          <div className="mb-4 flex flex-col items-center gap-3">
+            {/* Batch Export Button (only for "all" view) */}
+            {viewMode === "all" && (
+              <div className="flex flex-wrap justify-center gap-3">
+                <Button variant="success" onClick={handleExportAllDaysExcel} size="sm">
+                  <FileSpreadsheet size={16} />
+                  Export Semua Hari (Excel Multi-Sheet)
+                </Button>
+              </div>
+            )}
+            
+            {/* Regular Export Buttons */}
+            <div className="flex flex-wrap justify-center gap-3">
+              <Button onClick={handleExportPdf} size="sm">
+                <FileText size={16} />
+                Export PDF
+              </Button>
+              <Button variant="success" onClick={handleExportExcel} size="sm">
+                <FileSpreadsheet size={16} />
+                Export Excel
+              </Button>
+            </div>
           </div>
 
           {/* Hint */}

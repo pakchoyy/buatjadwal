@@ -66,6 +66,7 @@ function downloadWorkbook({
   const workbook = XLSX.utils.book_new();
   const worksheet = XLSX.utils.aoa_to_sheet(rows);
   const totalColumns = rows.reduce((max, row) => Math.max(max, row.length), 0);
+  const headerRowIndex = mergeRowCount;
 
   worksheet["!cols"] = Array.from({ length: totalColumns }, (_, columnIndex) => {
     const maxWidth = rows.reduce((width, row) => {
@@ -96,6 +97,39 @@ function downloadWorkbook({
     if (index <= mergeRowCount) return { hpt: 18 };
     return { hpt: 16 };
   });
+
+  // Apply styling to all cells
+  const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1');
+  for (let R = range.s.r; R <= range.e.r; R++) {
+    for (let C = range.s.c; C <= range.e.c; C++) {
+      const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+      if (!worksheet[cellAddress]) continue;
+
+      const cell = worksheet[cellAddress];
+      
+      // Initialize style object if not exists
+      if (!cell.s) cell.s = {};
+      
+      // Apply borders to all cells
+      cell.s.border = {
+        top: { style: 'thin', color: { rgb: 'CBD5E1' } },
+        bottom: { style: 'thin', color: { rgb: 'CBD5E1' } },
+        left: { style: 'thin', color: { rgb: 'CBD5E1' } },
+        right: { style: 'thin', color: { rgb: 'CBD5E1' } },
+      };
+
+      // Header row styling (bold + teal background + white text)
+      if (R === headerRowIndex) {
+        cell.s.font = { bold: true, color: { rgb: 'FFFFFF' } };
+        cell.s.fill = { fgColor: { rgb: '0F766E' } };
+        cell.s.alignment = { horizontal: 'center', vertical: 'center' };
+      }
+      // Alternate row styling (light gray background for data rows)
+      else if (R > headerRowIndex && (R - headerRowIndex) % 2 === 0) {
+        cell.s.fill = { fgColor: { rgb: 'F8FAFC' } };
+      }
+    }
+  }
 
   XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
   XLSX.writeFile(workbook, filename);
@@ -133,7 +167,7 @@ function downloadPdf({
     theme: "grid",
     tableWidth: "auto",
     styles: {
-      fontSize: orientation === "landscape" ? 7.4 : 8.4,
+      fontSize: orientation === "landscape" ? 9 : 10,
       cellPadding: 2,
       lineColor: [203, 213, 225],
       lineWidth: 0.1,
@@ -190,6 +224,11 @@ export function exportClassScheduleToPdf(schoolId: string, classId: string): voi
     (entry) => entry.classId === classId
   );
 
+  // Get active days (days that actually have slots)
+  const activeDays = Array.from(
+    new Set(timeSlots.filter((slot) => !slot.isBreak).map((slot) => slot.day))
+  ).sort((a, b) => DAYS.indexOf(a as Day) - DAYS.indexOf(b as Day)) as Day[];
+
   const slotNumbers = Array.from(
     new Set(timeSlots.filter((slot) => !slot.isBreak).map((slot) => slot.slotNumber))
   ).sort((a, b) => a - b);
@@ -197,7 +236,7 @@ export function exportClassScheduleToPdf(schoolId: string, classId: string): voi
   const body: RowInput[] = slotNumbers.map((slotNumber) => [
     `Jam ${slotNumber}`,
     getSlotTimeLabel(timeSlots, slotNumber),
-    ...DAYS.map((day) => {
+    ...activeDays.map((day) => {
       const slot = timeSlots.find(
         (item) => item.day === day && item.slotNumber === slotNumber && !item.isBreak
       );
@@ -219,7 +258,7 @@ export function exportClassScheduleToPdf(schoolId: string, classId: string): voi
       `Kelas ${cls?.name || "-"} | Tingkat ${cls?.grade || "-"}`,
       `Tahun Ajaran ${school?.academicYear || "-"} | Semester ${school?.semester || "-"}`,
     ],
-    headers: ["Jam", "Waktu", ...DAYS.map((day) => DAY_LABELS[day])],
+    headers: ["Jam", "Waktu", ...activeDays.map((day) => DAY_LABELS[day])],
     body,
     orientation: "portrait",
     filename: `Jadwal_Kelas_${sanitizeFilename(cls?.name || "kelas")}_${Date.now()}.pdf`,
@@ -236,6 +275,11 @@ export function exportTeacherScheduleToPdf(schoolId: string, teacherId: string):
     (entry) => entry.teacherId === teacherId
   );
 
+  // Get active days (days that actually have slots)
+  const activeDays = Array.from(
+    new Set(timeSlots.filter((slot) => !slot.isBreak).map((slot) => slot.day))
+  ).sort((a, b) => DAYS.indexOf(a as Day) - DAYS.indexOf(b as Day)) as Day[];
+
   const slotNumbers = Array.from(
     new Set(timeSlots.filter((slot) => !slot.isBreak).map((slot) => slot.slotNumber))
   ).sort((a, b) => a - b);
@@ -243,7 +287,7 @@ export function exportTeacherScheduleToPdf(schoolId: string, teacherId: string):
   const body: RowInput[] = slotNumbers.map((slotNumber) => [
     `Jam ${slotNumber}`,
     getSlotTimeLabel(timeSlots, slotNumber),
-    ...DAYS.map((day) => {
+    ...activeDays.map((day) => {
       const slot = timeSlots.find(
         (item) => item.day === day && item.slotNumber === slotNumber && !item.isBreak
       );
@@ -265,7 +309,7 @@ export function exportTeacherScheduleToPdf(schoolId: string, teacherId: string):
       `${teacher?.name || "-"} (${teacher?.code || "-"})`,
       `Tahun Ajaran ${school?.academicYear || "-"} | Semester ${school?.semester || "-"}`,
     ],
-    headers: ["Jam", "Waktu", ...DAYS.map((day) => DAY_LABELS[day])],
+    headers: ["Jam", "Waktu", ...activeDays.map((day) => DAY_LABELS[day])],
     body,
     orientation: "portrait",
     filename: `Jadwal_Guru_${sanitizeFilename(teacher?.name || "guru")}_${Date.now()}.pdf`,
@@ -323,11 +367,16 @@ export function exportClassScheduleToXlsx(schoolId: string, classId: string): vo
     (entry) => entry.classId === classId
   );
 
+  // Get active days (days that actually have slots)
+  const activeDays = Array.from(
+    new Set(timeSlots.filter((slot) => !slot.isBreak).map((slot) => slot.day))
+  ).sort((a, b) => DAYS.indexOf(a as Day) - DAYS.indexOf(b as Day)) as Day[];
+
   const slotNumbers = Array.from(
     new Set(timeSlots.filter((slot) => !slot.isBreak).map((slot) => slot.slotNumber))
   ).sort((a, b) => a - b);
 
-  const headerRow: SheetRow = ["Jam", ...DAYS.map((day) => DAY_LABELS[day])];
+  const headerRow: SheetRow = ["Jam", ...activeDays.map((day) => DAY_LABELS[day])];
   const rows: SheetRow[] = buildMetaRows(
     "Jadwal per Kelas",
     [
@@ -341,7 +390,7 @@ export function exportClassScheduleToXlsx(schoolId: string, classId: string): vo
   slotNumbers.forEach((slotNumber) => {
     rows.push([
       `Jam ${slotNumber}`,
-      ...DAYS.map((day) => {
+      ...activeDays.map((day) => {
         const slot = timeSlots.find(
           (item) => item.day === day && item.slotNumber === slotNumber && !item.isBreak
         );
@@ -378,11 +427,16 @@ export function exportTeacherScheduleToXlsx(schoolId: string, teacherId: string)
     (entry) => entry.teacherId === teacherId
   );
 
+  // Get active days (days that actually have slots)
+  const activeDays = Array.from(
+    new Set(timeSlots.filter((slot) => !slot.isBreak).map((slot) => slot.day))
+  ).sort((a, b) => DAYS.indexOf(a as Day) - DAYS.indexOf(b as Day)) as Day[];
+
   const slotNumbers = Array.from(
     new Set(timeSlots.filter((slot) => !slot.isBreak).map((slot) => slot.slotNumber))
   ).sort((a, b) => a - b);
 
-  const headerRow: SheetRow = ["Jam", ...DAYS.map((day) => DAY_LABELS[day])];
+  const headerRow: SheetRow = ["Jam", ...activeDays.map((day) => DAY_LABELS[day])];
   const rows: SheetRow[] = buildMetaRows(
     "Jadwal per Guru",
     [
@@ -396,7 +450,7 @@ export function exportTeacherScheduleToXlsx(schoolId: string, teacherId: string)
   slotNumbers.forEach((slotNumber) => {
     rows.push([
       `Jam ${slotNumber}`,
-      ...DAYS.map((day) => {
+      ...activeDays.map((day) => {
         const slot = timeSlots.find(
           (item) => item.day === day && item.slotNumber === slotNumber && !item.isBreak
         );
@@ -471,4 +525,130 @@ export function exportAllSchedulesToXlsx(schoolId: string, day: Day): void {
     freezeCell: "A6",
     autofilterRange: `A5:${XLSX.utils.encode_col(headerRow.length - 1)}5`,
   });
+}
+
+export function exportAllSchedulesToXlsxMultiSheet(schoolId: string): void {
+  const school = LocalDB.getSchool();
+  const classes = LocalDB.listClasses(schoolId).sort((a, b) => a.name.localeCompare(b.name));
+  const teachers = LocalDB.listTeachers(schoolId);
+  const subjects = LocalDB.listSubjects(schoolId);
+  const allTimeSlots = LocalDB.listTimeSlots(schoolId);
+  const scheduleEntries = getAllScheduleEntries(schoolId);
+
+  // Get active days (days that actually have slots)
+  const activeDays = Array.from(
+    new Set(allTimeSlots.filter((slot) => !slot.isBreak).map((slot) => slot.day))
+  ).sort((a, b) => DAYS.indexOf(a as Day) - DAYS.indexOf(b as Day)) as Day[];
+
+  const workbook = XLSX.utils.book_new();
+
+  // Create a sheet for each active day
+  activeDays.forEach((day) => {
+    const timeSlots = allTimeSlots
+      .filter((slot) => slot.day === day)
+      .sort((a, b) => a.slotNumber - b.slotNumber);
+
+    const headerRow: SheetRow = ["Jam", "Waktu", ...classes.map((cls) => cls.name)];
+    const rows: SheetRow[] = buildMetaRows(
+      "Jadwal Umum",
+      [
+        school?.name || "",
+        `Hari ${DAY_LABELS[day]} | Tahun Ajaran ${school?.academicYear || "-"} | Semester ${school?.semester || "-"}`,
+        `Dicetak: ${new Date().toLocaleString("id-ID")}`,
+      ],
+      headerRow
+    );
+
+    timeSlots.forEach((slot) => {
+      rows.push([
+        `Jam ${slot.slotNumber}`,
+        `${slot.startTime}-${slot.endTime}`,
+        ...classes.map((cls) => {
+          if (slot.isBreak) return "Istirahat";
+
+          const entry = scheduleEntries.find(
+            (item) => item.timeSlotId === slot.id && item.classId === cls.id
+          );
+          if (!entry) return "-";
+
+          const subject = subjects.find((item) => item.id === entry.subjectId);
+          const teacher = teachers.find((item) => item.id === entry.teacherId);
+          return `${subject?.name || "-"} - ${teacher?.name || "-"}`;
+        }),
+      ]);
+    });
+
+    // Create worksheet for this day
+    const worksheet = XLSX.utils.aoa_to_sheet(rows);
+    const totalColumns = rows.reduce((max, row) => Math.max(max, row.length), 0);
+    const headerRowIndex = 4;
+
+    // Column widths
+    worksheet["!cols"] = Array.from({ length: totalColumns }, (_, columnIndex) => {
+      const maxWidth = rows.reduce((width, row) => {
+        const cell = row[columnIndex];
+        return Math.max(width, String(cell ?? "").length);
+      }, 10);
+      return { wch: Math.min(Math.max(maxWidth + 2, 12), 36) };
+    });
+
+    // Merge meta rows
+    if (totalColumns > 1) {
+      worksheet["!merges"] = Array.from({ length: 4 }, (_, rowIndex) => ({
+        s: { r: rowIndex, c: 0 },
+        e: { r: rowIndex, c: totalColumns - 1 },
+      }));
+    }
+
+    // Freeze panes
+    worksheet["!freeze"] = { xSplit: 0, ySplit: 0, topLeftCell: "A6", activePane: "bottomLeft", state: "frozen" };
+
+    // Autofilter
+    worksheet["!autofilter"] = { ref: `A5:${XLSX.utils.encode_col(headerRow.length - 1)}5` };
+
+    // Row heights
+    worksheet["!rows"] = rows.map((_, index) => {
+      if (index === 0) return { hpt: 24 };
+      if (index <= 4) return { hpt: 18 };
+      return { hpt: 16 };
+    });
+
+    // Apply styling to all cells
+    const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1');
+    for (let R = range.s.r; R <= range.e.r; R++) {
+      for (let C = range.s.c; C <= range.e.c; C++) {
+        const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+        if (!worksheet[cellAddress]) continue;
+
+        const cell = worksheet[cellAddress];
+        if (!cell.s) cell.s = {};
+        
+        // Borders for all cells
+        cell.s.border = {
+          top: { style: 'thin', color: { rgb: 'CBD5E1' } },
+          bottom: { style: 'thin', color: { rgb: 'CBD5E1' } },
+          left: { style: 'thin', color: { rgb: 'CBD5E1' } },
+          right: { style: 'thin', color: { rgb: 'CBD5E1' } },
+        };
+
+        // Header row styling
+        if (R === headerRowIndex) {
+          cell.s.font = { bold: true, color: { rgb: 'FFFFFF' } };
+          cell.s.fill = { fgColor: { rgb: '0F766E' } };
+          cell.s.alignment = { horizontal: 'center', vertical: 'center' };
+        }
+        // Alternate row styling
+        else if (R > headerRowIndex && (R - headerRowIndex) % 2 === 0) {
+          cell.s.fill = { fgColor: { rgb: 'F8FAFC' } };
+        }
+      }
+    }
+
+    // Append sheet with day name
+    XLSX.utils.book_append_sheet(workbook, worksheet, DAY_LABELS[day]);
+  });
+
+  // Download the workbook
+  const schoolName = sanitizeFilename(school?.name || "sekolah");
+  XLSX.writeFile(workbook, `Jadwal_Umum_${schoolName}_AllDays_${Date.now()}.xlsx`);
 }
