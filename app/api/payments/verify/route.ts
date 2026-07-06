@@ -1,15 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ConvexHttpClient } from "convex/browser";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
+import { getConvexClient } from "@/lib/convex";
 import { checkMayarTransaction } from "@/lib/mayar";
 
-const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
-
 export async function POST(req: NextRequest) {
+  const traceId = `vr_${Date.now()}`;
+
   try {
     const body = await req.json();
     const { transactionId } = body;
+
+    console.log(`[${traceId}] Verify payment: ${transactionId}`);
 
     if (!transactionId) {
       return NextResponse.json(
@@ -18,7 +20,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    console.log(`[VERIFY] Verifying payment for transaction: ${transactionId}`);
+    const convex = getConvexClient();
 
     const transaction = await convex.query(api.transactions.getById, {
       id: transactionId as Id<"transactions">,
@@ -37,19 +39,18 @@ export async function POST(req: NextRequest) {
 
     if (transaction.status === "expired" || transaction.status === "cancelled") {
       return NextResponse.json(
-        { error: "Transaction expired atau dibatalkan" },
+        { error: "Transaksi expired atau dibatalkan" },
         { status: 400 }
       );
     }
 
-    // Check MAYAR API for matching transaction
     const result = await checkMayarTransaction(
       transaction.amount,
       transaction.createdAt
     );
 
     if (result.found) {
-      console.log(`[VERIFY] Payment confirmed for transaction: ${transactionId}`);
+      console.log(`[${traceId}] Payment confirmed via MAYAR API`);
 
       await convex.mutation(api.transactions.updateStatus, {
         id: transactionId as Id<"transactions">,
@@ -63,18 +64,18 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    console.log(`[VERIFY] No matching payment found for transaction: ${transactionId}`);
-
+    console.log(`[${traceId}] Payment not found in MAYAR`);
     return NextResponse.json({
       success: false,
       status: "pending",
-      message: "Pembayaran belum terdeteksi",
+      message: "Pembayaran belum terdeteksi di MAYAR",
     });
   } catch (error) {
-    console.error("[VERIFY] Error:", error);
+    console.error(`[${traceId}] Verify error:`, error);
     return NextResponse.json(
       {
         error: "Gagal memverifikasi pembayaran",
+        traceId,
         details: error instanceof Error ? error.message : "Unknown",
       },
       { status: 500 }

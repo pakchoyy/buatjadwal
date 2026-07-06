@@ -10,6 +10,7 @@ export const create = mutation({
   args: {
     amount: v.number(),
     qrisUrl: v.string(),
+    mayarQrisId: v.optional(v.string()),
     exportType: v.string(),
     exportMetadata: v.optional(
       v.object({

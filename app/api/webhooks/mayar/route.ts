@@ -1,109 +1,112 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ConvexHttpClient } from "convex/browser";
 import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
+import { getConvexClient } from "@/lib/convex";
 import { verifyWebhookSignature, parseMayarWebhook } from "@/lib/mayar";
 
-const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
-
 export async function POST(req: NextRequest) {
+  const traceId = `wh_${Date.now()}`;
+
   try {
     const signature = req.headers.get("x-mayar-signature");
     const payload = await req.json();
 
-    console.log("[WEBHOOK] Received MAYAR webhook:", {
+    console.log(`[${traceId}] Webhook received:`, {
       event: payload?.event,
       hasSignature: !!signature,
-      fullPayload: JSON.stringify(payload).substring(0, 500),
+      payload: JSON.stringify(payload).substring(0, 300),
     });
 
-    // Verify webhook signature
     if (!verifyWebhookSignature(payload, signature)) {
-      console.error("[WEBHOOK] Invalid webhook signature");
+      console.error(`[${traceId}] Invalid signature`);
       return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
     }
 
-    // Parse webhook payload
     const webhookData = parseMayarWebhook(payload);
     if (!webhookData) {
-      console.error("[WEBHOOK] Invalid webhook payload structure");
+      console.error(`[${traceId}] Invalid payload structure`);
       return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
     }
 
-    console.log("[WEBHOOK] Parsed webhook data:", {
+    console.log(`[${traceId}] Parsed webhook:`, {
       event: webhookData.event,
       amount: webhookData.data.amount,
       status: webhookData.data.status,
+      mayarId: webhookData.data.id,
     });
 
-    // Handle any successful payment event from MAYAR
     const event = webhookData.event.toLowerCase();
     const isPaymentEvent = event.includes("payment");
-    const isSuccessEvent = event.includes("received") || event.includes("success") || webhookData.data.status === true;
+    const isSuccessEvent =
+      event.includes("received") ||
+      event.includes("success") ||
+      webhookData.data.status === true;
 
     if (isPaymentEvent && isSuccessEvent) {
       const { amount } = webhookData.data;
 
-      // Find matching transaction by amount and recent timestamp
-      // Note: This is a workaround since MAYAR doesn't send our custom transaction ID
-      const allTransactions = await convex.query(api.transactions.listAll);
+      const convex = getConvexClient();
 
-      // Find pending transaction with matching amount created in last 30 minutes
-      const now = Date.now();
-      const matchingTransaction = allTransactions.find(
-        (t) =>
-          t.status === "pending" &&
-          t.amount === amount &&
-          now - t.createdAt < 30 * 60 * 1000 // Created within last 30 minutes
-      );
+      // Try to find matching transaction using MAYAR's QRIS ID if available
+      const mayarId = webhookData.data.id;
+      let matchingTransaction = null;
+
+      if (mayarId) {
+        // Search by QRIS ID
+        const allTransactions = await convex.query(api.transactions.listAll);
+        matchingTransaction = allTransactions.find(
+          (t) =>
+            t.status === "pending" &&
+            (t.mayarQrisId === mayarId ||
+              (t.amount === amount &&
+                Date.now() - t.createdAt < 30 * 60 * 1000))
+        );
+      }
+
+      if (!matchingTransaction) {
+        // Fallback: match by amount + recent timestamp
+        const now = Date.now();
+        const allTransactions = await convex.query(api.transactions.listAll);
+        matchingTransaction = allTransactions.find(
+          (t) =>
+            t.status === "pending" &&
+            t.amount === amount &&
+            now - t.createdAt < 30 * 60 * 1000
+        );
+      }
 
       if (matchingTransaction) {
-        console.log(
-          `[WEBHOOK] Matching transaction found: ${matchingTransaction._id}`
-        );
+        console.log(`[${traceId}] Matching transaction: ${matchingTransaction._id}`);
 
-        // Update transaction status to paid
         await convex.mutation(api.transactions.updateStatus, {
-          id: matchingTransaction._id,
+          id: matchingTransaction._id as Id<"transactions">,
           status: "paid",
         });
 
-        console.log(
-          `[WEBHOOK] Transaction ${matchingTransaction._id} marked as paid`
-        );
-
+        console.log(`[${traceId}] Transaction marked as paid`);
         return NextResponse.json({
           success: true,
           message: "Payment recorded",
           transactionId: matchingTransaction._id,
         });
       } else {
-        console.warn(
-          `[WEBHOOK] No matching pending transaction found for amount: ${amount}`
-        );
+        console.warn(`[${traceId}] No matching transaction found for amount: ${amount}`);
         return NextResponse.json(
-          {
-            success: false,
-            message: "No matching transaction found",
-          },
+          { success: false, message: "No matching transaction found" },
           { status: 404 }
         );
       }
     }
 
-    // Handle other events
-    console.log(`[WEBHOOK] Event "${webhookData.event}" received but not processed as payment. Returning success to acknowledge.`);
-
-    return NextResponse.json({
-      success: true,
-      message: "Webhook received (not processed)",
-    });
+    console.log(`[${traceId}] Event "${webhookData.event}" not processed as payment.`);
+    return NextResponse.json({ success: true, message: "Webhook received" });
   } catch (error) {
-    console.error("[WEBHOOK] Error processing webhook:", error);
-
+    console.error(`[${traceId}] Webhook error:`, error);
     return NextResponse.json(
       {
         error: "Webhook processing failed",
-        details: error instanceof Error ? error.message : "Unknown error",
+        traceId,
+        details: error instanceof Error ? error.message : "Unknown",
       },
       { status: 500 }
     );

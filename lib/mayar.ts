@@ -3,21 +3,26 @@
  * Handles all interactions with MAYAR Headless API
  */
 
-const MAYAR_API_KEY = process.env.MAYAR_API_KEY;
-const MAYAR_BASE_URL = process.env.MAYAR_BASE_URL;
+function getMayarConfig(): { apiKey: string; baseUrl: string } {
+  const apiKey = process.env.MAYAR_API_KEY;
+  const baseUrl = process.env.MAYAR_BASE_URL;
 
-if (!MAYAR_API_KEY) {
-  throw new Error("MAYAR_API_KEY is not defined in environment variables");
-}
+  if (!apiKey) {
+    throw new Error("MAYAR_API_KEY is not defined in environment variables");
+  }
 
-if (!MAYAR_BASE_URL) {
-  throw new Error("MAYAR_BASE_URL is not defined in environment variables");
+  if (!baseUrl) {
+    throw new Error("MAYAR_BASE_URL is not defined in environment variables");
+  }
+
+  return { apiKey, baseUrl };
 }
 
 interface CreateQRISResponse {
   statusCode: number;
   messages: string;
   data: {
+    id: string;
     url: string;
     amount: number;
   };
@@ -29,13 +34,15 @@ interface CreateQRISResponse {
 export async function createDynamicQRIS(
   amount: number
 ): Promise<CreateQRISResponse> {
+  const { apiKey, baseUrl } = getMayarConfig();
+
   try {
     console.log(`[MAYAR] Creating QRIS for amount: ${amount}`);
 
-    const response = await fetch(`${MAYAR_BASE_URL}/qr-codes/create`, {
+    const response = await fetch(`${baseUrl}/qr-codes/create`, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${MAYAR_API_KEY}`,
+        Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ amount }),
@@ -45,7 +52,6 @@ export async function createDynamicQRIS(
       const errorData = await response.json().catch(() => ({}));
       console.error("[MAYAR] API Error:", {
         status: response.status,
-        statusText: response.statusText,
         error: errorData,
       });
       throw new Error(
@@ -60,7 +66,12 @@ export async function createDynamicQRIS(
       throw new Error(`MAYAR returned error: ${data.messages}`);
     }
 
-    console.log("[MAYAR] QRIS created successfully:", data.data.url);
+    console.log("[MAYAR] QRIS created:", {
+      id: data.data.id,
+      url: data.data.url,
+      amount: data.data.amount,
+    });
+
     return data;
   } catch (error) {
     console.error("[MAYAR] Error creating QRIS:", error);
@@ -124,12 +135,21 @@ export async function checkMayarTransaction(
   amount: number,
   sinceTimestamp: number
 ): Promise<{ found: boolean; transaction?: any }> {
+  let config: { apiKey: string; baseUrl: string };
+
+  try {
+    config = getMayarConfig();
+  } catch {
+    console.warn("[MAYAR] Config not available, skipping check");
+    return { found: false };
+  }
+
   try {
     console.log(`[MAYAR] Checking transactions for amount: ${amount}`);
 
-    const response = await fetch(`${MAYAR_BASE_URL}/transactions?limit=20`, {
+    const response = await fetch(`${config.baseUrl}/transactions?limit=20`, {
       headers: {
-        Authorization: `Bearer ${MAYAR_API_KEY}`,
+        Authorization: `Bearer ${config.apiKey}`,
         "Content-Type": "application/json",
       },
     });
@@ -142,7 +162,6 @@ export async function checkMayarTransaction(
     const data = await response.json();
     const transactions = data.data || [];
 
-    // Find matching transaction by amount and recent timestamp
     const match = transactions.find((t: any) => {
       const tAmount = t.amount || t.total || 0;
       const tCreated = new Date(t.createdAt || t.created_at || 0).getTime();

@@ -10,6 +10,7 @@ export default defineSchema({
   transactions: defineTable({
     amount: v.number(),
     qrisUrl: v.string(),
+    mayarQrisId: v.optional(v.string()),
     status: v.union(
       v.literal("pending"),
       v.literal("paid"),
