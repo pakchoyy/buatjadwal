@@ -5,7 +5,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { CalendarRange, FileSpreadsheet, FileText, GraduationCap, Users } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Select from "@/components/ui/Select";
@@ -21,6 +21,8 @@ import {
   exportTeacherScheduleToXlsx,
 } from "@/lib/export";
 import { getDayLabel, formatDateTime } from "@/lib/utils";
+import PaymentModal from "@/components/ui/PaymentModal";
+import { hasUserPaid } from "@/lib/payment-storage";
 import {
   ScheduleEntry,
   TimeSlot,
@@ -48,6 +50,9 @@ export default function UnifiedSchedulesPage() {
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [school, setSchool] = useState<School | null>(null);
   
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [paymentExportType, setPaymentExportType] = useState("");
+
   const printedAt = formatDateTime(Date.now());
 
   useEffect(() => {
@@ -106,33 +111,45 @@ export default function UnifiedSchedulesPage() {
     return subject ? subject.name : "-";
   };
 
-  const handleExportPdf = () => {
+  const checkPaymentAndExport = useCallback((exportFn: () => void, exportType: string) => {
     if (!school) return;
-    
-    if (viewMode === "all") {
-      exportAllSchedulesToPdf(school.id, selectedDay);
-    } else if (viewMode === "teacher" && selectedTeacherId) {
-      exportTeacherScheduleToPdf(school.id, selectedTeacherId);
-    } else if (viewMode === "class" && selectedClassId) {
-      exportClassScheduleToPdf(school.id, selectedClassId);
+
+    if (hasUserPaid()) {
+      exportFn();
+    } else {
+      setPaymentExportType(exportType);
+      setShowPaymentModal(true);
     }
+  }, [school]);
+
+  const handleExportPdf = () => {
+    checkPaymentAndExport(() => {
+      if (viewMode === "all") {
+        exportAllSchedulesToPdf(school!.id, selectedDay);
+      } else if (viewMode === "teacher" && selectedTeacherId) {
+        exportTeacherScheduleToPdf(school!.id, selectedTeacherId);
+      } else if (viewMode === "class" && selectedClassId) {
+        exportClassScheduleToPdf(school!.id, selectedClassId);
+      }
+    }, "pdf");
   };
 
   const handleExportExcel = () => {
-    if (!school) return;
-    
-    if (viewMode === "all") {
-      exportAllSchedulesToXlsx(school.id, selectedDay);
-    } else if (viewMode === "teacher" && selectedTeacherId) {
-      exportTeacherScheduleToXlsx(school.id, selectedTeacherId);
-    } else if (viewMode === "class" && selectedClassId) {
-      exportClassScheduleToXlsx(school.id, selectedClassId);
-    }
+    checkPaymentAndExport(() => {
+      if (viewMode === "all") {
+        exportAllSchedulesToXlsx(school!.id, selectedDay);
+      } else if (viewMode === "teacher" && selectedTeacherId) {
+        exportTeacherScheduleToXlsx(school!.id, selectedTeacherId);
+      } else if (viewMode === "class" && selectedClassId) {
+        exportClassScheduleToXlsx(school!.id, selectedClassId);
+      }
+    }, "excel");
   };
 
   const handleExportAllDaysExcel = () => {
-    if (!school) return;
-    exportAllSchedulesToXlsxMultiSheet(school.id);
+    checkPaymentAndExport(() => {
+      exportAllSchedulesToXlsxMultiSheet(school!.id);
+    }, "excel-multi");
   };
 
   const selectedTeacher = teachers.find((t) => t.id === selectedTeacherId);
@@ -171,6 +188,15 @@ export default function UnifiedSchedulesPage() {
       <div className="p-4 md:p-6">
         {/* Sticky Header: Export + Hint + Cards */}
         <div className="sticky top-0 z-40 bg-white pb-4 shadow-sm print:static print:shadow-none">
+          {/* Donation Banner */}
+          {!hasUserPaid() && (
+            <div className="mb-3 rounded-lg border border-teal-100 bg-teal-50 px-4 py-2.5 text-center print:hidden">
+              <p className="text-sm text-teal-800">
+                💚 Dukung aplikasi ini dengan donasi untuk mendapatkan akses export
+              </p>
+            </div>
+          )}
+
           {/* Export Buttons */}
           <div className="mb-4 flex flex-col items-center gap-3">
             {/* Batch Export Button (only for "all" view) */}
@@ -588,6 +614,12 @@ export default function UnifiedSchedulesPage() {
           </div>
         )}
       </div>
+
+      <PaymentModal
+        isOpen={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        exportType={paymentExportType}
+      />
     </>
   );
 }
