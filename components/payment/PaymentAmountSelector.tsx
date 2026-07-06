@@ -103,7 +103,7 @@ export default function PaymentAmountSelector({
                 type="radio"
                 name="amount"
                 value={preset.value}
-                checked={selectedAmount === preset.value && !customAmount}
+                checked={selectedAmount === preset.value && !isCustomSelected}
                 onChange={() => handlePresetSelect(preset.value)}
                 className="h-4 w-4 border-gray-300 text-teal-600 focus:ring-2 focus:ring-teal-500"
               />

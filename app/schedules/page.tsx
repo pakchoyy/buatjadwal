@@ -231,6 +231,10 @@ export default function UnifiedSchedulesPage() {
     new Set(timeSlots.filter((s) => !s.isBreak).map((s) => s.slotNumber))
   ).sort((a, b) => a - b);
 
+  const activeDays = Array.from(
+    new Set(timeSlots.filter((s) => !s.isBreak).map((s) => s.day))
+  ).sort((a, b) => DAYS.indexOf(a as Day) - DAYS.indexOf(b as Day)) as Day[];
+
   const getClassName = (classId: string) => {
     const cls = classes.find((c) => c.id === classId);
     return cls ? cls.name : "-";
@@ -504,7 +508,7 @@ export default function UnifiedSchedulesPage() {
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Jam
                     </th>
-                    {DAYS.map((day) => (
+                    {activeDays.map((day) => (
                       <th
                         key={day}
                         className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
@@ -520,7 +524,7 @@ export default function UnifiedSchedulesPage() {
                       <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
                         Jam {slotNum}
                       </td>
-                      {DAYS.map((day) => {
+                      {activeDays.map((day) => {
                         const entry = getScheduleForSlot(day, slotNum);
                         const slot = timeSlots.find(
                           (s) => s.day === day && s.slotNumber === slotNum
@@ -578,7 +582,7 @@ export default function UnifiedSchedulesPage() {
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Jam
                     </th>
-                    {DAYS.map((day) => (
+                    {activeDays.map((day) => (
                       <th
                         key={day}
                         className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
@@ -594,7 +598,7 @@ export default function UnifiedSchedulesPage() {
                       <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
                         Jam {slotNum}
                       </td>
-                      {DAYS.map((day) => {
+                      {activeDays.map((day) => {
                         const entry = getScheduleForSlot(day, slotNum);
                         const slot = timeSlots.find(
                           (s) => s.day === day && s.slotNumber === slotNum
