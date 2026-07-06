@@ -6,6 +6,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Eye, RotateCcw, Sparkles, Trash2 } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Alert from "@/components/ui/Alert";
 import { LocalDB } from "@/lib/db";
@@ -133,12 +134,13 @@ export default function GeneratePage() {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex space-x-4 mb-6">
+        <div className="mb-6 flex flex-wrap justify-center gap-4">
           <Button
             onClick={handleGenerate}
             isLoading={isGenerating}
             size="lg"
           >
+            {!isGenerating && (result ? <RotateCcw size={18} /> : <Sparkles size={18} />)}
             {result ? "Re-generate Jadwal" : "Generate Jadwal"}
           </Button>
 
@@ -149,6 +151,7 @@ export default function GeneratePage() {
                 onClick={handleClear}
                 size="lg"
               >
+                <Trash2 size={18} />
                 Hapus Jadwal
               </Button>
               <Button
@@ -156,6 +159,7 @@ export default function GeneratePage() {
                 onClick={handleViewSchedule}
                 size="lg"
               >
+                <Eye size={18} />
                 Lihat Jadwal
               </Button>
             </>

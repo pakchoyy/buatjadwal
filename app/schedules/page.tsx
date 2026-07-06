@@ -7,6 +7,7 @@
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { CalendarRange, FileSpreadsheet, FileText, GraduationCap, Users } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Select from "@/components/ui/Select";
 import { LocalDB } from "@/lib/db";
@@ -23,7 +24,7 @@ import {
   Day,
 } from "@/lib/types";
 import { getDayLabel } from "@/lib/utils";
-import { exportAllSchedulesToXlsx, exportScheduleToPdf, printSchedule } from "@/lib/export";
+import { exportAllSchedulesToPdf, exportAllSchedulesToXlsx } from "@/lib/export";
 
 export default function SchedulesPage() {
   const router = useRouter();
@@ -47,6 +48,13 @@ export default function SchedulesPage() {
     if (!currentSchool) return;
 
     exportAllSchedulesToXlsx(currentSchool.id, selectedDay);
+  };
+
+  const handleExportPdf = () => {
+    const currentSchool = LocalDB.getSchool();
+    if (!currentSchool) return;
+
+    exportAllSchedulesToPdf(currentSchool.id, selectedDay);
   };
 
   useEffect(() => {
@@ -91,25 +99,35 @@ export default function SchedulesPage() {
   return (
     <>
       {/* Action button */}
-      <div className="p-4 md:p-6 pb-0 print:hidden">
-        <div className="flex justify-end">
-          <div className="flex flex-wrap gap-3">
-            <Button variant="secondary" onClick={() => printSchedule("landscape")} size="sm">Print</Button>
-            <Button onClick={() => exportScheduleToPdf("landscape")} size="sm">Export PDF</Button>
-            <Button variant="success" onClick={handleExportExcel} size="sm">Export Excel</Button>
+      <div className="p-4 md:p-6 pb-0">
+        <div className="flex flex-col items-center gap-3">
+          <div className="flex flex-wrap justify-center gap-3">
+            <Button onClick={handleExportPdf} size="sm">
+              <FileText size={16} />
+              Export PDF
+            </Button>
+            <Button variant="success" onClick={handleExportExcel} size="sm">
+              <FileSpreadsheet size={16} />
+              Export Excel
+            </Button>
             <Button variant="secondary" onClick={() => router.push("/schedules/teacher")} size="sm">
+              <Users size={16} />
               Jadwal per Guru
             </Button>
             <Button variant="secondary" onClick={() => router.push("/schedules/class")} size="sm">
+              <GraduationCap size={16} />
               Jadwal per Kelas
             </Button>
           </div>
+          <p className="text-center text-xs text-gray-500">
+            PDF diunduh langsung dalam format A4 landscape untuk hari {getDayLabel(selectedDay)}.
+          </p>
         </div>
       </div>
 
       <div className="p-4 md:p-6">
         {/* Day Selector */}
-        <div className="mb-6 max-w-xs print:hidden">
+        <div className="mb-6 max-w-xs mx-auto">
           <Select
             label="Pilih Hari"
             value={selectedDay}
@@ -191,7 +209,10 @@ export default function SchedulesPage() {
         </div>
 
         <div className="mt-4 text-sm text-gray-500 print:hidden">
-          Menampilkan jadwal untuk hari {getDayLabel(selectedDay)} - {sortedClasses.length} kelas
+          <div className="inline-flex items-center gap-2 rounded-full bg-gray-100 px-4 py-2 text-sm text-gray-600">
+            <CalendarRange size={16} />
+            Menampilkan jadwal hari {getDayLabel(selectedDay)} untuk {sortedClasses.length} kelas
+          </div>
         </div>
       </div>
     </>

@@ -7,11 +7,12 @@
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { Eye, FileSpreadsheet, FileText, GraduationCap, LayoutGrid, Users } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Select from "@/components/ui/Select";
 import { LocalDB } from "@/lib/db";
 import { getScheduleByTeacher } from "@/lib/scheduler";
-import { exportScheduleToPdf, exportTeacherScheduleToXlsx, printSchedule } from "@/lib/export";
+import { exportTeacherScheduleToPdf, exportTeacherScheduleToXlsx } from "@/lib/export";
 import { formatDateTime } from "@/lib/utils";
 import {
   ScheduleEntry,
@@ -102,6 +103,13 @@ export default function TeacherSchedulePage() {
     exportTeacherScheduleToXlsx(school.id, selectedTeacherId);
   };
 
+  const handleExportPdf = () => {
+    const school = LocalDB.getSchool();
+    if (!school || !selectedTeacherId) return;
+
+    exportTeacherScheduleToPdf(school.id, selectedTeacherId);
+  };
+
   // Get unique slot numbers for display (across all days)
   const allSlotNumbers = Array.from(
     new Set(
@@ -114,29 +122,35 @@ export default function TeacherSchedulePage() {
   return (
     <>
       {/* Action buttons */}
-      <div className="p-4 md:p-6 pb-0 print:hidden">
-        <div className="flex flex-wrap gap-3 justify-end">
-          <Button variant="secondary" onClick={() => printSchedule("portrait")} disabled={!selectedTeacherId} size="sm">
-            Print
-          </Button>
-          <Button onClick={() => exportScheduleToPdf("portrait")} disabled={!selectedTeacherId} size="sm" title="Buka dialog print lalu pilih Save as PDF">
-            Export PDF
-          </Button>
-          <Button variant="success" onClick={handleExportExcel} disabled={!selectedTeacherId} size="sm">
-            Export Excel
-          </Button>
-          <Button variant="secondary" onClick={() => router.push("/schedules")} size="sm">
-            Jadwal Umum
-          </Button>
-          <Button variant="secondary" onClick={() => router.push("/schedules/class")} size="sm">
-            Jadwal per Kelas
-          </Button>
+      <div className="p-4 md:p-6 pb-0">
+        <div className="flex flex-col items-center gap-3">
+          <div className="flex flex-wrap justify-center gap-3">
+            <Button onClick={handleExportPdf} disabled={!selectedTeacherId} size="sm">
+              <FileText size={16} />
+              Export PDF
+            </Button>
+            <Button variant="success" onClick={handleExportExcel} disabled={!selectedTeacherId} size="sm">
+              <FileSpreadsheet size={16} />
+              Export Excel
+            </Button>
+            <Button variant="secondary" onClick={() => router.push("/schedules")} size="sm">
+              <LayoutGrid size={16} />
+              Jadwal Umum
+            </Button>
+            <Button variant="secondary" onClick={() => router.push("/schedules/class")} size="sm">
+              <GraduationCap size={16} />
+              Jadwal per Kelas
+            </Button>
+          </div>
+          <p className="text-center text-xs text-gray-500">
+            PDF diunduh langsung dalam format A4 portrait untuk jadwal per guru.
+          </p>
         </div>
       </div>
 
       <div className="p-4 md:p-6">
         {/* Teacher Selector */}
-        <div className="mb-6 max-w-md print:hidden">
+        <div className="mb-6 max-w-md mx-auto">
           <Select
             label="Pilih Guru"
             value={selectedTeacherId}
@@ -163,13 +177,25 @@ export default function TeacherSchedulePage() {
             </div>
 
             {/* Teacher Info */}
-            <div className="print-title bg-white rounded-lg shadow-sm p-6 mb-6 print:hidden">
-              <h3 className="text-lg font-semibold text-gray-900">
-                {selectedTeacher.name}
-              </h3>
-              <p className="text-sm text-gray-500">
-                Kode: {selectedTeacher.code} | Total mengajar: {scheduleEntries.length} jam
-              </p>
+            <div className="print-title bg-white rounded-lg shadow-sm p-6 mb-6">
+              <div className="flex flex-col items-center gap-3 text-center sm:flex-row sm:justify-between sm:text-left">
+                <div>
+                  <div className="inline-flex items-center gap-2 rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
+                    <Users size={14} />
+                    Jadwal per Guru
+                  </div>
+                  <h3 className="mt-3 text-lg font-semibold text-gray-900">
+                    {selectedTeacher.name}
+                  </h3>
+                  <p className="text-sm text-gray-500">
+                    Kode: {selectedTeacher.code} | Total mengajar: {scheduleEntries.length} jam
+                  </p>
+                </div>
+                <Button variant="secondary" onClick={() => router.push("/schedules")} size="sm">
+                  <Eye size={16} />
+                  Lihat Semua Jadwal
+                </Button>
+              </div>
             </div>
 
             {/* Schedule Table */}

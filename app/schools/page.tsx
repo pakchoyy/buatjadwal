@@ -5,6 +5,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { Building2, Pencil, Plus, School as SchoolIcon } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
 import Input from "@/components/ui/Input";
@@ -107,8 +108,9 @@ export default function SchoolsPage() {
     <>
       {/* Action button */}
       <div className="p-4 md:p-6 pb-0">
-        <div className="flex justify-end">
+        <div className="flex justify-center">
           <Button onClick={school ? handleEdit : handleCreate} size="sm">
+            {school ? <Pencil size={16} /> : <Plus size={16} />}
             {school ? "Edit Sekolah" : "Tambah Sekolah"}
           </Button>
         </div>
@@ -162,25 +164,18 @@ export default function SchoolsPage() {
           </div>
         ) : (
           <div className="bg-white rounded-lg shadow-sm p-12 text-center">
-            <svg
-              className="mx-auto h-12 w-12 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-              />
-            </svg>
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-sky-100 text-sky-700">
+              <Building2 size={28} />
+            </div>
             <h3 className="mt-4 text-lg font-medium text-gray-900">Belum ada data sekolah</h3>
             <p className="mt-2 text-sm text-gray-500">
               Tambahkan data sekolah untuk memulai
             </p>
             <div className="mt-6">
-              <Button onClick={handleCreate}>Tambah Sekolah</Button>
+              <Button onClick={handleCreate}>
+                <SchoolIcon size={16} />
+                Tambah Sekolah
+              </Button>
             </div>
           </div>
         )}
@@ -256,9 +251,11 @@ export default function SchoolsPage() {
               variant="secondary"
               onClick={() => setIsModalOpen(false)}
             >
+              <Plus size={16} className="rotate-45" />
               Batal
             </Button>
             <Button type="submit" isLoading={isSubmitting}>
+              {!isSubmitting && <SchoolIcon size={16} />}
               Simpan
             </Button>
           </div>

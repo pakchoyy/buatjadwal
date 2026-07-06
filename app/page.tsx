@@ -5,6 +5,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import Button from "@/components/ui/Button";
 import Alert from "@/components/ui/Alert";
 import LoadingScreen from "@/components/ui/LoadingScreen";
@@ -12,13 +13,17 @@ import { LocalDB } from "@/lib/db";
 import { seedDatabase } from "@/lib/seed-data";
 import { AlertState } from "@/lib/types";
 import { 
+  BookCopy,
   School, 
   Users, 
   Clock, 
   ClipboardList, 
   Zap, 
   Calendar,
-  BookOpen 
+  BookOpen,
+  Building2,
+  GraduationCap,
+  Trash2
 } from "lucide-react";
 
 const GUIDES = [
@@ -62,7 +67,7 @@ const GUIDES = [
     num: "7",
     icon: Calendar,
     title: "Lihat & Export Jadwal",
-    desc: "Buka menu Lihat Jadwal untuk melihat jadwal lengkap. Filter per Kelas atau per Guru, lalu print, export PDF, atau export Excel."
+    desc: "Buka menu Lihat Jadwal untuk melihat jadwal lengkap. Filter per Kelas atau per Guru, lalu export PDF atau export Excel."
   }
 ];
 
@@ -83,14 +88,24 @@ export default function DashboardPage() {
     message: "",
   });
 
-  // Load stats on mount with 1s loading screen
+  // Load stats on mount; show branded loading once per browser session
   useEffect(() => {
-    const timer = setTimeout(() => {
+    const hasShownLoading = window.sessionStorage.getItem("bgy-initial-loading-done");
+
+    if (hasShownLoading) {
       loadStats();
       setIsInitialLoading(false);
+      return;
+    }
+
+    setIsInitialLoading(true);
+    const timer = window.setTimeout(() => {
+      loadStats();
+      setIsInitialLoading(false);
+      window.sessionStorage.setItem("bgy-initial-loading-done", "1");
     }, 1000);
 
-    return () => clearTimeout(timer);
+    return () => window.clearTimeout(timer);
   }, []);
 
   const loadStats = () => {
@@ -185,7 +200,7 @@ export default function DashboardPage() {
               size="md"
               className="w-full md:w-auto"
             >
-              <Zap size={16} className="mr-2" />
+              <BookCopy size={16} />
               Isi Data Contoh
             </Button>
             <p className="text-xs text-gray-500 mt-2">
@@ -202,7 +217,7 @@ export default function DashboardPage() {
               size="md"
               className="w-full md:w-auto"
             >
-              <Zap size={16} className="mr-2" />
+              <Trash2 size={16} />
               Hapus Semua Data
             </Button>
             <p className="text-xs text-gray-500 mt-2">
@@ -252,8 +267,8 @@ export default function DashboardPage() {
                   key={guide.num}
                   className="flex gap-3 items-start p-3 border border-[var(--border)] rounded-lg bg-[var(--input-bg)]"
                 >
-                  <div className="text-xl font-bold text-[#0ea5a0] flex-shrink-0">
-                    {guide.num}️⃣
+                  <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-2xl bg-[rgba(14,165,160,0.12)] text-sm font-bold text-[#0ea5a0]">
+                    {guide.num}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
@@ -283,19 +298,7 @@ export default function DashboardPage() {
                   </p>
                 </div>
                 <div className="bg-blue-100 p-3 rounded-lg">
-                  <svg
-                    className="w-6 h-6 text-blue-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                    />
-                  </svg>
+                  <Building2 className="w-6 h-6 text-blue-600" />
                 </div>
               </div>
             </div>
@@ -310,19 +313,7 @@ export default function DashboardPage() {
                   </p>
                 </div>
                 <div className="bg-green-100 p-3 rounded-lg">
-                  <svg
-                    className="w-6 h-6 text-green-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-                    />
-                  </svg>
+                  <GraduationCap className="w-6 h-6 text-green-600" />
                 </div>
               </div>
             </div>
@@ -337,19 +328,7 @@ export default function DashboardPage() {
                   </p>
                 </div>
                 <div className="bg-purple-100 p-3 rounded-lg">
-                  <svg
-                    className="w-6 h-6 text-purple-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                    />
-                  </svg>
+                  <Users className="w-6 h-6 text-purple-600" />
                 </div>
               </div>
             </div>
@@ -366,19 +345,7 @@ export default function DashboardPage() {
                   </p>
                 </div>
                 <div className="bg-yellow-100 p-3 rounded-lg">
-                  <svg
-                    className="w-6 h-6 text-yellow-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                    />
-                  </svg>
+                  <BookOpen className="w-6 h-6 text-yellow-600" />
                 </div>
               </div>
             </div>
@@ -395,19 +362,7 @@ export default function DashboardPage() {
                   </p>
                 </div>
                 <div className="bg-red-100 p-3 rounded-lg">
-                  <svg
-                    className="w-6 h-6 text-red-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
+                  <Clock className="w-6 h-6 text-red-600" />
                 </div>
               </div>
             </div>
@@ -424,19 +379,7 @@ export default function DashboardPage() {
                   </p>
                 </div>
                 <div className="bg-indigo-100 p-3 rounded-lg">
-                  <svg
-                    className="w-6 h-6 text-indigo-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
-                    />
-                  </svg>
+                  <ClipboardList className="w-6 h-6 text-indigo-600" />
                 </div>
               </div>
             </div>
@@ -450,93 +393,45 @@ export default function DashboardPage() {
               Quick Actions
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <a
+              <Link
                 href="/classes"
                 className="flex flex-col items-center justify-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
               >
-                <svg
-                  className="w-8 h-8 text-gray-600 mb-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-                  />
-                </svg>
+                <GraduationCap className="w-8 h-8 text-gray-600 mb-2" />
                 <span className="text-sm font-medium text-gray-700">
                   Kelola Kelas
                 </span>
-              </a>
+              </Link>
 
-              <a
+              <Link
                 href="/teachers"
                 className="flex flex-col items-center justify-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
               >
-                <svg
-                  className="w-8 h-8 text-gray-600 mb-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                  />
-                </svg>
+                <Users className="w-8 h-8 text-gray-600 mb-2" />
                 <span className="text-sm font-medium text-gray-700">
                   Kelola Guru
                 </span>
-              </a>
+              </Link>
 
-              <a
+              <Link
                 href="/subjects"
                 className="flex flex-col items-center justify-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
               >
-                <svg
-                  className="w-8 h-8 text-gray-600 mb-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                  />
-                </svg>
+                <BookOpen className="w-8 h-8 text-gray-600 mb-2" />
                 <span className="text-sm font-medium text-gray-700">
                   Kelola Mapel
                 </span>
-              </a>
+              </Link>
 
-              <a
+              <Link
                 href="/teaching-allocations"
                 className="flex flex-col items-center justify-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
               >
-                <svg
-                  className="w-8 h-8 text-gray-600 mb-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
-                  />
-                </svg>
+                <ClipboardList className="w-8 h-8 text-gray-600 mb-2" />
                 <span className="text-sm font-medium text-gray-700">
                   Alokasi Mengajar
                 </span>
-              </a>
+              </Link>
             </div>
           </div>
         )}

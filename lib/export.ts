@@ -2,13 +2,15 @@
  * Export Functions - Export jadwal ke PDF/Excel-friendly formats
  */
 
+import { jsPDF } from "jspdf";
+import autoTable, { type RowInput } from "jspdf-autotable";
 import * as XLSX from "xlsx";
 import { LocalDB } from "./db";
 import { getAllScheduleEntries } from "./scheduler";
 import { DAYS, DAY_LABELS, Day } from "./types";
 
 type SheetRow = Array<string | number | undefined | null>;
-type PrintOrientation = "portrait" | "landscape";
+type PdfOrientation = "portrait" | "landscape";
 
 interface WorkbookOptions {
   filename: string;
@@ -32,19 +34,25 @@ function buildMetaRows(title: string, detailLines: string[], headerRow: SheetRow
   ];
 }
 
-function openPrintDialog(orientation: PrintOrientation = "landscape"): void {
-  const style = document.createElement("style");
-  style.media = "print";
-  style.textContent = `@page { size: ${orientation}; margin: 10mm; }`;
-  document.head.appendChild(style);
+function getPrintedAtLabel(): string {
+  return new Date().toLocaleString("id-ID", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
 
-  const cleanup = () => {
-    style.remove();
-    window.removeEventListener("afterprint", cleanup);
-  };
+function getSlotTimeLabel(
+  timeSlots: Array<{ slotNumber: number; startTime: string; endTime: string; isBreak: boolean }>,
+  slotNumber: number
+): string {
+  const slot = timeSlots
+    .filter((item) => item.slotNumber === slotNumber && !item.isBreak)
+    .sort((a, b) => a.startTime.localeCompare(b.startTime))[0];
 
-  window.addEventListener("afterprint", cleanup, { once: true });
-  window.print();
+  return slot ? `${slot.startTime}-${slot.endTime}` : "-";
 }
 
 function downloadWorkbook({
@@ -93,12 +101,216 @@ function downloadWorkbook({
   XLSX.writeFile(workbook, filename);
 }
 
-export function printSchedule(orientation: PrintOrientation = "landscape"): void {
-  openPrintDialog(orientation);
+function downloadPdf({
+  title,
+  detailLines,
+  headers,
+  body,
+  orientation,
+  filename,
+}: {
+  title: string;
+  detailLines: string[];
+  headers: string[];
+  body: RowInput[];
+  orientation: PdfOrientation;
+  filename: string;
+}): void {
+  const doc = new jsPDF({
+    orientation,
+    unit: "mm",
+    format: "a4",
+  });
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const topMargin = 32 + detailLines.length * 5;
+
+  autoTable(doc, {
+    head: [headers],
+    body,
+    startY: topMargin,
+    margin: { top: topMargin, left: 10, right: 10, bottom: 16 },
+    theme: "grid",
+    tableWidth: "auto",
+    styles: {
+      fontSize: orientation === "landscape" ? 7.4 : 8.4,
+      cellPadding: 2,
+      lineColor: [203, 213, 225],
+      lineWidth: 0.1,
+      textColor: [17, 24, 39],
+      overflow: "linebreak",
+      valign: "middle",
+    },
+    headStyles: {
+      fillColor: [15, 118, 110],
+      textColor: [255, 255, 255],
+      fontStyle: "bold",
+      halign: "center",
+    },
+    alternateRowStyles: {
+      fillColor: [248, 250, 252],
+    },
+    columnStyles: {
+      0: { halign: "center", cellWidth: 18 },
+      1: { halign: "center", cellWidth: 24 },
+    },
+    didDrawPage: (data) => {
+      doc.setFillColor(14, 165, 160);
+      doc.roundedRect(10, 10, pageWidth - 20, 14, 3, 3, "F");
+      doc.setTextColor(255, 255, 255);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(15);
+      doc.text(title, 14, 19);
+
+      doc.setTextColor(55, 65, 81);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      detailLines.forEach((line, index) => {
+        doc.text(line, 10, 30 + index * 5);
+      });
+
+      doc.setDrawColor(226, 232, 240);
+      doc.line(10, pageHeight - 11, pageWidth - 10, pageHeight - 11);
+      doc.setFontSize(8);
+      doc.text(`Bantu Guru Yuk - Halaman ${data.pageNumber}`, 10, pageHeight - 6);
+      doc.text(getPrintedAtLabel(), pageWidth - 10, pageHeight - 6, { align: "right" });
+    },
+  });
+
+  doc.save(filename);
 }
 
-export function exportScheduleToPdf(orientation: PrintOrientation = "landscape"): void {
-  openPrintDialog(orientation);
+export function exportClassScheduleToPdf(schoolId: string, classId: string): void {
+  const school = LocalDB.getSchool();
+  const cls = LocalDB.getClass(classId);
+  const teachers = LocalDB.listTeachers(schoolId);
+  const subjects = LocalDB.listSubjects(schoolId);
+  const timeSlots = LocalDB.listTimeSlots(schoolId);
+  const scheduleEntries = getAllScheduleEntries(schoolId).filter(
+    (entry) => entry.classId === classId
+  );
+
+  const slotNumbers = Array.from(
+    new Set(timeSlots.filter((slot) => !slot.isBreak).map((slot) => slot.slotNumber))
+  ).sort((a, b) => a - b);
+
+  const body: RowInput[] = slotNumbers.map((slotNumber) => [
+    `Jam ${slotNumber}`,
+    getSlotTimeLabel(timeSlots, slotNumber),
+    ...DAYS.map((day) => {
+      const slot = timeSlots.find(
+        (item) => item.day === day && item.slotNumber === slotNumber && !item.isBreak
+      );
+      if (!slot) return "-";
+
+      const entry = scheduleEntries.find((item) => item.timeSlotId === slot.id);
+      if (!entry) return "-";
+
+      const subject = subjects.find((item) => item.id === entry.subjectId);
+      const teacher = teachers.find((item) => item.id === entry.teacherId);
+      return `${subject?.name || "-"}\n${teacher?.name || "-"}`;
+    }),
+  ]);
+
+  downloadPdf({
+    title: "Jadwal per Kelas",
+    detailLines: [
+      school?.name || "-",
+      `Kelas ${cls?.name || "-"} | Tingkat ${cls?.grade || "-"}`,
+      `Tahun Ajaran ${school?.academicYear || "-"} | Semester ${school?.semester || "-"}`,
+    ],
+    headers: ["Jam", "Waktu", ...DAYS.map((day) => DAY_LABELS[day])],
+    body,
+    orientation: "portrait",
+    filename: `Jadwal_Kelas_${sanitizeFilename(cls?.name || "kelas")}_${Date.now()}.pdf`,
+  });
+}
+
+export function exportTeacherScheduleToPdf(schoolId: string, teacherId: string): void {
+  const school = LocalDB.getSchool();
+  const teacher = LocalDB.getTeacher(teacherId);
+  const classes = LocalDB.listClasses(schoolId);
+  const subjects = LocalDB.listSubjects(schoolId);
+  const timeSlots = LocalDB.listTimeSlots(schoolId);
+  const scheduleEntries = getAllScheduleEntries(schoolId).filter(
+    (entry) => entry.teacherId === teacherId
+  );
+
+  const slotNumbers = Array.from(
+    new Set(timeSlots.filter((slot) => !slot.isBreak).map((slot) => slot.slotNumber))
+  ).sort((a, b) => a - b);
+
+  const body: RowInput[] = slotNumbers.map((slotNumber) => [
+    `Jam ${slotNumber}`,
+    getSlotTimeLabel(timeSlots, slotNumber),
+    ...DAYS.map((day) => {
+      const slot = timeSlots.find(
+        (item) => item.day === day && item.slotNumber === slotNumber && !item.isBreak
+      );
+      if (!slot) return "-";
+
+      const entry = scheduleEntries.find((item) => item.timeSlotId === slot.id);
+      if (!entry) return "-";
+
+      const subject = subjects.find((item) => item.id === entry.subjectId);
+      const cls = classes.find((item) => item.id === entry.classId);
+      return `${subject?.name || "-"}\n${cls?.name || "-"}`;
+    }),
+  ]);
+
+  downloadPdf({
+    title: "Jadwal per Guru",
+    detailLines: [
+      school?.name || "-",
+      `${teacher?.name || "-"} (${teacher?.code || "-"})`,
+      `Tahun Ajaran ${school?.academicYear || "-"} | Semester ${school?.semester || "-"}`,
+    ],
+    headers: ["Jam", "Waktu", ...DAYS.map((day) => DAY_LABELS[day])],
+    body,
+    orientation: "portrait",
+    filename: `Jadwal_Guru_${sanitizeFilename(teacher?.name || "guru")}_${Date.now()}.pdf`,
+  });
+}
+
+export function exportAllSchedulesToPdf(schoolId: string, day: Day): void {
+  const school = LocalDB.getSchool();
+  const classes = LocalDB.listClasses(schoolId).sort((a, b) => a.name.localeCompare(b.name));
+  const teachers = LocalDB.listTeachers(schoolId);
+  const subjects = LocalDB.listSubjects(schoolId);
+  const timeSlots = LocalDB.listTimeSlots(schoolId)
+    .filter((slot) => slot.day === day)
+    .sort((a, b) => a.slotNumber - b.slotNumber);
+  const scheduleEntries = getAllScheduleEntries(schoolId);
+
+  const body: RowInput[] = timeSlots.map((slot) => [
+    `Jam ${slot.slotNumber}`,
+    `${slot.startTime}-${slot.endTime}`,
+    ...classes.map((cls) => {
+      if (slot.isBreak) return "Istirahat";
+
+      const entry = scheduleEntries.find(
+        (item) => item.timeSlotId === slot.id && item.classId === cls.id
+      );
+      if (!entry) return "-";
+
+      const subject = subjects.find((item) => item.id === entry.subjectId);
+      const teacher = teachers.find((item) => item.id === entry.teacherId);
+      return `${subject?.name || "-"}\n${teacher?.name || "-"}`;
+    }),
+  ]);
+
+  downloadPdf({
+    title: "Jadwal Umum",
+    detailLines: [
+      school?.name || "-",
+      `Hari ${DAY_LABELS[day]}`,
+      `Tahun Ajaran ${school?.academicYear || "-"} | Semester ${school?.semester || "-"}`,
+    ],
+    headers: ["Jam", "Waktu", ...classes.map((cls) => cls.name)],
+    body,
+    orientation: "landscape",
+    filename: `Jadwal_${sanitizeFilename(DAY_LABELS[day])}_${Date.now()}.pdf`,
+  });
 }
 
 export function exportClassScheduleToXlsx(schoolId: string, classId: string): void {
