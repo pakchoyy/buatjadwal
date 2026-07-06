@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { CheckCircle2, Heart, Download, RefreshCw } from "lucide-react";
 import Button from "@/components/ui/Button";
 
 interface PaymentAmountSelectorProps {
@@ -73,23 +74,27 @@ export default function PaymentAmountSelector({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Title */}
       <div className="text-center">
-        <h2 className="text-2xl font-bold text-gray-900">🎉 Jadwal Berhasil Dibuat</h2>
-        <p className="mt-3 text-gray-600">
+        <div className="mb-1 flex items-center justify-center gap-2">
+          <CheckCircle2 size={22} className="text-teal-600" />
+          <h2 className="text-xl font-bold text-gray-900">Jadwal Berhasil Dibuat</h2>
+        </div>
+        <p className="text-sm text-gray-600">
           Terima kasih telah menggunakan aplikasi ini.
         </p>
-        <p className="mt-2 text-sm text-gray-500">
+        <p className="mt-1 text-xs text-gray-500">
           Aplikasi ini dikembangkan secara mandiri untuk membantu guru menyusun
           jadwal dengan lebih mudah dan cepat.
         </p>
       </div>
 
       {/* Amount Selection */}
-      <div className="rounded-xl bg-gradient-to-br from-teal-50 to-cyan-50 p-6">
-        <h3 className="mb-4 text-center text-lg font-semibold text-teal-900">
-          ☕ Pilih Nominal Dukungan
+      <div className="rounded-xl bg-gradient-to-br from-teal-50 to-cyan-50 p-4">
+        <h3 className="mb-3 text-center text-sm font-semibold text-teal-900 flex items-center justify-center gap-1.5">
+          <Heart size={16} className="text-teal-600" />
+          Pilih Nominal Dukungan
         </h3>
 
         {/* Preset Amounts */}
@@ -148,9 +153,9 @@ export default function PaymentAmountSelector({
           </div>
         )}
 
-        <div className="mt-4 space-y-2 text-center text-xs text-teal-700">
-          <p>✨ Download otomatis setelah pembayaran</p>
-          <p>✨ Unlimited download selamanya</p>
+        <div className="mt-3 space-y-1.5 text-center text-xs text-teal-700">
+          <p className="flex items-center justify-center gap-1"><Download size={12} /> Download otomatis setelah pembayaran</p>
+          <p className="flex items-center justify-center gap-1"><RefreshCw size={12} /> Unlimited download selamanya</p>
         </div>
       </div>
 

@@ -4,7 +4,7 @@
 
 "use client";
 
-import { Menu } from "lucide-react";
+import { Menu, Home, Info, Mail, Globe } from "lucide-react";
 
 interface HamburgerMenuProps {
   isOpen: boolean;
@@ -45,7 +45,7 @@ export default function HamburgerMenu({
             onClick={() => handleItemClick(onNavigate.home)}
             className="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left"
           >
-            <span className="text-base">🏠</span>
+            <Home size={16} className="text-gray-500" />
             <span>Home</span>
           </button>
 
@@ -55,7 +55,7 @@ export default function HamburgerMenu({
             onClick={() => handleItemClick(onNavigate.tentang)}
             className="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left"
           >
-            <span className="text-base">ℹ️</span>
+            <Info size={16} className="text-gray-500" />
             <span>Tentang</span>
           </button>
 
@@ -63,7 +63,7 @@ export default function HamburgerMenu({
             onClick={() => handleItemClick(onNavigate.kontak)}
             className="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left"
           >
-            <span className="text-base">📬</span>
+            <Mail size={16} className="text-gray-500" />
             <span>Kontak</span>
           </button>
 
@@ -76,7 +76,7 @@ export default function HamburgerMenu({
             className="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
             onClick={onClick}
           >
-            <span className="text-base">🌐</span>
+            <Globe size={16} className="text-gray-500" />
             <span>BantuGuruYuk.web.id</span>
             <span className="ml-auto text-xs">↗</span>
           </a>

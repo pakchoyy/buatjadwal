@@ -8,6 +8,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Button from "@/components/ui/Button";
 import Alert from "@/components/ui/Alert";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import LoadingScreen from "@/components/ui/LoadingScreen";
 import { LocalDB } from "@/lib/db";
 import { seedDatabase } from "@/lib/seed-data";
@@ -82,6 +83,8 @@ export default function DashboardPage() {
   } | null>(null);
   const [isSeeding, setIsSeeding] = useState(false);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [showSeedConfirm, setShowSeedConfirm] = useState(false);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [alert, setAlert] = useState<AlertState>({
     show: false,
     type: "info",
@@ -128,19 +131,12 @@ export default function DashboardPage() {
     }
   };
 
-  const handleSeed = () => {
-    const existingSchool = LocalDB.getSchool();
-    
-    // If data exists, ask user to confirm clear + reseed
-    if (existingSchool && !confirm("Hapus data lama dan isi ulang?")) {
-      return; // User cancelled
-    }
-    
+  const doSeed = () => {
     setIsSeeding(true);
     setAlert({ show: false, type: "info", message: "" });
 
     try {
-      // Clear existing data if any
+      const existingSchool = LocalDB.getSchool();
       if (existingSchool) {
         LocalDB.clearAll();
       }
@@ -171,16 +167,17 @@ export default function DashboardPage() {
     }
   };
 
-  const handleClearAll = () => {
-    if (confirm("Apakah Anda yakin ingin menghapus semua data?")) {
-      LocalDB.clearAll();
-      loadStats();
-      setAlert({
-        show: true,
-        type: "success",
-        message: "Semua data berhasil dihapus",
-      });
+  const handleSeed = () => {
+    const existingSchool = LocalDB.getSchool();
+    if (existingSchool) {
+      setShowSeedConfirm(true);
+    } else {
+      doSeed();
     }
+  };
+
+  const handleClearAll = () => {
+    setShowClearConfirm(true);
   };
 
 
@@ -239,6 +236,26 @@ export default function DashboardPage() {
             />
           </div>
         )}
+
+        {/* Confirm Dialogs */}
+        <ConfirmDialog
+          isOpen={showSeedConfirm}
+          onClose={() => setShowSeedConfirm(false)}
+          onConfirm={() => { setShowSeedConfirm(false); doSeed(); }}
+          title="Isi Data Contoh"
+          message="Data yang sudah ada akan dihapus dan diganti dengan data contoh. Lanjutkan?"
+          confirmText="Ya, Isi Data"
+          confirmVariant="primary"
+        />
+        <ConfirmDialog
+          isOpen={showClearConfirm}
+          onClose={() => setShowClearConfirm(false)}
+          onConfirm={() => { setShowClearConfirm(false); LocalDB.clearAll(); loadStats(); setAlert({ show: true, type: "success", message: "Semua data berhasil dihapus" }); }}
+          title="Hapus Semua Data"
+          message="Apakah Anda yakin ingin menghapus semua data?"
+          confirmText="Ya, Hapus"
+          confirmVariant="danger"
+        />
 
         {/* Petunjuk Penggunaan Section */}
         <section className="bg-[var(--card-bg)] rounded-[var(--radius)] shadow-[var(--shadow)] p-6 mb-6 border border-[var(--border)]">

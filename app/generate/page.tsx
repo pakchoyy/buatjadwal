@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { Eye, RotateCcw, Sparkles, Trash2 } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Alert from "@/components/ui/Alert";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import { LocalDB } from "@/lib/db";
 import { Scheduler, clearSchedule } from "@/lib/scheduler";
 import { AlertState } from "@/lib/types";
@@ -16,6 +17,8 @@ import { AlertState } from "@/lib/types";
 export default function GeneratePage() {
   const router = useRouter();
   const [isGenerating, setIsGenerating] = useState(false);
+  const [showRegenConfirm, setShowRegenConfirm] = useState(false);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [alert, setAlert] = useState<AlertState>({
     show: false,
     type: "info",
@@ -23,39 +26,19 @@ export default function GeneratePage() {
   });
   const [result, setResult] = useState<any>(null);
 
-  const handleGenerate = async () => {
+  const doGenerate = async () => {
     const school = LocalDB.getSchool();
-    if (!school) {
-      setAlert({
-        show: true,
-        type: "error",
-        message: "Silakan buat data sekolah terlebih dahulu",
-      });
-      return;
-    }
-
-    // Confirm if re-generating (existing schedule will be lost)
-    if (result) {
-      const confirmed = confirm(
-        "Jadwal yang sudah ada akan dihapus dan di-generate ulang. Apakah Anda yakin?"
-      );
-      if (!confirmed) return;
-    }
+    if (!school) return;
 
     setIsGenerating(true);
     setAlert({ show: false, type: "info", message: "" });
     const startTime = Date.now();
 
     try {
-      // Create scheduler instance
       const scheduler = new Scheduler(school.id);
-
-      // Generate schedule
       const scheduleResult = scheduler.generateSchedule();
-
       setResult(scheduleResult);
 
-      // Ensure loading shows for at least 1500ms
       const elapsed = Date.now() - startTime;
       if (elapsed < 1500) {
         await new Promise(resolve => setTimeout(resolve, 1500 - elapsed));
@@ -85,19 +68,25 @@ export default function GeneratePage() {
     }
   };
 
-  const handleClear = () => {
+  const handleGenerate = async () => {
     const school = LocalDB.getSchool();
-    if (!school) return;
-
-    if (confirm("Apakah Anda yakin ingin menghapus semua jadwal?")) {
-      clearSchedule(school.id);
-      setResult(null);
+    if (!school) {
       setAlert({
         show: true,
-        type: "success",
-        message: "Jadwal berhasil dihapus",
+        type: "error",
+        message: "Silakan buat data sekolah terlebih dahulu",
       });
+      return;
     }
+    if (result) {
+      setShowRegenConfirm(true);
+      return;
+    }
+    await doGenerate();
+  };
+
+  const handleClear = () => {
+    setShowClearConfirm(true);
   };
 
   const handleViewSchedule = () => {
@@ -295,6 +284,26 @@ export default function GeneratePage() {
             )}
           </div>
         )}
+
+        {/* Confirm Dialogs */}
+        <ConfirmDialog
+          isOpen={showRegenConfirm}
+          onClose={() => setShowRegenConfirm(false)}
+          onConfirm={() => { setShowRegenConfirm(false); doGenerate(); }}
+          title="Generate Ulang Jadwal"
+          message="Jadwal yang sudah ada akan dihapus dan di-generate ulang. Apakah Anda yakin?"
+          confirmText="Ya, Generate Ulang"
+          confirmVariant="primary"
+        />
+        <ConfirmDialog
+          isOpen={showClearConfirm}
+          onClose={() => setShowClearConfirm(false)}
+          onConfirm={() => { setShowClearConfirm(false); const school = LocalDB.getSchool(); if (school) { clearSchedule(school.id); setResult(null); setAlert({ show: true, type: "success", message: "Jadwal berhasil dihapus" }); } }}
+          title="Hapus Jadwal"
+          message="Apakah Anda yakin ingin menghapus semua jadwal?"
+          confirmText="Ya, Hapus"
+          confirmVariant="danger"
+        />
       </div>
   );
 }
