@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { CheckCircle2, Heart } from "lucide-react";
 
 interface PaymentSuccessProps {
   onComplete?: () => void;
@@ -8,7 +9,6 @@ interface PaymentSuccessProps {
 
 export default function PaymentSuccess({ onComplete }: PaymentSuccessProps) {
   useEffect(() => {
-    // Auto-close after 3 seconds
     const timer = setTimeout(() => {
       if (onComplete) onComplete();
     }, 3000);
@@ -17,34 +17,21 @@ export default function PaymentSuccess({ onComplete }: PaymentSuccessProps) {
   }, [onComplete]);
 
   return (
-    <div className="space-y-6 py-8 text-center">
+    <div className="space-y-3 py-4 text-center">
       {/* Success Icon */}
       <div className="flex justify-center">
-        <div className="animate-bounce">
-          <div className="flex h-24 w-24 items-center justify-center rounded-full bg-green-100">
-            <svg
-              className="h-12 w-12 text-green-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
-          </div>
+        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-green-100">
+          <CheckCircle2 size={32} className="text-green-600" />
         </div>
       </div>
 
       {/* Success Message */}
       <div>
-        <h2 className="text-2xl font-bold text-gray-900">
-          ❤️ Terima Kasih Atas Dukungannya!
+        <h2 className="text-sm font-bold text-gray-900 flex items-center justify-center gap-1">
+          <Heart size={16} className="text-red-500" />
+          Terima Kasih Atas Dukungannya!
         </h2>
-        <p className="mt-4 text-gray-600">
+        <p className="mt-2 text-xs text-gray-600">
           Dukungan Anda membantu pengembangan aplikasi ini agar tetap gratis dan
           bermanfaat untuk guru-guru Indonesia.
         </p>
@@ -52,13 +39,13 @@ export default function PaymentSuccess({ onComplete }: PaymentSuccessProps) {
 
       {/* Loading Animation */}
       <div className="flex justify-center">
-        <div className="h-2 w-64 overflow-hidden rounded-full bg-gray-200">
+        <div className="h-1.5 w-48 overflow-hidden rounded-full bg-gray-200">
           <div className="h-full animate-[progress_3s_ease-in-out] bg-gradient-to-r from-teal-500 to-green-500" />
         </div>
       </div>
 
       {/* Countdown */}
-      <p className="text-sm text-gray-500">
+      <p className="text-xs text-gray-500">
         Download dimulai dalam beberapa detik...
       </p>
 

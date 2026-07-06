@@ -120,46 +120,48 @@ export default function PaymentModal({
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
-      showClose={step === "amount" || step === "error" || step === "expired"}
+      showClose={true}
       size="md"
     >
-      {step === "amount" && (
-        <PaymentAmountSelector
-          onSelect={handleAmountSelect}
-          onCancel={handleClose}
-          minAmount={10000}
-        />
-      )}
-
-      {step === "qris" && (
-        <QRISDisplay
-          qrisUrl={qrisUrl}
-          amount={selectedAmount}
-          transactionId={transactionId}
-          expiresIn={expiresIn}
-          onSuccess={handlePaymentSuccess}
-          onCancel={handleClose}
-          onExpired={handleExpired}
-        />
-      )}
-
-      {step === "success" && <PaymentSuccess onComplete={() => {}} />}
-
-      {(step === "error" || step === "expired") && (
-        <PaymentError
-          error={error || "Pembayaran gagal atau expired"}
-          onRetry={handleRetry}
-          onClose={handleClose}
-        />
-      )}
-
-      {loading && (
+      {loading ? (
         <div className="flex items-center justify-center py-8">
           <div className="text-center">
-            <div className="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-solid border-teal-600 border-t-transparent" />
-            <p className="mt-4 text-gray-600">Memproses pembayaran...</p>
+            <div className="mx-auto h-10 w-10 animate-spin rounded-full border-[3px] border-solid border-teal-600 border-t-transparent" />
+            <p className="mt-3 text-sm text-gray-600">Memproses pembayaran...</p>
           </div>
         </div>
+      ) : (
+        <>
+          {step === "amount" && (
+            <PaymentAmountSelector
+              onSelect={handleAmountSelect}
+              onCancel={handleClose}
+              minAmount={10000}
+            />
+          )}
+
+          {step === "qris" && (
+            <QRISDisplay
+              qrisUrl={qrisUrl}
+              amount={selectedAmount}
+              transactionId={transactionId}
+              expiresIn={expiresIn}
+              onSuccess={handlePaymentSuccess}
+              onCancel={handleClose}
+              onExpired={handleExpired}
+            />
+          )}
+
+          {step === "success" && <PaymentSuccess onComplete={() => {}} />}
+
+          {(step === "error" || step === "expired") && (
+            <PaymentError
+              error={error || "Pembayaran gagal atau expired"}
+              onRetry={handleRetry}
+              onClose={handleClose}
+            />
+          )}
+        </>
       )}
     </Modal>
   );

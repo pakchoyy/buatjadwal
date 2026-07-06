@@ -69,8 +69,8 @@ export default function Modal({
         <div className="rounded-2xl bg-white shadow-2xl">
           {/* Header */}
           {(title || showClose) && (
-            <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
-              {title && <h2 className="text-xl font-bold text-gray-900">{title}</h2>}
+            <div className="flex items-center justify-between border-b border-gray-200 px-4 py-2">
+              {title && <h2 className="text-sm font-bold text-gray-900">{title}</h2>}
               {showClose && (
                 <button
                   onClick={onClose}
@@ -84,7 +84,7 @@ export default function Modal({
           )}
 
           {/* Content */}
-          <div className="max-h-[80vh] overflow-y-auto p-6">{children}</div>
+          <div className="max-h-[75vh] overflow-y-auto p-4">{children}</div>
         </div>
       </div>
     </div>

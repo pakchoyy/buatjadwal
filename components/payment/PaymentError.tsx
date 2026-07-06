@@ -1,5 +1,6 @@
 "use client";
 
+import { XCircle } from "lucide-react";
 import Button from "@/components/ui/Button";
 
 interface PaymentErrorProps {
@@ -14,38 +15,26 @@ export default function PaymentError({
   onClose,
 }: PaymentErrorProps) {
   return (
-    <div className="space-y-6 py-4 text-center">
+    <div className="space-y-3 py-2 text-center">
       {/* Error Icon */}
       <div className="flex justify-center">
-        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-red-100">
-          <svg
-            className="h-10 w-10 text-red-600"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
+        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-red-100">
+          <XCircle size={28} className="text-red-600" />
         </div>
       </div>
 
       {/* Error Message */}
       <div>
-        <h2 className="text-xl font-bold text-gray-900">Pembayaran Gagal</h2>
-        <p className="mt-3 text-gray-600">{error}</p>
+        <h2 className="text-sm font-bold text-gray-900">Pembayaran Gagal</h2>
+        <p className="mt-2 text-xs text-gray-600">{error}</p>
       </div>
 
       {/* Actions */}
-      <div className="flex gap-3">
-        <Button onClick={onClose} variant="secondary" className="flex-1">
+      <div className="flex gap-2">
+        <Button onClick={onClose} variant="secondary" size="sm" className="flex-1">
           Tutup
         </Button>
-        <Button onClick={onRetry} variant="primary" className="flex-1">
+        <Button onClick={onRetry} variant="primary" size="sm" className="flex-1">
           Coba Lagi
         </Button>
       </div>

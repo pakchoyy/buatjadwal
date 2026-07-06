@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { Clock } from "lucide-react";
 import Button from "@/components/ui/Button";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
@@ -84,45 +85,45 @@ export default function QRISDisplay({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       {/* Title */}
       <div className="text-center">
-        <h2 className="text-2xl font-bold text-gray-900">
+        <h2 className="text-base font-bold text-gray-900">
           Scan QRIS untuk Donasi
         </h2>
-        <p className="mt-2 text-lg font-semibold text-teal-600">
+        <p className="mt-1 text-sm font-semibold text-teal-600">
           Rp{amount.toLocaleString("id-ID")}
         </p>
       </div>
 
       {/* QRIS Image */}
       <div className="flex justify-center">
-        <div className="rounded-2xl bg-white p-4 shadow-lg">
+        <div className="rounded-xl bg-white p-2 shadow-lg">
           <img
             src={qrisUrl}
             alt="QRIS Code"
-            className="h-64 w-64 object-contain"
+            className="h-44 w-44 object-contain"
           />
         </div>
       </div>
 
       {/* Timer */}
       <div className="text-center">
-        <div className="inline-flex items-center gap-2 rounded-full bg-amber-50 px-4 py-2 text-amber-800">
-          <span className="text-lg">⏱️</span>
-          <span className="font-mono text-lg font-semibold">
-            Berlaku: {formatTime(timeLeft)}
+        <div className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1.5 text-amber-800">
+          <Clock size={14} />
+          <span className="font-mono text-sm font-semibold">
+            {formatTime(timeLeft)}
           </span>
         </div>
       </div>
 
       {/* Status */}
       <div className="text-center">
-        <div className="flex items-center justify-center gap-3">
+        <div className="flex items-center justify-center gap-2">
           <LoadingSpinner size="sm" />
-          <span className="text-gray-600">Menunggu pembayaran...</span>
+          <span className="text-xs text-gray-600">Menunggu pembayaran...</span>
         </div>
-        <div className="mt-2 h-2 overflow-hidden rounded-full bg-gray-200">
+        <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-gray-200">
           <div
             className="h-full animate-pulse bg-gradient-to-r from-teal-500 to-cyan-500 transition-all"
             style={{ width: "60%" }}
@@ -131,10 +132,9 @@ export default function QRISDisplay({
       </div>
 
       {/* Instructions */}
-      <div className="rounded-lg bg-blue-50 p-4">
-        <p className="text-center text-sm text-blue-800">
-          ℹ️ Scan dengan aplikasi e-wallet Anda (Gopay, OVO, Dana, LinkAja,
-          ShopeePay, dll)
+      <div className="rounded-lg bg-blue-50 p-3">
+        <p className="text-center text-xs text-blue-800">
+          Scan dengan aplikasi e-wallet (Gopay, OVO, Dana, LinkAja, ShopeePay, dll)
         </p>
       </div>
 
