@@ -5,7 +5,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { CalendarRange, FileSpreadsheet, FileText, GraduationCap, Users } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Select from "@/components/ui/Select";
@@ -21,8 +21,13 @@ import {
   exportTeacherScheduleToXlsx,
 } from "@/lib/export";
 import { getDayLabel, formatDateTime } from "@/lib/utils";
-import PaymentModal from "@/components/ui/PaymentModal";
+import PaymentModal from "@/components/payment/PaymentModal";
 import { hasUserPaid } from "@/lib/payment-storage";
+import {
+  setPendingExport,
+  executePendingExport,
+  getPendingExportInfo,
+} from "@/lib/export-wrapper";
 import {
   ScheduleEntry,
   TimeSlot,
@@ -51,12 +56,13 @@ export default function UnifiedSchedulesPage() {
   const [school, setSchool] = useState<School | null>(null);
   
   const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [paymentExportType, setPaymentExportType] = useState("");
-
-  const printedAt = formatDateTime(Date.now());
+  const [showDonationBanner, setShowDonationBanner] = useState(true);
+  const [printedAt, setPrintedAt] = useState("");
 
   useEffect(() => {
     loadData();
+    setPrintedAt(formatDateTime(Date.now()));
+    setShowDonationBanner(!hasUserPaid());
   }, []);
 
   useEffect(() => {
@@ -111,45 +117,92 @@ export default function UnifiedSchedulesPage() {
     return subject ? subject.name : "-";
   };
 
-  const checkPaymentAndExport = useCallback((exportFn: () => void, exportType: string) => {
+  const handleExportPdf = () => {
     if (!school) return;
 
+    const executeExport = () => {
+      if (viewMode === "all") {
+        exportAllSchedulesToPdf(school.id, selectedDay);
+      } else if (viewMode === "teacher" && selectedTeacherId) {
+        exportTeacherScheduleToPdf(school.id, selectedTeacherId);
+      } else if (viewMode === "class" && selectedClassId) {
+        exportClassScheduleToPdf(school.id, selectedClassId);
+      }
+    };
+
     if (hasUserPaid()) {
-      exportFn();
+      executeExport();
     } else {
-      setPaymentExportType(exportType);
+      const exportType =
+        viewMode === "all"
+          ? "pdf-all"
+          : viewMode === "teacher"
+          ? "pdf-teacher"
+          : "pdf-class";
+      const metadata =
+        viewMode === "all"
+          ? { day: selectedDay }
+          : viewMode === "teacher"
+          ? { teacherId: selectedTeacherId }
+          : { classId: selectedClassId };
+
+      setPendingExport(executeExport, exportType as any, metadata);
       setShowPaymentModal(true);
     }
-  }, [school]);
-
-  const handleExportPdf = () => {
-    checkPaymentAndExport(() => {
-      if (viewMode === "all") {
-        exportAllSchedulesToPdf(school!.id, selectedDay);
-      } else if (viewMode === "teacher" && selectedTeacherId) {
-        exportTeacherScheduleToPdf(school!.id, selectedTeacherId);
-      } else if (viewMode === "class" && selectedClassId) {
-        exportClassScheduleToPdf(school!.id, selectedClassId);
-      }
-    }, "pdf");
   };
 
   const handleExportExcel = () => {
-    checkPaymentAndExport(() => {
+    if (!school) return;
+
+    const executeExport = () => {
       if (viewMode === "all") {
-        exportAllSchedulesToXlsx(school!.id, selectedDay);
+        exportAllSchedulesToXlsx(school.id, selectedDay);
       } else if (viewMode === "teacher" && selectedTeacherId) {
-        exportTeacherScheduleToXlsx(school!.id, selectedTeacherId);
+        exportTeacherScheduleToXlsx(school.id, selectedTeacherId);
       } else if (viewMode === "class" && selectedClassId) {
-        exportClassScheduleToXlsx(school!.id, selectedClassId);
+        exportClassScheduleToXlsx(school.id, selectedClassId);
       }
-    }, "excel");
+    };
+
+    if (hasUserPaid()) {
+      executeExport();
+    } else {
+      const exportType =
+        viewMode === "all"
+          ? "excel-single"
+          : viewMode === "teacher"
+          ? "excel-single"
+          : "excel-single";
+      const metadata =
+        viewMode === "all"
+          ? { day: selectedDay }
+          : viewMode === "teacher"
+          ? { teacherId: selectedTeacherId }
+          : { classId: selectedClassId };
+
+      setPendingExport(executeExport, exportType, metadata);
+      setShowPaymentModal(true);
+    }
   };
 
   const handleExportAllDaysExcel = () => {
-    checkPaymentAndExport(() => {
-      exportAllSchedulesToXlsxMultiSheet(school!.id);
-    }, "excel-multi");
+    if (!school) return;
+
+    const executeExport = () => {
+      exportAllSchedulesToXlsxMultiSheet(school.id);
+    };
+
+    if (hasUserPaid()) {
+      executeExport();
+    } else {
+      setPendingExport(executeExport, "excel-multi", {});
+      setShowPaymentModal(true);
+    }
+  };
+
+  const handlePaymentSuccess = () => {
+    executePendingExport();
+    setShowPaymentModal(false);
   };
 
   const selectedTeacher = teachers.find((t) => t.id === selectedTeacherId);
@@ -189,7 +242,7 @@ export default function UnifiedSchedulesPage() {
         {/* Sticky Header: Export + Hint + Cards */}
         <div className="sticky top-0 z-40 bg-white pb-4 shadow-sm print:static print:shadow-none">
           {/* Donation Banner */}
-          {!hasUserPaid() && (
+          {showDonationBanner && (
             <div className="mb-3 rounded-lg border border-teal-100 bg-teal-50 px-4 py-2.5 text-center print:hidden">
               <p className="text-sm text-teal-800">
                 💚 Dukung aplikasi ini dengan donasi untuk mendapatkan akses export
@@ -615,11 +668,15 @@ export default function UnifiedSchedulesPage() {
         )}
       </div>
 
-      <PaymentModal
-        isOpen={showPaymentModal}
-        onClose={() => setShowPaymentModal(false)}
-        exportType={paymentExportType}
-      />
+      {showPaymentModal && (
+        <PaymentModal
+          isOpen={showPaymentModal}
+          onClose={() => setShowPaymentModal(false)}
+          onSuccess={handlePaymentSuccess}
+          exportType={getPendingExportInfo().exportType || "pdf-all"}
+          exportMetadata={getPendingExportInfo().metadata || {}}
+        />
+      )}
     </>
   );
 }

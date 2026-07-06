@@ -3,6 +3,16 @@
  * Data storage: localStorage (Phase 1A)
  */
 
+// ==================== PAYMENT TYPES ====================
+
+export type ExportType = "pdf-class" | "pdf-teacher" | "pdf-all" | "excel-single" | "excel-multi";
+
+export interface ExportMetadata {
+  classId?: string;
+  teacherId?: string;
+  day?: Day;
+}
+
 // ==================== ENTITIES ====================
 
 export interface School {

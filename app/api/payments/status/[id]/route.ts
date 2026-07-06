@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "@/convex/_generated/api";
-import type { Id } from "@/convex/_generated/dataModel";
+import { Id } from "@/convex/_generated/dataModel";
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
@@ -14,12 +14,17 @@ export async function GET(
 
     if (!id) {
       return NextResponse.json(
-        { error: "Transaction ID is required" },
+        { error: "Transaction ID required" },
         { status: 400 }
       );
     }
 
-    const transaction = await convex.query(api.transactions.getById, { id: id as Id<"transactions"> });
+    console.log(`[API] Checking status for transaction: ${id}`);
+
+    // Query transaction from Convex
+    const transaction = await convex.query(api.transactions.getById, {
+      id: id as Id<"transactions">,
+    });
 
     if (!transaction) {
       return NextResponse.json(
@@ -28,27 +33,37 @@ export async function GET(
       );
     }
 
+    // Check if expired
+    const now = Date.now();
+    if (transaction.status === "pending" && transaction.expiresAt < now) {
+      // Auto-expire
+      await convex.mutation(api.transactions.updateStatus, {
+        id: id as Id<"transactions">,
+        status: "expired",
+      });
+
+      console.log(`[API] Transaction ${id} auto-expired`);
+
+      return NextResponse.json({
+        status: "expired",
+        message: "Pembayaran telah expired",
+      });
+    }
+
+    console.log(`[API] Transaction ${id} status: ${transaction.status}`);
+
     return NextResponse.json({
-      success: true,
-      data: {
-        id: transaction._id,
-        status: transaction.status,
-        amount: transaction.amount,
-        qrisUrl: transaction.qrisUrl,
-        exportType: transaction.exportType,
-        createdAt: transaction.createdAt,
-        updatedAt: transaction.updatedAt,
-        paidAt: transaction.paidAt,
-        expiresAt: transaction.expiresAt,
-      },
+      status: transaction.status,
+      amount: transaction.amount,
+      createdAt: transaction.createdAt,
+      expiresAt: transaction.expiresAt,
+      paidAt: transaction.paidAt,
     });
   } catch (error) {
     console.error("[API] Status check error:", error);
+
     return NextResponse.json(
-      {
-        error: "Gagal memeriksa status pembayaran",
-        details: error instanceof Error ? error.message : "Unknown error",
-      },
+      { error: "Gagal memeriksa status pembayaran" },
       { status: 500 }
     );
   }
