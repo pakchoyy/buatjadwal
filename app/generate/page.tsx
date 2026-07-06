@@ -44,6 +44,7 @@ export default function GeneratePage() {
 
     setIsGenerating(true);
     setAlert({ show: false, type: "info", message: "" });
+    const startTime = Date.now();
 
     try {
       // Create scheduler instance
@@ -53,6 +54,12 @@ export default function GeneratePage() {
       const scheduleResult = scheduler.generateSchedule();
 
       setResult(scheduleResult);
+
+      // Ensure loading shows for at least 800ms
+      const elapsed = Date.now() - startTime;
+      if (elapsed < 800) {
+        await new Promise(resolve => setTimeout(resolve, 800 - elapsed));
+      }
 
       if (scheduleResult.success) {
         setAlert({

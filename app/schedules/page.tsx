@@ -7,7 +7,7 @@
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { CalendarRange, FileSpreadsheet, FileText, GraduationCap, Info, Users } from "lucide-react";
+import { CalendarRange, FileSpreadsheet, FileText, GraduationCap, Users } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Select from "@/components/ui/Select";
 import { LocalDB } from "@/lib/db";
@@ -98,54 +98,64 @@ export default function SchedulesPage() {
 
   return (
     <>
-      {/* Action button */}
-      <div className="p-4 md:p-6 pb-0">
-        <div className="flex flex-col items-center gap-3">
-          <div className="flex flex-wrap justify-center gap-3">
-            <Button onClick={handleExportPdf} size="sm">
-              <FileText size={16} />
-              Export PDF
-            </Button>
-            <Button variant="success" onClick={handleExportExcel} size="sm">
-              <FileSpreadsheet size={16} />
-              Export Excel
-            </Button>
-            <Button variant="secondary" onClick={() => router.push("/schedules/teacher")} size="sm">
-              <Users size={16} />
-              Jadwal per Guru
-            </Button>
-            <Button variant="secondary" onClick={() => router.push("/schedules/class")} size="sm">
-              <GraduationCap size={16} />
-              Jadwal per Kelas
-            </Button>
-          </div>
-          <p className="text-center text-xs text-gray-500">
-            PDF diunduh langsung dalam format A4 landscape untuk hari {getDayLabel(selectedDay)}.
-          </p>
-        </div>
-      </div>
-
       <div className="p-4 md:p-6">
-        {/* Usage Info */}
-        <div className="mb-6 rounded-lg border border-teal-100 bg-teal-50 p-5 shadow-sm print:hidden">
-          <div className="mb-3 flex items-center gap-2 text-teal-800">
-            <Info size={18} />
-            <h2 className="text-lg font-bold">Cara Pakai Lihat Jadwal</h2>
+        {/* Export Buttons */}
+        <div className="mb-6 flex flex-wrap justify-center gap-3">
+          <Button onClick={handleExportPdf} size="sm">
+            <FileText size={16} />
+            Export PDF
+          </Button>
+          <Button variant="success" onClick={handleExportExcel} size="sm">
+            <FileSpreadsheet size={16} />
+            Export Excel
+          </Button>
+        </div>
+
+        {/* Hint */}
+        <div className="mb-6 rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-center text-sm text-blue-800 print:hidden">
+          📋 <strong>Pilih card di bawah untuk melihat jenis jadwal lain</strong>, lalu klik Export PDF/Excel untuk mencetak.
+        </div>
+
+        {/* Navigation Cards */}
+        <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3 print:hidden">
+          {/* Card Jadwal Umum (aktif) */}
+          <div className="rounded-lg border-2 border-teal-600 bg-teal-50 p-5 shadow-sm">
+            <div className="flex flex-col items-center text-center">
+              <CalendarRange size={32} className="mb-3 text-teal-600" />
+              <h3 className="text-lg font-bold text-teal-900">Jadwal Umum</h3>
+              <p className="mt-2 text-sm text-teal-700">
+                Semua kelas dalam satu tabel (halaman ini)
+              </p>
+            </div>
           </div>
-          <div className="grid gap-3 text-sm text-teal-900 md:grid-cols-3">
-            <div>
-              <p className="font-semibold">1. Pilih jenis jadwal</p>
-              <p className="mt-1 text-teal-700">Gunakan card &quot;Jadwal per Guru&quot; untuk jadwal mengajar satu guru, &quot;Jadwal per Kelas&quot; untuk jadwal lengkap satu kelas, atau &quot;Jadwal Umum&quot; (halaman ini) untuk semua kelas. Pilih hari untuk melihat jadwal Senin sampai Sabtu sesuai slot yang tersedia.</p>
+
+          {/* Card Jadwal per Guru */}
+          <button
+            onClick={() => router.push("/schedules/teacher")}
+            className="rounded-lg border border-gray-300 bg-white p-5 shadow-sm transition-all hover:border-teal-400 hover:shadow-md"
+          >
+            <div className="flex flex-col items-center text-center">
+              <Users size={32} className="mb-3 text-gray-600" />
+              <h3 className="text-lg font-bold text-gray-900">Jadwal per Guru</h3>
+              <p className="mt-2 text-sm text-gray-600">
+                Jadwal mengajar satu guru
+              </p>
             </div>
-            <div>
-              <p className="font-semibold">2. Cek bentrok</p>
-              <p className="mt-1 text-teal-700">Tabel menampilkan jadwal semua kelas agar mudah mengecek guru dan mapel di jam yang sama.</p>
+          </button>
+
+          {/* Card Jadwal per Kelas */}
+          <button
+            onClick={() => router.push("/schedules/class")}
+            className="rounded-lg border border-gray-300 bg-white p-5 shadow-sm transition-all hover:border-teal-400 hover:shadow-md"
+          >
+            <div className="flex flex-col items-center text-center">
+              <GraduationCap size={32} className="mb-3 text-gray-600" />
+              <h3 className="text-lg font-bold text-gray-900">Jadwal per Kelas</h3>
+              <p className="mt-2 text-sm text-gray-600">
+                Jadwal lengkap satu kelas
+              </p>
             </div>
-            <div>
-              <p className="font-semibold">3. Export jadwal</p>
-              <p className="mt-1 text-teal-700">Klik &quot;Export PDF&quot; untuk cetak atau &quot;Export Excel&quot; untuk edit lebih lanjut.</p>
-            </div>
-          </div>
+          </button>
         </div>
 
         {/* Day Selector */}
