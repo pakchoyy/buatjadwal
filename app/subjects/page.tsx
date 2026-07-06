@@ -5,7 +5,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus, Trash2, BookOpen } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
 import Input from "@/components/ui/Input";
@@ -143,10 +143,10 @@ export default function SubjectsPage() {
     <>
       {/* Action button */}
       <div className="p-4 md:p-6 pb-0">
-        <div className="flex justify-end">
+        <div className="flex justify-center">
           <Button onClick={handleCreate}>
             <Plus size={16} />
-            Tambah Mapel
+            Tambah Mata Pelajaran
           </Button>
         </div>
       </div>
@@ -165,10 +165,10 @@ export default function SubjectsPage() {
         {/* Search Bar */}
         <div className="mb-4">
           <Input
-            label=""
+            label="Cari Mata Pelajaran"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Cari mata pelajaran (nama/kode)..."
+            placeholder="Ketik nama atau kode mata pelajaran..."
           />
         </div>
 
@@ -176,9 +176,17 @@ export default function SubjectsPage() {
         <div className="bg-white rounded-lg shadow-sm overflow-hidden">
           {filteredSubjects.length === 0 ? (
             <div className="p-12 text-center">
-              <p className="text-gray-500">
-                {searchTerm ? "Tidak ada mata pelajaran yang ditemukan" : "Belum ada data mata pelajaran"}
-              </p>
+              <div className="flex flex-col items-center gap-3">
+                <BookOpen size={48} className="text-gray-300" />
+                <p className="text-gray-500">
+                  {searchTerm ? "Tidak ada mata pelajaran yang ditemukan" : "Belum ada data mata pelajaran"}
+                </p>
+                {!searchTerm && (
+                  <p className="text-sm text-gray-400">
+                    Klik tombol &quot;Tambah Mata Pelajaran&quot; di atas untuk memulai
+                  </p>
+                )}
+              </div>
             </div>
           ) : (
             <table className="min-w-full divide-y divide-gray-200">

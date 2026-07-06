@@ -5,7 +5,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus, Trash2, Users } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
 import Input from "@/components/ui/Input";
@@ -146,7 +146,7 @@ export default function TeachersPage() {
     <>
       {/* Action button */}
       <div className="p-4 md:p-6 pb-0">
-        <div className="flex justify-end">
+        <div className="flex justify-center">
           <Button onClick={handleCreate}>
             <Plus size={16} />
             Tambah Guru
@@ -168,10 +168,10 @@ export default function TeachersPage() {
         {/* Search Bar */}
         <div className="mb-4">
           <Input
-            label=""
+            label="Cari Guru"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Cari guru (nama/kode)..."
+            placeholder="Ketik nama atau kode guru..."
           />
         </div>
 
@@ -179,9 +179,17 @@ export default function TeachersPage() {
         <div className="bg-white rounded-lg shadow-sm overflow-hidden">
           {filteredTeachers.length === 0 ? (
             <div className="p-12 text-center">
-              <p className="text-gray-500">
-                {searchTerm ? "Tidak ada guru yang ditemukan" : "Belum ada data guru"}
-              </p>
+              <div className="flex flex-col items-center gap-3">
+                <Users size={48} className="text-gray-300" />
+                <p className="text-gray-500">
+                  {searchTerm ? "Tidak ada guru yang ditemukan" : "Belum ada data guru"}
+                </p>
+                {!searchTerm && (
+                  <p className="text-sm text-gray-400">
+                    Klik tombol &quot;Tambah Guru&quot; di atas untuk memulai
+                  </p>
+                )}
+              </div>
             </div>
           ) : (
             <table className="min-w-full divide-y divide-gray-200">

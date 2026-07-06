@@ -5,7 +5,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus, Trash2, ClipboardList } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
 import Input from "@/components/ui/Input";
@@ -169,7 +169,7 @@ export default function TeachingAllocationsPage() {
     <>
       {/* Action button */}
       <div className="p-4 md:p-6 pb-0">
-        <div className="flex justify-end">
+        <div className="flex justify-center">
           <Button onClick={handleCreate}>
             <Plus size={16} />
             Tambah Alokasi
@@ -192,7 +192,13 @@ export default function TeachingAllocationsPage() {
         <div className="bg-white rounded-lg shadow-sm overflow-hidden">
           {allocations.length === 0 ? (
             <div className="p-12 text-center">
-              <p className="text-gray-500">Belum ada data alokasi mengajar</p>
+              <div className="flex flex-col items-center gap-3">
+                <ClipboardList size={48} className="text-gray-300" />
+                <p className="text-gray-500">Belum ada data alokasi mengajar</p>
+                <p className="text-sm text-gray-400">
+                  Klik tombol &quot;Tambah Alokasi&quot; di atas untuk memulai
+                </p>
+              </div>
             </div>
           ) : (
             <div className="overflow-x-auto">
