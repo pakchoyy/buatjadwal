@@ -55,10 +55,10 @@ export default function GeneratePage() {
 
       setResult(scheduleResult);
 
-      // Ensure loading shows for at least 800ms
+      // Ensure loading shows for at least 1500ms
       const elapsed = Date.now() - startTime;
-      if (elapsed < 800) {
-        await new Promise(resolve => setTimeout(resolve, 800 - elapsed));
+      if (elapsed < 1500) {
+        await new Promise(resolve => setTimeout(resolve, 1500 - elapsed));
       }
 
       if (scheduleResult.success) {

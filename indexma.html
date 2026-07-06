@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Bantu Guru Yuk | Modul Ajar</title>
+<link rel="icon" href="../guru-cibisd2.png" sizes="192x192" type="image/png"/>
+<link rel="shortcut icon" href="../guru-cibisd2.png" type="image/png"/>
+<link rel="apple-touch-icon" href="../guru-cibisd2.png"/>
+<link rel="manifest" href="/modul-ajar/manifest.json"/>
+<meta name="theme-color" content="#0d9488"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-83WBBEE5BG"></script>
+<script>
+  window.dataLayer=window.dataLayer||[];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js',new Date());
+  gtag('config','G-83WBBEE5BG');
+  function gaEvent(n,p){if(typeof gtag==='function')gtag('event',n,p||{});}
+</script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --grad:linear-gradient(135deg,#0ea5a0,#0d7a8a,#2d6a7f);
+  --white:#fff;--gray-50:#f8fafc;--gray-100:#f1f5f9;--gray-200:#e2e8f0;
+  --gray-700:#334155;--blue:#0ea5a0;--radius:12px;
+  --shadow:0 2px 12px rgba(0,0,0,.08);--shadow-lg:0 8px 32px rgba(0,0,0,.13);
+  --bg:#f0f4f8;--card-bg:#fff;--text:#1e293b;
+  --text-light:#64748b;--border:#e2e8f0;--input-bg:#f8fafc;
+  --accent:#f59e0b;
+}
+body.dark{
+  --bg:#0f172a;--card-bg:#1e293b;--text:#f1f5f9;
+  --text-light:#94a3b8;--border:#334155;--input-bg:#0f172a;
+}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);min-height:100vh;color:var(--text);transition:background .3s,color .3s;display:flex;flex-direction:column;}
+
+/* LOADING */
+#loadingScreen{position:fixed;top:0;left:0;width:100%;height:100%;background:var(--grad);display:flex;flex-direction:column;justify-content:center;align-items:center;color:white;font-family:sans-serif;z-index:99999;}
+#loadingScreen img{width:64px;margin-bottom:14px;border-radius:16px;}
+#loadingScreen .ls-title{font-size:1.3rem;font-weight:800;letter-spacing:1px;}
+#loadingScreen .ls-sub{font-size:.8rem;margin-top:6px;opacity:.85;}
+.ls-spinner{width:32px;height:32px;border:3px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;margin-top:18px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* GENERATE OVERLAY */
+#generateOverlay{position:fixed;inset:0;z-index:9999;background:linear-gradient(135deg,#0d2137 0%,#0a3d4a 50%,#0d2137 100%);display:none;flex-direction:column;align-items:center;justify-content:center;gap:0;}
+#generateOverlay .go-orb{position:absolute;border-radius:50%;filter:blur(60px);animation:goOrb 4s ease-in-out infinite;}
+@keyframes goOrb{0%,100%{transform:scale(1) translate(0,0);opacity:.5;}50%{transform:scale(1.2) translate(10px,-10px);opacity:.8;}}
+#generateOverlay .go-orb1{width:300px;height:300px;background:radial-gradient(circle,#0ea5a066,transparent);top:-80px;left:-80px;animation-delay:0s;}
+#generateOverlay .go-orb2{width:250px;height:250px;background:radial-gradient(circle,#f59e0b44,transparent);bottom:-60px;right:-60px;animation-delay:1.5s;}
+#generateOverlay .go-orb3{width:180px;height:180px;background:radial-gradient(circle,#3b82f644,transparent);bottom:30%;right:15%;animation-delay:.8s;}
+#generateOverlay .go-logo{width:72px;height:72px;border-radius:20px;margin-bottom:24px;box-shadow:0 0 40px rgba(14,165,160,.5);}
+#generateOverlay .go-ring-wrap{position:relative;width:110px;height:110px;margin-bottom:28px;}
+#generateOverlay .go-ring{position:absolute;inset:0;border-radius:50%;border:3px solid transparent;}
+#generateOverlay .go-ring1{border-top-color:#0ea5a0;border-right-color:#0ea5a0;animation:goSpin1 1.2s linear infinite;}
+#generateOverlay .go-ring2{inset:12px;border-top-color:#f59e0b;border-left-color:#f59e0b;animation:goSpin2 1.8s linear infinite reverse;}
+#generateOverlay .go-ring3{inset:24px;border-top-color:#fff;animation:goSpin1 2.4s linear infinite;}
+#generateOverlay .go-icon{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:2rem;}
+@keyframes goSpin1{to{transform:rotate(360deg);}}
+@keyframes goSpin2{to{transform:rotate(360deg);}}
+#generateOverlay .go-title{font-size:1.5rem;font-weight:900;color:#fff;letter-spacing:.5px;text-align:center;margin-bottom:8px;}
+#generateOverlay .go-sub{font-size:.9rem;color:rgba(255,255,255,.7);text-align:center;margin-bottom:32px;font-style:italic;}
+#generateOverlay .go-msgs{min-height:28px;text-align:center;}
+#generateOverlay .go-msg{font-size:.82rem;color:#5eead4;font-weight:700;letter-spacing:.3px;animation:goMsgFade .5s ease;}
+@keyframes goMsgFade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+#generateOverlay .go-dots{display:flex;gap:8px;margin-top:24px;align-items:center;justify-content:center;}
+#generateOverlay .go-dot{width:8px;height:8px;border-radius:50%;background:#0ea5a0;animation:goDot 1.4s ease-in-out infinite;}
+#generateOverlay .go-dot:nth-child(2){background:#f59e0b;animation-delay:.2s;}
+#generateOverlay .go-dot:nth-child(3){background:#3b82f6;animation-delay:.4s;}
+@keyframes goDot{0%,80%,100%{transform:scale(.7);opacity:.5;}40%{transform:scale(1.2);opacity:1;}}
+#generateOverlay .go-bar-wrap{width:260px;height:4px;background:rgba(255,255,255,.1);border-radius:99px;overflow:hidden;margin-top:20px;}
+#generateOverlay .go-bar{height:100%;background:linear-gradient(90deg,#0ea5a0,#f59e0b,#3b82f6);border-radius:99px;animation:goBar 2.5s ease-in-out infinite;}
+@keyframes goBar{0%{width:0%;margin-left:0;}50%{width:70%;margin-left:0;}100%{width:0%;margin-left:100%;}}
+
+/* PRO WELCOME OVERLAY */
+#proWelcomeOverlay .pw-confetti{position:absolute;inset:0;overflow:hidden;pointer-events:none;}
+#proWelcomeOverlay .pw-confetti span{position:absolute;top:-20px;width:10px;height:10px;border-radius:2px;animation:pwFall linear infinite;}
+@keyframes pwFall{0%{transform:translateY(-20px) rotate(0deg);opacity:1;}100%{transform:translateY(110vh) rotate(720deg);opacity:0;}}
+#proWelcomeOverlay .pw-badge{background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;font-size:1rem;font-weight:900;padding:7px 22px;border-radius:99px;letter-spacing:2px;display:inline-block;margin-bottom:20px;box-shadow:0 4px 20px rgba(245,158,11,.5);animation:pwPulse 1.5s ease-in-out infinite;}
+@keyframes pwPulse{0%,100%{transform:scale(1);}50%{transform:scale(1.05);}}
+#proWelcomeOverlay .pw-emoji{font-size:3.5rem;margin-bottom:16px;animation:pwBounce .6s ease-in-out 4;}
+@keyframes pwBounce{0%,100%{transform:scale(1);}50%{transform:scale(1.3);}}
+#proWelcomeOverlay .pw-title{font-size:1.7rem;font-weight:900;color:#fff;margin-bottom:8px;letter-spacing:.5px;text-shadow:0 2px 20px rgba(245,158,11,.5);}
+#proWelcomeOverlay .pw-sub{font-size:.95rem;color:rgba(255,255,255,.8);margin-bottom:28px;line-height:1.9;}
+#proWelcomeOverlay .pw-features{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:32px;max-width:400px;}
+#proWelcomeOverlay .pw-feat{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;font-size:.8rem;font-weight:700;padding:7px 14px;border-radius:99px;}
+#proWelcomeOverlay .pw-btn{background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;border:none;border-radius:14px;padding:16px 42px;font-size:1rem;font-weight:900;cursor:pointer;box-shadow:0 6px 24px rgba(245,158,11,.45);letter-spacing:.5px;transition:transform .2s,box-shadow .2s;}
+#proWelcomeOverlay .pw-btn:hover{transform:translateY(-2px);box-shadow:0 10px 32px rgba(245,158,11,.6);}
+
+/* INSTALL POPUP */
+#installPopup{position:fixed;top:-90px;left:0;right:0;background:var(--grad);color:#fff;padding:12px 16px;text-align:center;transition:.4s;z-index:9998;font-size:.85rem;font-weight:600;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 3px 12px rgba(0,0,0,.2);}
+#installPopup.show{top:0;}
+#installPopup button{border:none;border-radius:8px;padding:5px 14px;font-weight:700;cursor:pointer;font-size:.8rem;}
+.btn-install{background:#fff;color:#2563eb;}
+.btn-install-close{background:rgba(255,255,255,.2);color:#fff;}
+
+/* HEADER */
+header{position:sticky;top:0;z-index:300;background:var(--grad);padding:0 16px;box-shadow:0 2px 10px rgba(0,0,0,.18);}
+body.dark header{background:linear-gradient(135deg,#0d4a47,#1a3a4a);}
+.header-inner{display:flex;align-items:center;justify-content:space-between;height:60px;}
+.header-brand{display:flex;align-items:center;gap:10px;min-width:0;flex:1;}
+.header-brand img{width:36px;height:36px;border-radius:10px;flex-shrink:0;}
+.header-brand-text h1{font-size:1rem;font-weight:800;color:#fff;line-height:1.2;}
+.header-brand-text p{font-size:.68rem;color:rgba(255,255,255,.8);font-weight:500;}
+.header-right{display:flex;align-items:center;gap:6px;position:relative;flex-shrink:0;}
+.hdr-btn{height:32px;width:36px;border-radius:8px;border:1.5px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);color:#fff;cursor:pointer;font-size:1rem;transition:background .2s;display:flex;align-items:center;justify-content:center;}
+.hdr-btn:hover{background:rgba(255,255,255,.22);}
+.hdr-menu-btn{height:32px;width:36px;border-radius:8px;border:1.5px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);color:#fff;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;position:relative;}
+.hdr-menu-badge{position:absolute;top:-4px;right:-4px;background:#ef4444;color:#fff;border-radius:99px;padding:0 4px;font-size:.55rem;font-weight:800;line-height:14px;min-width:14px;text-align:center;display:none;}
+.dropdown-menu{position:absolute;top:calc(100% + 8px);right:0;background:var(--card-bg);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow-lg);min-width:180px;overflow:hidden;display:none;z-index:400;}
+.dropdown-menu.open{display:block;}
+.dropdown-item{display:flex;align-items:center;gap:10px;padding:11px 16px;font-size:.83rem;font-weight:600;color:var(--text);cursor:pointer;transition:background .15s;border:none;background:none;width:100%;text-align:left;}
+.dropdown-item:hover{background:var(--gray-100);}
+body.dark .dropdown-item:hover{background:rgba(255,255,255,.06);}
+.dropdown-item.active{color:var(--blue);}
+.dropdown-divider{height:1px;background:var(--border);margin:4px 0;}
+.dropdown-badge{background:#ef4444;color:#fff;border-radius:99px;padding:0 5px;font-size:.6rem;font-weight:800;line-height:16px;display:inline-block;min-width:16px;text-align:center;margin-left:auto;}
+.badge-pro{display:inline-block;background:linear-gradient(135deg,#d97706,#b45309);color:#fff;font-size:.6rem;font-weight:800;padding:2px 8px;border-radius:99px;margin-left:6px;vertical-align:middle;}
+.badge-free{display:inline-block;background:#64748b;color:#fff;font-size:.6rem;font-weight:800;padding:2px 8px;border-radius:99px;margin-left:6px;vertical-align:middle;}
+
+/* MAIN */
+main{max-width:1200px;margin:0 auto;padding:20px;width:100%;flex:1;}
+@media(max-width:640px){main{padding:10px;}}
+.card{background:var(--card-bg);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;margin-bottom:12px;border:1px solid var(--border);}
+.card-title{font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:12px;display:flex;align-items:center;gap:6px;border-bottom:1px solid var(--border);padding-bottom:8px;}
+.two-col{display:grid;grid-template-columns:380px 1fr;gap:16px;align-items:start;}
+@media(max-width:900px){.two-col{grid-template-columns:1fr;}}
+.col-left{display:flex;flex-direction:column;gap:12px;}
+.col-right{position:sticky;top:80px;}
+
+/* FORM */
+.form-group{margin-bottom:10px;}
+label{display:block;font-size:.69rem;font-weight:700;color:var(--text-light);margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px;}
+input[type=text],input[type=email],select,textarea{width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:.83rem;color:var(--text);background:var(--input-bg);transition:border-color .2s,background .3s;outline:none;font-family:inherit;}
+input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,130,246,.12);}
+textarea{resize:vertical;}
+.row-2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+@media(max-width:500px){.row-2{grid-template-columns:1fr;}}
+.dim-checks{display:flex;flex-wrap:wrap;gap:5px;margin-top:2px;}
+.dim-chip{display:flex;align-items:center;gap:4px;padding:4px 10px;border:1.5px solid var(--border);border-radius:99px;font-size:.72rem;font-weight:600;color:var(--text-light);cursor:pointer;transition:all .18s;background:var(--input-bg);}
+.dim-chip input{display:none;}
+.dim-chip:has(input:checked){background:#cff0ef;border-color:#0ea5a0;color:#0d6e6a;}
+body.dark .dim-chip:has(input:checked){background:#0d3a47;color:#5eead4;border-color:#0ea5a0;}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 13px;border-radius:8px;border:none;font-weight:600;font-size:.8rem;cursor:pointer;transition:all .2s;}
+.btn-primary{background:var(--grad);color:#fff;width:100%;justify-content:center;padding:12px;font-size:.9rem;border-radius:10px;box-shadow:0 4px 14px rgba(37,99,235,.3);}
+.btn-primary:hover{transform:translateY(-1px);}
+.btn-primary:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+.btn-gemini{background:linear-gradient(135deg,#4285f4,#34a853);color:#fff;flex:1;justify-content:center;padding:10px;font-size:.85rem;border-radius:9px;}
+.btn-claude{background:linear-gradient(135deg,#d97706,#b45309);color:#fff;flex:1;justify-content:center;padding:10px;font-size:.85rem;border-radius:9px;}
+.btn-copy{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;width:100%;justify-content:center;padding:11px;font-size:.88rem;border-radius:9px;}
+.prompt-result{background:var(--input-bg);border:1.5px solid var(--border);border-radius:10px;padding:14px;font-size:.8rem;color:var(--text);white-space:pre-wrap;line-height:1.75;min-height:200px;max-height:500px;overflow-y:auto;font-family:'Courier New',monospace;}
+body.dark .prompt-result{background:#0f172a;}
+.prompt-placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:300px;color:var(--text-light);gap:10px;}
+.prompt-placeholder .ph-icon{font-size:2.5rem;opacity:.4;}
+.prompt-placeholder p{font-size:.82rem;text-align:center;}
+.notif-box{background:#dcfce7;color:#15803d;border:1px solid #86efac;border-radius:8px;padding:8px 12px;font-size:.78rem;font-weight:600;text-align:center;display:none;margin-top:8px;}
+.aktivasi-box{border:1.5px dashed #0ea5a0;border-radius:10px;padding:12px 14px;background:rgba(14,165,160,.04);margin-top:8px;}
+.histori-item{border:1px solid var(--border);border-radius:9px;padding:11px 13px;margin-bottom:7px;background:var(--input-bg);cursor:pointer;transition:all .2s;}
+.histori-item:hover{border-color:var(--blue);background:rgba(59,130,246,.04);}
+.histori-item .hi-meta{font-size:.69rem;color:var(--text-light);margin-bottom:2px;}
+.histori-item .hi-preview{font-size:.8rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.error-box{background:#fef2f2;border:1px solid #fca5a5;color:#dc2626;padding:9px 12px;border-radius:8px;font-size:.79rem;display:none;margin-bottom:10px;}
+.hint-bar{background:rgba(14,165,160,.08);border:1.5px solid rgba(14,165,160,.25);border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:.76rem;color:var(--text);line-height:1.8;}
+.hint-bar span{font-weight:700;color:#0d7a8a;}
+body.dark .hint-bar span{color:#5eead4;}
+.limit-bar-wrap{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);border-radius:8px;padding:7px 11px;font-size:.74rem;color:#92400e;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+body.dark .limit-bar-wrap{color:#fcd34d;}
+footer{background:var(--grad);color:#fff;text-align:center;padding:14px 20px 10px;margin-top:auto;}
+footer .footer-title{font-size:.84rem;font-weight:700;margin-bottom:2px;}
+footer .footer-sub{font-size:.7rem;color:rgba(255,255,255,.8);}
+footer a{color:inherit;text-decoration:underline;}
+#menuOverlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:250;}
+#menuOverlay.open{display:block;}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="loadingScreen">
+  <img src="../guru-cibisd2.png" alt="Logo"/>
+  <div class="ls-title">Bantu Guru Yuk</div>
+  <div class="ls-sub">Modul Ajar SD &bull; Generator Prompt AI</div>
+  <div class="ls-spinner"></div>
+</div>
+
+<!-- GENERATE OVERLAY -->
+<div id="generateOverlay">
+  <div class="go-orb go-orb1"></div>
+  <div class="go-orb go-orb2"></div>
+  <div class="go-orb go-orb3"></div>
+  <img src="../guru-cibisd2.png" alt="Logo" class="go-logo" onerror="this.style.display='none'"/>
+  <div class="go-ring-wrap">
+    <div class="go-ring go-ring1"></div>
+    <div class="go-ring go-ring2"></div>
+    <div class="go-ring go-ring3"></div>
+    <div class="go-icon">📝</div>
+  </div>
+  <div class="go-title">Menyusun Prompt Modul</div>
+  <div class="go-sub">Sabar ya... AI lagi racik prompt terbaik! 🧠</div>
+  <div class="go-msgs"><div class="go-msg" id="goMsg">Menyiapkan struktur modul ajar...</div></div>
+  <div class="go-dots">
+    <div class="go-dot"></div>
+    <div class="go-dot"></div>
+    <div class="go-dot"></div>
+  </div>
+  <div class="go-bar-wrap"><div class="go-bar"></div></div>
+</div>
+
+<!-- PRO WELCOME OVERLAY -->
+<div id="proWelcomeOverlay" style="display:none;position:fixed;inset:0;z-index:99999;background:linear-gradient(135deg,#0d2137 0%,#0a3d4a 40%,#1a1a2e 100%);flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;">
+  <div class="pw-confetti" id="pwConfetti"></div>
+  <div class="pw-glow" style="position:absolute;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(245,158,11,.18),transparent 70%);top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;"></div>
+  <div class="pw-badge">✨ BGY PRO</div>
+  <div class="pw-emoji" id="pwEmoji">🎉</div>
+  <div class="pw-title">Selamat, Pak/Bu Guru!</div>
+  <div class="pw-sub">Kamu sekarang sudah jadi<br/><strong style="color:#f59e0b;">Member Pro BGY — Modul Ajar</strong><br/>Nikmati semua fitur tanpa batas! 🚀</div>
+  <div class="pw-features">
+    <span class="pw-feat">⚡ Generate Unlimited</span>
+    <span class="pw-feat">📋 Salin 1 Klik</span>
+    <span class="pw-feat">🚀 Buka Claude</span>
+    <span class="pw-feat">📚 Kurikulum Merdeka</span>
+  </div>
+  <button class="pw-btn" onclick="closeProWelcome()">Ayo Mulai Buat Modul! 🚀</button>
+</div>
+
+<!-- INSTALL POPUP -->
+<div id="installPopup">
+  <span>📲 Install aplikasi Bantu Guru Yuk</span>
+  <button class="btn-install" onclick="installApp()">Install</button>
+  <button class="btn-install-close" onclick="closeInstall()">✕</button>
+</div>
+
+<div id="menuOverlay" onclick="closeMenu()"></div>
+
+<!-- HEADER -->
+<header>
+  <div class="header-inner">
+    <div class="header-brand">
+      <img src="../guru-cibisd2.png" alt="Logo"/>
+      <div class="header-brand-text">
+        <h1>Bantu Guru Yuk | Modul Ajar <span id="hBadge" class="badge-free">FREE</span></h1>
+      </div>
+    </div>
+    <div class="header-right">
+      <button id="darkBtn" class="hdr-btn" onclick="toggleDark()" title="Mode gelap/terang">🌙</button>
+      <button class="hdr-menu-btn" onclick="toggleMenu()" title="Menu">
+        ☰
+        <span id="menuBadge" class="hdr-menu-badge"></span>
+      </button>
+      <div class="dropdown-menu" id="dropdownMenu">
+        <button class="dropdown-item active" id="mi-home" onclick="selectTab('home');closeMenu()">🏠 Home</button>
+        <button class="dropdown-item" id="mi-histori" onclick="selectTab('histori');closeMenu()">
+          🕒 Histori
+          <span id="historiBadge" class="dropdown-badge" style="display:none;"></span>
+        </button>
+        <button class="dropdown-item" id="mi-tentang" onclick="selectTab('tentang');closeMenu()">ℹ️ Tentang</button>
+        <button class="dropdown-item" id="mi-kontak" onclick="selectTab('kontak');closeMenu()">📬 Kontak</button>
+        <button class="dropdown-item" onclick="installApp();closeMenu()">📲 Install BGY</button>
+        <div class="dropdown-divider"></div>
+        <a class="dropdown-item" href="https://bantuguruyuk.web.id" target="_blank" rel="noopener" onclick="event.stopPropagation()">
+          🌐 BantuGuruYuk
+        </a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- TAB TENTANG -->
+<div id="tab-tentang" style="display:none;">
+<main>
+  <div class="card">
+    <div class="card-title">ℹ️ Tentang Aplikasi</div>
+    <p style="font-size:.82rem;color:var(--text-light);margin-bottom:10px;">Bantu Guru Yuk — Modul Ajar v26.5.2</p>
+    <p style="font-size:.85rem;color:var(--text);line-height:1.8;margin-bottom:12px;"><b>Generator Prompt Modul Ajar SD</b> membantu guru SD membuat prompt siap pakai untuk di-paste ke Claude atau Gemini, menghasilkan Modul Ajar lengkap sesuai <b>Kurikulum Merdeka</b>.</p>
+    <h4 style="font-size:.82rem;font-weight:700;margin:12px 0 6px;">✨ Fitur</h4>
+    <ul style="font-size:.82rem;color:var(--text);line-height:2.2;padding-left:18px;">
+      <li>Generate prompt Modul Ajar SD siap pakai</li>
+      <li>Sesuai Kurikulum Merdeka (Kemendikdasmen)</li>
+      <li>Salin 1 klik → paste ke Claude atau Gemini</li>
+      <li>Histori 20 prompt terakhir</li>
+    </ul>
+  </div>
+</main>
+</div>
+
+<!-- TAB HISTORI -->
+<div id="tab-histori" style="display:none;">
+<main>
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+      <div class="card-title" style="margin-bottom:0;border:none;padding:0;">🕒 Histori Prompt</div>
+      <button onclick="hapusSemuaHistori()" style="background:#fee2e2;color:#dc2626;border:none;border-radius:7px;padding:5px 11px;font-size:.74rem;font-weight:700;cursor:pointer;">🗑️ Hapus Semua</button>
+    </div>
+    <div id="historiList"><div style="text-align:center;padding:36px 0;color:var(--text-light);font-size:.85rem;">Belum ada histori. Generate dulu ya! 😊</div></div>
+  </div>
+</main>
+</div>
+
+<!-- TAB KONTAK -->
+<div id="tab-kontak" style="display:none;">
+<main>
+  <div class="card">
+    <div class="card-title">📬 Kontak</div>
+    <p style="font-size:.84rem;color:var(--text);line-height:1.7;margin-bottom:14px;">Untuk bantuan, kritik, saran, atau aktivasi Pro:</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <button onclick="window.open('https://wa.me/6289530713597')" style="background:#25D366;color:#fff;border:none;padding:10px 20px;border-radius:9px;font-weight:700;cursor:pointer;font-size:.85rem;">💬 WhatsApp</button>
+      <button onclick="window.open('https://tiktok.com/@pak.choyy')" style="background:#000;color:#fff;border:none;padding:10px 20px;border-radius:9px;font-weight:700;cursor:pointer;font-size:.85rem;">🎵 TikTok</button>
+    </div>
+  </div>
+</main>
+</div>
+
+<!-- TAB HOME -->
+<div id="tab-home">
+<main>
+
+  <div class="hint-bar">
+    💡 <span>Isi form</span> → <span>Klik Generate</span> → <span>Prompt siap muncul</span> → <span>Salin & paste ke Claude 🎉</span>
+  </div>
+
+  <div class="two-col">
+    <!-- ============ KOLOM KIRI: FORM ============ -->
+    <div class="col-left">
+      <div class="card">
+        <div class="card-title">📋 Identitas Modul Ajar</div>
+
+        <div class="form-group">
+          <label>Nama Sekolah</label>
+          <input type="text" id="namaSekolah" placeholder="Contoh: SD Negeri 1 Magetan"/>
+        </div>
+
+        <div class="row-2">
+          <div class="form-group">
+            <label>Nama Penyusun</label>
+            <input type="text" id="namaPenyusun" placeholder="Nama guru..."/>
+          </div>
+          <div class="form-group">
+            <label>Semester</label>
+            <select id="semester">
+              <option value="Semester 1 (Ganjil)">Semester 1 (Ganjil)</option>
+              <option value="Semester 2 (Genap)">Semester 2 (Genap)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Mata Pelajaran</label>
+          <select id="mapel" onchange="toggleMapelManual(this.value)">
+            <option value="">-- Pilih Mata Pelajaran --</option>
+          </select>
+        </div>
+
+        <div class="row-2">
+          <div class="form-group">
+            <label>Fase / Kelas</label>
+            <select id="faseKelas" onchange="onFaseChange()">
+              <option value="Fase A / Kelas 1 SD">Fase A / Kelas 1</option>
+              <option value="Fase A / Kelas 2 SD">Fase A / Kelas 2</option>
+              <option value="Fase B / Kelas 3 SD">Fase B / Kelas 3</option>
+              <option value="Fase B / Kelas 4 SD">Fase B / Kelas 4</option>
+              <option value="Fase C / Kelas 5 SD" selected>Fase C / Kelas 5</option>
+              <option value="Fase C / Kelas 6 SD">Fase C / Kelas 6</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Alokasi Waktu</label>
+            <input type="text" id="alokasiWaktu" placeholder="Misal: 2 x 35 menit" oninput="this.dataset.edited='1'"/>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Topik / Materi Pokok</label>
+          <input type="text" id="topikMateri" placeholder="Contoh: Bilangan Bulat, Teks Deskripsi, Gaya dan Gerak..."/>
+        </div>
+
+        <div class="form-group">
+          <label>Model / Pendekatan Pembelajaran</label>
+          <select id="modelPembelajaran">
+            <option value="Deep Learning + Problem Based Learning (PBL)">Deep Learning + Problem Based Learning (PBL)</option>
+            <option value="Deep Learning + Project Based Learning (PjBL)">Deep Learning + Project Based Learning (PjBL)</option>
+            <option value="Discovery Learning">Discovery Learning</option>
+            <option value="Project Based Learning (PjBL)">Project Based Learning (PjBL)</option>
+            <option value="Problem Based Learning (PBL)">Problem Based Learning (PBL)</option>
+            <option value="Cooperative Learning">Cooperative Learning</option>
+            <option value="Inquiry Learning">Inquiry Learning</option>
+            <option value="Kontekstual / Kontextual Teaching Learning (CTL)">Kontekstual (CTL)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Profil Pelajar Pancasila</label>
+          <div class="dim-checks">
+            <label class="dim-chip"><input type="checkbox" class="cb-p5" value="Beriman, Bertakwa kepada Tuhan YME dan Berakhlak Mulia"/>Beriman &amp; Berakhlak</label>
+            <label class="dim-chip"><input type="checkbox" class="cb-p5" value="Berkebinekaan Global" checked/>Berkebinekaan Global</label>
+            <label class="dim-chip"><input type="checkbox" class="cb-p5" value="Bergotong Royong" checked/>Bergotong Royong</label>
+            <label class="dim-chip"><input type="checkbox" class="cb-p5" value="Mandiri"/>Mandiri</label>
+            <label class="dim-chip"><input type="checkbox" class="cb-p5" value="Bernalar Kritis" checked/>Bernalar Kritis</label>
+            <label class="dim-chip"><input type="checkbox" class="cb-p5" value="Kreatif"/>Kreatif</label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Karakteristik Siswa <span style="font-size:.65rem;color:var(--text-light);font-weight:400;">(opsional)</span></label>
+          <textarea id="karakteristikSiswa" rows="2" placeholder="Contoh: Reguler, mayoritas visual, ada siswa berkebutuhan khusus..."></textarea>
+        </div>
+
+      </div>
+
+      <div id="errorBox" class="error-box"></div>
+
+      <div id="errorBox" class="error-box" style="display:none;margin-bottom:8px;"></div>
+
+      <button class="btn btn-primary" id="btnGenerate" onclick="generatePrompt()">
+        <span id="btnLabel">✨ Generate Prompt Modul Ajar</span>
+      </button>
+      <div id="limitInfo" style="font-size:.75rem;text-align:center;margin-top:5px;color:#64748b;min-height:16px;"></div>
+      <div id="limitReset" style="font-size:.68rem;text-align:center;color:var(--text-light);margin-top:2px;font-style:italic;">(reset tiap tengah malam)</div>
+
+      <!-- AKTIVASI PRO -->
+      <div id="aktivasiBox" style="margin-top:12px;border:2px solid #f59e0b;border-radius:14px;overflow:hidden;box-shadow:0 2px 12px rgba(245,158,11,.15);">
+        <div style="background:linear-gradient(135deg,#f59e0b,#d97706);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;">
+          <div style="font-size:.8rem;font-weight:800;color:#fff;display:flex;align-items:center;gap:6px;">
+            🔓 <span>Aktivasi Pro</span>
+            <span style="background:rgba(255,255,255,.25);font-size:.6rem;padding:1px 7px;border-radius:99px;font-weight:700;letter-spacing:.5px;">UNLIMITED</span>
+          </div>
+          <a href="https://bantuguruyuk.web.id/aktvs-ma.html" target="_blank"
+            style="font-size:.65rem;font-weight:700;color:#fff;background:rgba(255,255,255,.2);padding:3px 9px;border-radius:99px;text-decoration:none;border:1px solid rgba(255,255,255,.4);">
+            Beli Pro →
+          </a>
+        </div>
+        <div style="padding:12px 14px;background:linear-gradient(135deg,rgba(245,158,11,.04),rgba(14,165,160,.04));">
+          <!-- MODE 1: Input kode -->
+          <div id="modeKode" style="display:none;">
+            <div style="font-size:.72rem;color:var(--text-light);margin-bottom:8px;font-weight:600;">✉️ Masukkan email + kode aktivasi kamu:</div>
+            <div style="display:flex;flex-direction:column;gap:7px;">
+              <input type="email" id="inputEmailKode" placeholder="Email pembelian..."
+                style="width:100%;padding:8px 11px;border:2px solid var(--border);border-radius:9px;font-size:.82rem;background:var(--input-bg);color:var(--text);outline:none;transition:border-color .2s;"
+                onfocus="this.style.borderColor='#f59e0b'" onblur="this.style.borderColor='var(--border)'"/>
+              <div style="display:flex;gap:6px;">
+                <input type="text" id="inputKodeAktivasi" placeholder="BGY-XXXXX"
+                  style="flex:1;padding:8px 11px;border:2px solid var(--border);border-radius:9px;font-size:.85rem;font-weight:700;font-family:monospace;letter-spacing:2px;background:var(--input-bg);color:var(--text);outline:none;text-transform:uppercase;transition:border-color .2s;"
+                  onfocus="this.style.borderColor='#f59e0b'" onblur="this.style.borderColor='var(--border)'"/>
+                <button onclick="verifikasiKode()"
+                  style="background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;border:none;border-radius:9px;padding:8px 15px;font-size:.82rem;font-weight:800;cursor:pointer;white-space:nowrap;box-shadow:0 2px 8px rgba(245,158,11,.35);">
+                  🔑 Aktifkan
+                </button>
+              </div>
+            </div>
+            <div style="font-size:.67rem;color:var(--text-light);margin-top:7px;text-align:center;">
+              Sudah pernah aktivasi? <a href="#" onclick="tampilModeEmail();return false;" style="color:#d97706;font-weight:700;">Cek pakai email</a>
+            </div>
+          </div>
+          <!-- MODE 2: Cek email (default) -->
+          <div id="modeEmail" style="display:block;">
+            <div style="font-size:.72rem;color:var(--text-light);margin-bottom:7px;">Sudah beli? Masukkan email pembelian untuk cek status:</div>
+            <div style="display:flex;gap:6px;">
+              <input type="email" id="inputEmailPro" placeholder="Email pembelian..."
+                style="flex:1;padding:8px 11px;border:2px solid var(--border);border-radius:9px;font-size:.82rem;background:var(--input-bg);color:var(--text);outline:none;transition:border-color .2s;"
+                onfocus="this.style.borderColor='#0ea5a0'" onblur="this.style.borderColor='var(--border)'"/>
+              <button onclick="cekAksesPro()"
+                style="background:linear-gradient(135deg,#0ea5a0,#0d7a8a);color:#fff;border:none;border-radius:9px;padding:8px 14px;font-size:.82rem;font-weight:800;cursor:pointer;box-shadow:0 2px 8px rgba(14,165,160,.3);">
+                Cek
+              </button>
+            </div>
+            <div style="font-size:.67rem;color:var(--text-light);margin-top:7px;text-align:center;">
+              Punya kode aktivasi? <a href="#" onclick="tampilModeKode();return false;" style="color:#d97706;font-weight:700;">Masukkan kode</a>
+            </div>
+          </div>
+          <div id="aktivasiMsg" style="font-size:.73rem;margin-top:8px;min-height:14px;font-weight:600;"></div>
+        </div>
+      </div>
+
+    </div><!-- /col-left -->
+
+    <!-- ============ KOLOM KANAN: PROMPT OUTPUT ============ -->
+    <div class="col-right">
+      <div class="card" id="hasilCard">
+        <div class="card-title">📄 Prompt Siap Pakai</div>
+
+        <div class="prompt-placeholder" id="promptPlaceholder">
+          <div class="ph-icon">📝</div>
+          <p>Isi form di kiri lalu klik<br/><b>Generate Prompt Modul Ajar</b><br/><span style="font-size:.74rem;opacity:.7;">Prompt siap paste ke Claude</span></p>
+        </div>
+
+        <div id="promptContent" style="display:none;">
+          <div class="prompt-result" id="hasilPrompt"></div>
+          <div style="margin-top:10px;display:flex;flex-direction:column;gap:7px;">
+            <button class="btn btn-copy" onclick="copyPrompt()">📋 Salin Prompt</button>
+            <div class="notif-box" id="notifCopy">✅ Prompt berhasil disalin!</div>
+          </div>
+          <div style="margin-top:10px;background:rgba(14,165,160,.07);border:1.5px solid rgba(14,165,160,.2);border-radius:10px;padding:10px 12px;">
+            <div style="font-size:.72rem;font-weight:700;color:#0d7a8a;margin-bottom:7px;">🚀 Kirim ke Claude — Prompt otomatis tersalin, langsung paste!</div>
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-claude" style="width:100%;" onclick="openAI('claude')">🧡 Buka Claude</button>
+            </div>
+            <div style="font-size:.68rem;color:var(--text-light);margin-top:6px;">Setelah terbuka, tekan <b>Ctrl+V</b> (atau tahan layar → Tempel) lalu kirim.</div>
+            <div style="font-size:.68rem;color:#b45309;margin-top:5px;font-weight:600;">⚠️ Jika terkena limit Claude, silahkan coba ganti akun Claude.</div>
+          </div>
+          <div id="generateFeedback" style="font-size:.75rem;text-align:center;margin-top:6px;min-height:14px;color:#15803d;"></div>
+        </div>
+
+      </div>
+    </div><!-- /col-right -->
+
+  </div>
+</main>
+</div>
+
+<footer>
+  <div class="footer-title">Modul Ajar SD • Kurikulum Merdeka</div>
+  <div class="footer-sub">© 2026 Bantu Guru Yuk by <a href="https://www.tiktok.com/@pak.choyy" target="_blank">pak.choyy</a> &bull; v26.5.2</div>
+
+</footer>
+
+<!-- UPGRADE POPUP -->
+<div id="upgradePopup" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:99999;align-items:center;justify-content:center;">
+  <div style="background:var(--card-bg);border-radius:18px;padding:30px 24px;max-width:340px;width:90%;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,.3);position:relative;">
+    <div style="font-size:2.2rem;margin-bottom:10px;">🔒</div>
+    <div style="font-weight:800;font-size:1.05rem;margin-bottom:8px;color:var(--text)">Fitur Khusus PRO</div>
+    <div style="font-size:.85rem;color:var(--text-light);margin-bottom:22px;line-height:1.6">
+      Tombol <strong>Salin Prompt</strong> dan <strong>Buka AI</strong> hanya untuk member PRO.<br><br>
+      <div style="background:rgba(14,165,160,.08);border:1.5px solid rgba(14,165,160,.25);border-radius:10px;padding:10px 12px;margin-bottom:14px;text-align:left;">
+        <div style="font-size:.76rem;font-weight:700;color:#0d7a8a;margin-bottom:5px;">💡 Untuk pengguna Free:</div>
+        <div style="font-size:.75rem;color:var(--text);line-height:1.7;">Silakan <b>salin prompt secara manual</b> (tekan lama → Pilih Semua → Salin), lalu paste ke <b>Claude</b> atau AI lainnya.</div>
+      </div>
+      Upgrade ke PRO untuk salin 1 klik + generate unlimited tanpa batas!
+    </div>
+    <a href="https://lynk.id/kreacy/y8eol1jk91g6" target="_blank"
+      style="display:block;background:linear-gradient(135deg,#d97706,#b45309);color:#fff;border-radius:10px;padding:11px 0;font-weight:800;font-size:.92rem;text-align:center;width:100%;margin-bottom:10px;text-decoration:none;">
+      🚀 Upgrade ke PRO Sekarang
+    </a>
+    <button onclick="document.getElementById('upgradePopup').style.display='none';"
+      style="background:var(--gray-100);color:var(--text-light);border:none;border-radius:10px;padding:9px 0;font-size:.82rem;cursor:pointer;width:100%;">
+      Nanti saja
+    </button>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// KONFIGURASI
+// ============================================================
+const DAILY_LIMIT = 1;
+const STORAGE_KEY_HISTORI = 'bgy_ma_histori';
+const STORAGE_KEY_LIMIT   = 'bgy_ma_limit';
+let _isPro = false;
+
+const sbClient = window.supabase.createClient(
+  "https://xtmpiqpmwirsrcsphsto.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh0bXBpcXBtd2lyc3Jjc3Boc3RvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0OTkyODMsImV4cCI6MjA5MzA3NTI4M30.yk1ZW3fxKn2lLoalJt97l34a80ERaGiVTIt09titk-w"
+);
+
+// ============================================================
+// MAPEL DINAMIS BERDASARKAN FASE
+// (harus di atas init agar tidak ReferenceError)
+// ============================================================
+const MAPEL_PER_FASE={
+  A:['Bahasa Indonesia','Matematika','PPKn','PJOK','Seni Budaya','Pendidikan Agama Islam','Bahasa Inggris','Lainnya'],
+  B:['Bahasa Indonesia','Matematika','IPAS','PPKn','PJOK','Seni Budaya','Pendidikan Agama Islam','Bahasa Inggris','Lainnya'],
+  C:['Bahasa Indonesia','Matematika','IPAS','PPKn','PJOK','Seni Budaya','Pendidikan Agama Islam','Bahasa Inggris','Lainnya'],
+};
+const ALOKASI_PER_FASE={A:'2 x 35 menit',B:'3 x 35 menit',C:'3 x 35 menit'};
+let _mapelLainnyaActive=false;
+
+function getFaseFromValue(val){
+  if(val.startsWith('Fase A'))return 'A';
+  if(val.startsWith('Fase B'))return 'B';
+  if(val.startsWith('Fase C'))return 'C';
+  return 'B';
+}
+
+function updateMapelOptions(fase){
+  const sel=document.getElementById('mapel');
+  const currentVal=sel.value;
+  const list=MAPEL_PER_FASE[fase]||MAPEL_PER_FASE.B;
+  sel.innerHTML='<option value="">-- Pilih Mata Pelajaran --</option>';
+  list.forEach(m=>{
+    const opt=document.createElement('option');
+    if(m==='Lainnya'){opt.value='__lainnya__';opt.textContent='Lainnya (isi manual)';}
+    else{opt.value=m;opt.textContent=m;}
+    if(m===currentVal||opt.value===currentVal)opt.selected=true;
+    sel.appendChild(opt);
+  });
+  toggleMapelManual(sel.value);
+}
+
+function toggleMapelManual(val){
+  let manualWrap=document.getElementById('mapelManualWrap');
+  if(val==='__lainnya__'){
+    if(!manualWrap){
+      manualWrap=document.createElement('div');
+      manualWrap.id='mapelManualWrap';
+      manualWrap.style.marginTop='6px';
+      manualWrap.innerHTML='<input type="text" id="mapelManual" placeholder="Tulis nama mata pelajaran..." style="width:100%;"/>';
+      document.getElementById('mapel').parentNode.appendChild(manualWrap);
+    }
+    manualWrap.style.display='block';
+  } else {
+    if(manualWrap)manualWrap.style.display='none';
+  }
+}
+
+function onFaseChange(){
+  const fase=getFaseFromValue(document.getElementById('faseKelas').value);
+  updateMapelOptions(fase);
+  const alokasiEl=document.getElementById('alokasiWaktu');
+  const defaultValues=Object.values(ALOKASI_PER_FASE);
+  if(!alokasiEl.dataset.edited||defaultValues.includes(alokasiEl.value)){
+    alokasiEl.value=ALOKASI_PER_FASE[fase];
+    delete alokasiEl.dataset.edited;
+  }
+}
+
+// ============================================================
+// INIT
+// ============================================================
+(function init(){
+  window.addEventListener('load',()=>{
+    const ls=document.getElementById('loadingScreen');
+    if(ls){ls.style.opacity='0';ls.style.transition='opacity .4s';setTimeout(()=>ls.remove(),400);}
+  });
+  const saved=localStorage.getItem('theme');
+  if(saved==='dark'){document.body.classList.add('dark');document.getElementById('darkBtn').textContent='☀️';}
+  checkProStatus();    // ← harus sebelum updateLimitDisplay!
+  updateLimitDisplay();
+  updateHistoriBadge();
+  onFaseChange();
+  window.addEventListener('beforeinstallprompt',e=>{
+    e.preventDefault();window._dip=e;
+    const last=localStorage.getItem('installClosedAt');
+    if(!last||Date.now()-parseInt(last)>86400000){
+      setTimeout(()=>document.getElementById('installPopup').classList.add('show'),2000);
+    }
+  });
+})();
+
+// ============================================================
+// DARK MODE
+// ============================================================
+function toggleDark(){
+  document.body.classList.toggle('dark');
+  const d=document.body.classList.contains('dark');
+  document.getElementById('darkBtn').textContent=d?'☀️':'🌙';
+  localStorage.setItem('theme',d?'dark':'light');
+}
+
+// ============================================================
+// PWA
+// ============================================================
+function installApp(){if(window._dip){window._dip.prompt();window._dip=null;}closeInstall();}
+function closeInstall(){document.getElementById('installPopup').classList.remove('show');localStorage.setItem('installClosedAt',Date.now().toString());}
+
+// ============================================================
+// MENU
+// ============================================================
+let _menuOpen=false;
+function toggleMenu(){
+  _menuOpen=!_menuOpen;
+  document.getElementById('dropdownMenu').classList.toggle('open',_menuOpen);
+  document.getElementById('menuOverlay').classList.toggle('open',_menuOpen);
+}
+function closeMenu(){
+  _menuOpen=false;
+  document.getElementById('dropdownMenu').classList.remove('open');
+  document.getElementById('menuOverlay').classList.remove('open');
+}
+
+// ============================================================
+// TABS
+// ============================================================
+function selectTab(tab){
+  ['home','histori','tentang','kontak'].forEach(t=>{
+    const d=document.getElementById('tab-'+t);
+    if(d)d.style.display=t===tab?'block':'none';
+    const mi=document.getElementById('mi-'+t);
+    if(mi)mi.classList.toggle('active',t===tab);
+  });
+  if(tab==='histori')renderHistoriList();
+}
+
+// ============================================================
+// LIMIT & PRO
+// ============================================================
+function checkProStatus(){
+  const proData=localStorage.getItem('bgy_pro_ma');
+  if(proData){
+    try{
+      const d=JSON.parse(proData);
+      if(d.is_pro){
+        _isPro=true;
+        document.getElementById('hBadge').textContent='PRO';
+        document.getElementById('hBadge').className='badge-pro';
+        document.getElementById('aktivasiBox').style.display='none';
+      }
+    }catch(e){}
+  }
+}
+function isPro(){return _isPro;}
+
+function checkLimit(){
+  if(_isPro)return{ok:true,used:0,remaining:999};
+  const today=new Date().toDateString();
+  let data=JSON.parse(localStorage.getItem(STORAGE_KEY_LIMIT)||'{}');
+  if(data.date!==today)data={date:today,used:0};
+  const used=data.used||0;
+  return{ok:used<DAILY_LIMIT,used,remaining:DAILY_LIMIT-used};
+}
+function incrementDaily(){
+  const today=new Date().toDateString();
+  let data=JSON.parse(localStorage.getItem(STORAGE_KEY_LIMIT)||'{}');
+  if(data.date!==today)data={date:today,used:0};
+  data.used=(data.used||0)+1;
+  localStorage.setItem(STORAGE_KEY_LIMIT,JSON.stringify(data));
+}
+function updateLimitDisplay(){
+  const el=document.getElementById('limitInfo');
+  const lr=document.getElementById('limitReset');
+  const btnLbl=document.getElementById('btnLabel');
+  const btn=document.getElementById('btnGenerate');
+  if(_isPro){
+    if(el){el.textContent='⭐ Pro Aktif — Generate Unlimited';el.style.color='#059669';}
+    document.getElementById('aktivasiBox').style.display='none';
+    if(btnLbl)btnLbl.textContent='✨ Generate Prompt Modul Ajar';
+    if(btn)btn.disabled=false;
+    if(lr)lr.style.display='none';
+    const b=document.getElementById('hBadge');if(b){b.textContent='PRO';b.className='badge-pro';}
+    return;
+  }
+  if(lr)lr.style.display='';
+  const b=document.getElementById('hBadge');if(b){b.textContent='FREE';b.className='badge-free';}
+  const lc=checkLimit();
+  const remaining=Math.max(0,lc.remaining);
+  if(el){
+    el.textContent=lc.ok?`🔢 Sisa generate hari ini: ${remaining}x`:'⛔ Batas harian habis. Aktivasi Pro atau coba besok.';
+    el.style.color=remaining<=0?'#dc2626':remaining===1?'#d97706':'#64748b';
+  }
+  if(btnLbl&&btnLbl.textContent.indexOf('Menyusun')===-1){
+    btnLbl.textContent=lc.ok?`✨ Generate Prompt Modul Ajar (${remaining}x)`:'⛔ Limit Habis';
+  }
+  if(btn)btn.disabled=!lc.ok;
+}
+
+// ============================================================
+// GENERATE OVERLAY
+// ============================================================
+const _goMessages=[
+  'Menyusun kerangka modul ajar... 📋',
+  'Menyelaraskan dengan Kurikulum Merdeka... 📚',
+  'Meracik tujuan pembelajaran HOTS... 🎯',
+  'Menyiapkan alur kegiatan belajar... 🗂️',
+  'Mengkodekan instruksi anti-plagiat... 🔐',
+  'Ngecek profil pelajar Pancasila... 🇮🇩',
+  'AI-nya semangat bikin modul! 💪',
+  'Menambahkan instruksi Word/PDF output... 📄',
+  'Mengoptimalkan prompt Deep Learning... 🧠',
+  'Menyisipkan rubrik asesmen lengkap... 📝',
+  'Dikiiit lagi, Pak/Bu Guru! ⏳',
+  'Sebentar ya... sambil ngopi dulu boleh nih ☕',
+  'Hampir selesai, kualitas premium! ✨',
+];
+let _goMsgTimer=null,_goMsgIdx=0;
+function _startGoMessages(){
+  _goMsgIdx=0;
+  const el=document.getElementById('goMsg');
+  function rotate(){
+    if(el){el.style.animation='none';el.offsetHeight;el.style.animation='';el.textContent=_goMessages[_goMsgIdx%_goMessages.length];_goMsgIdx++;}
+    _goMsgTimer=setTimeout(rotate,2800);
+  }
+  rotate();
+}
+function _stopGoMessages(){clearTimeout(_goMsgTimer);}
+
+function setLoading(s){
+  const btn=document.getElementById('btnGenerate');
+  const btnLbl=document.getElementById('btnLabel');
+  if(btn)btn.disabled=s;
+  const ov=document.getElementById('generateOverlay');
+  if(ov){
+    ov.style.display=s?'flex':'none';
+    if(s){_startGoMessages();document.body.style.overflow='hidden';}
+    else{_stopGoMessages();document.body.style.overflow='';}
+  }
+  if(!s){
+    const{ok,remaining}=checkLimit();
+    if(btnLbl){
+      btnLbl.textContent=_isPro?'✨ Generate Prompt Modul Ajar':(ok?`✨ Generate Prompt Modul Ajar (${remaining}x)`:'⛔ Limit Habis');
+    }
+  } else {
+    if(btnLbl)btnLbl.textContent='Menyusun prompt...';
+  }
+}
+
+// ============================================================
+// PRO WELCOME CELEBRATION
+// ============================================================
+function showProWelcome(){
+  const ov=document.getElementById('proWelcomeOverlay');
+  if(!ov)return;
+  ov.style.display='flex';
+  document.body.style.overflow='hidden';
+  const conf=document.getElementById('pwConfetti');
+  if(conf){
+    conf.innerHTML='';
+    const colors=['#f59e0b','#0ea5a0','#3b82f6','#10b981','#ef4444','#8b5cf6','#fff'];
+    for(let i=0;i<60;i++){
+      const s=document.createElement('span');
+      const color=colors[i%colors.length];
+      const size=6+Math.random()*8;
+      const left=Math.random()*100;
+      const delay=Math.random()*3;
+      const dur=2.5+Math.random()*3;
+      s.style.cssText=`left:${left}%;width:${size}px;height:${size}px;background:${color};animation-duration:${dur}s;animation-delay:${delay}s;border-radius:${Math.random()>.5?'50%':'2px'};`;
+      conf.appendChild(s);
+    }
+  }
+  const emojis=['🎉','🥳','⭐','🎊','🚀','✨'];
+  let ei=0;
+  const el=document.getElementById('pwEmoji');
+  const emojiTimer=setInterval(()=>{if(el){el.textContent=emojis[ei%emojis.length];ei++;}},600);
+  ov._emojiTimer=emojiTimer;
+}
+function closeProWelcome(){
+  const ov=document.getElementById('proWelcomeOverlay');
+  if(!ov)return;
+  if(ov._emojiTimer)clearInterval(ov._emojiTimer);
+  ov.style.display='none';
+  document.body.style.overflow='';
+}
+
+// ============================================================
+// AKTIVASI PRO
+// ============================================================
+function tampilModeKode(){
+  document.getElementById('modeKode').style.display='block';
+  document.getElementById('modeEmail').style.display='none';
+}
+function tampilModeEmail(){
+  document.getElementById('modeKode').style.display='none';
+  document.getElementById('modeEmail').style.display='block';
+}
+function _setProAktif(fromActivation){
+  _isPro=true;
+  document.getElementById('hBadge').textContent='PRO';
+  document.getElementById('hBadge').className='badge-pro';
+  document.getElementById('aktivasiBox').style.display='none';
+  updateLimitDisplay();
+  if(fromActivation)showProWelcome();
+}
+async function verifikasiKode(){
+  const email=document.getElementById('inputEmailKode').value.trim().toLowerCase();
+  const kode=document.getElementById('inputKodeAktivasi').value.trim().toUpperCase();
+  const msgEl=document.getElementById('aktivasiMsg');
+  if(!kode){msgEl.style.color='#dc2626';msgEl.textContent='⚠️ Kode tidak boleh kosong.';return;}
+  msgEl.style.color='#0d7a8a';msgEl.textContent='⏳ Memeriksa kode...';
+  try{
+    const{data,error}=await sbClient.from('users').select('*').eq('code',kode).eq('access','modul_ajar').single();
+    if(error||!data){msgEl.style.color='#dc2626';msgEl.textContent='❌ Kode tidak valid.';return;}
+    localStorage.setItem('bgy_pro_ma',JSON.stringify({is_pro:true,kode,email}));
+    _setProAktif(true);
+    msgEl.style.color='#15803d';msgEl.textContent='✅ Aktivasi berhasil! Selamat menjadi PRO 🎉';
+    gaEvent('aktivasi_pro_ma',{kode});
+  }catch(e){msgEl.style.color='#dc2626';msgEl.textContent='❌ Gagal menghubungi server.';}
+}
+async function cekAksesPro(){
+  const email=document.getElementById('inputEmailPro').value.trim().toLowerCase();
+  const msgEl=document.getElementById('aktivasiMsg');
+  if(!email){msgEl.style.color='#dc2626';msgEl.textContent='⚠️ Email tidak boleh kosong.';return;}
+  msgEl.style.color='#0d7a8a';msgEl.textContent='⏳ Memeriksa email...';
+  try{
+    const{data,error}=await sbClient.from('users').select('*').eq('email',email).eq('access','modul_ajar').single();
+    if(error||!data||!data.is_pro){msgEl.style.color='#dc2626';msgEl.textContent='❌ Email tidak ditemukan atau belum Pro.';return;}
+    localStorage.setItem('bgy_pro_ma',JSON.stringify({is_pro:true,email}));
+    _setProAktif(true);
+    msgEl.style.color='#15803d';msgEl.textContent='✅ Login berhasil! Selamat datang PRO 🎉';
+  }catch(e){msgEl.style.color='#dc2626';msgEl.textContent='❌ Gagal menghubungi server.';}
+}
+
+// ============================================================
+// TAHUN AJARAN OTOMATIS
+// ============================================================
+function getAutoTahunAjaran(){
+  const now=new Date();
+  const month=now.getMonth()+1; // 1-12
+  const year=now.getFullYear();
+  // Juli-Des = tahun berjalan / tahun+1, Jan-Jun = tahun-1 / tahun berjalan
+  if(month>=7) return year+'/'+(year+1);
+  return (year-1)+'/'+year;
+}
+
+// ============================================================
+// GENERATE PROMPT
+// ============================================================
+function generatePrompt(){
+  const errBox=document.getElementById('errorBox');
+  errBox.style.display='none';
+
+  const namaSekolah=document.getElementById('namaSekolah').value.trim()||'SD ...';
+  const namaPenyusun=document.getElementById('namaPenyusun').value.trim()||'Guru Kelas';
+  const semester=document.getElementById('semester').value;
+  const mapelRaw=document.getElementById('mapel').value;
+  const mapel=mapelRaw==='__lainnya__'?(document.getElementById('mapelManual')?.value.trim()||'Lainnya'):mapelRaw;
+  const fase=document.getElementById('faseKelas').value;
+  const alokasi=document.getElementById('alokasiWaktu').value.trim()||'2 x 35 menit';
+  const topik=document.getElementById('topikMateri').value.trim();
+  const model=document.getElementById('modelPembelajaran').value;
+  const p5=[...document.querySelectorAll('.cb-p5:checked')].map(c=>c.value).join(', ');
+  const karakteristik=document.getElementById('karakteristikSiswa').value.trim()||'Peserta didik reguler, kelas heterogen';
+  const tahun=getAutoTahunAjaran();
+
+  if(!mapelRaw||mapelRaw==='__lainnya__'&&!document.getElementById('mapelManual')?.value.trim()){errBox.textContent='⚠️ Pilih atau isi mata pelajaran terlebih dahulu.';errBox.style.display='block';return;}
+  if(!topik){errBox.textContent='⚠️ Topik / materi pokok belum diisi.';errBox.style.display='block';return;}
+  if(!p5){errBox.textContent='⚠️ Pilih minimal satu dimensi Profil Pelajar Pancasila.';errBox.style.display='block';return;}
+
+  const lc=checkLimit();
+  if(!lc.ok){document.getElementById('upgradePopup').style.display='flex';return;}
+
+  setLoading(true);
+  // Prompt building is sync, but wrap in setTimeout for overlay to render
+  setTimeout(()=>{
+  const prompt=`You are an expert Indonesian elementary school (SD) teacher, curriculum developer, and practitioner of Kurikulum Merdeka with deep knowledge of the latest Indonesian national education standards and school administration.
+
+Generate a complete, detailed, systematic, professional, and ready-to-use **MODUL AJAR KURIKULUM MERDEKA** with the following identity:
+
+**MODULE IDENTITY:**
+- School Name: ${namaSekolah}
+- Author: ${namaPenyusun}
+- Subject: ${mapel}
+- Phase / Grade: ${fase}
+- Semester: ${semester}
+- Academic Year: ${tahun}
+- Time Allocation: ${alokasi}
+- Topic / Main Material: ${topik}
+
+**CORE GUIDELINES:**
+1. The module must comply with the latest Kurikulum Merdeka standards based on **BSKAP Number 046/H/KR/2025**.
+2. Apply the **Deep Learning** approach (Mindful, Meaningful, Joyful Learning) integrated with the ${model} instructional model.
+3. Include **HOTS**, Differentiated Learning, Meaningful Learning, and Student-Centered Learning throughout.
+4. Student characteristics: ${karakteristik}
+5. Completeness level: comprehensive and highly detailed.
+
+Write ALL content in formal academic Indonesian (Bahasa Indonesia formal akademik), natural as a genuine official document:
+
+1. **INFORMASI UMUM** — contextual student characteristics for Indonesian SD, infrastructure (realistic SD conditions), Profil Pelajar Pancasila dimensions (${p5}), target students, learning model/approach/method.
+
+2. **CAPAIAN PEMBELAJARAN (CP)** — complete official CP text from Kurikulum Merdeka for the subject and phase.
+
+3. **TUJUAN PEMBELAJARAN (TP)** — specific measurable objectives using Bloom's Taxonomy KKO at HOTS level, realistic for SD.
+
+4. **PEMAHAMAN BERMAKNA** — real-world benefits of this topic in daily life and students' local environment.
+
+5. **PERTANYAAN PEMANTIK** — minimum 3 contextual questions to spark curiosity, encourage HOTS, relevant to children's daily experiences.
+
+6. **PERSIAPAN PEMBELAJARAN** — interactive learning media, concrete tools & materials, learning resources, supporting technology, teacher preparation steps.
+
+7. **KEGIATAN PEMBELAJARAN** — very detailed, realistic, sequential, with time estimates, teacher actions, and student actions:
+   - A. **PENDAHULUAN**: Greeting & prayer, attendance, contextual apersepsi, cheerful ice breaking typical for SD, learning motivation, pemantik questions, objectives delivery.
+   - B. **INTI**: Concrete step-by-step activities following the ${model} model syntax integrated with DEEP LEARNING elements (real problem exploration, direct observation/media, interactive group discussion, collaboration, case analysis/independent practice, experiment/creative work, presentation, mid-process reflection, communication, creativity, content/process differentiation, literacy & numeracy reinforcement). Include realistic teacher-student dialogue examples.
+   - C. **PENUTUP**: Student reflection, teacher concept reinforcement, joint conclusion, short evaluation/quiz, follow-up, closing motivation, prayer.
+
+8. **ASESMEN LENGKAP** — diagnostic (cognitive/non-cognitive), formative, summative, attitude, skill, and knowledge assessment; observation sheets, descriptive rubrics, question grids, and HOTS sample questions at SD level.
+
+9. **DIFERENSIASI PEMBELAJARAN** — technical ways to differentiate content, process, and product based on student learning readiness.
+
+10. **REMEDIAL DAN PENGAYAAN** — tactical activities for students who have not mastered the material and fast learners.
+
+11. **REFLEKSI GURU** — guiding reflection questions on student responses, technical obstacles, strategy effectiveness, and improvement plans for the next session.
+
+12. **LAMPIRAN SIAP PAKAI** — must contain complete draft content: engaging LKPD for SD, brief subject matter/reading material, blank assessment tables/rubrics ready to fill, ready-to-use observation instruments.
+
+════════════════════════════════════════
+OUTPUT RULES:
+- ALL content MUST be written in formal academic Indonesian (Bahasa Indonesia formal akademik).
+- DO NOT write any greeting, opener, AI disclaimer, or introductory sentence.
+- DO NOT write "Tentu!", "Baik!", "Berikut adalah...", "Dengan senang hati", or anything similar.
+- DO NOT add any explanation, note, or comment between sections.
+- Start the document directly with: ## MODUL AJAR KURIKULUM MERDEKA
+- Use full Markdown formatting (##/### headings, markdown tables for activities & rubrics, bold for important terms).
+
+════════════════════════════════════════
+SIGNATURE PAGE (HALAMAN PENGESAHAN):
+- At the very end of the document, add a signature page with this EXACT format (do NOT duplicate headers):
+
+${namaSekolah}, ${new Date().toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'})}
+
+Mengetahui,
+Kepala ${namaSekolah}
+
+
+(________________________)
+NIP. ____________________
+
+
+Guru Kelas,
+
+
+(${namaPenyusun})
+NIP. ____________________
+
+- Use a simple 2-column table in the .docx for the two signatures side by side (Kepala Sekolah kiri, Guru Kelas kanan).
+- Do NOT repeat "Mengetahui, Kepala ${namaSekolah}" twice. Only write it ONCE at the top of the signature block.
+
+════════════════════════════════════════
+AFTER COMPLETING THE FULL MODULE CONTENT:
+
+1. Immediately use the **file creation tool** to save the entire module as a downloadable **.docx file** — do this automatically, without waiting for any additional instruction from the user.
+2. Name the file: Modul_Ajar_${mapel.replace(/\s+/g,'_')}_${fase.replace(/[\s\/]+/g,'_')}.docx
+3. After the file is created and ready to download, inform the user with a short message:
+   "✅ Modul Ajar selesai disusun. File Word (.docx) sudah siap diunduh di atas."
+════════════════════════════════════════`;
+
+  document.getElementById('hasilPrompt').textContent=prompt;
+  document.getElementById('promptPlaceholder').style.display='none';
+  document.getElementById('promptContent').style.display='block';
+
+  if(!isPro()) incrementDaily();
+  simpanHistori(prompt,mapel,fase,topik);
+  setLoading(false);
+  updateLimitDisplay();
+  updateHistoriBadge();
+
+  gaEvent('generate_prompt_modul_ajar',{mapel,fase,topik,tipe_user:isPro()?'pro':'free'});
+
+  document.getElementById('generateFeedback').textContent='✅ Prompt siap! Salin lalu paste ke Claude.';
+  setTimeout(()=>document.getElementById('generateFeedback').textContent='',4000);
+
+  if(window.innerWidth<900){
+    document.getElementById('hasilCard').scrollIntoView({behavior:'smooth',block:'start'});
+  }
+  },2500); // 2500ms overlay for feel
+}
+
+// ============================================================
+// COPY PROMPT
+// ============================================================
+function copyPrompt(){
+  const txt=document.getElementById('hasilPrompt').textContent;
+  if(!txt){alert('Generate prompt dulu!');return;}
+  if(!isPro()){showUpgradePopup();return;}
+  gaEvent('salin_prompt_modul_ajar',{tipe_user:'pro'});
+  const showNotif=()=>{const n=document.getElementById('notifCopy');n.style.display='block';setTimeout(()=>n.style.display='none',3000);};
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(showNotif).catch(()=>{fallbackCopy(txt);showNotif();});
+  }else{fallbackCopy(txt);showNotif();}
+}
+function fallbackCopy(txt){
+  const ta=document.createElement('textarea');
+  ta.value=txt;ta.style.position='fixed';ta.style.opacity='0';
+  document.body.appendChild(ta);ta.select();
+  try{document.execCommand('copy');}catch(e){}
+  document.body.removeChild(ta);
+}
+
+// ============================================================
+// OPEN AI
+// ============================================================
+function openAI(tipe){
+  const txt=document.getElementById('hasilPrompt').textContent;
+  if(!txt){alert('Generate prompt dulu!');return;}
+  if(!isPro()){showUpgradePopup();return;}
+  const urls={gemini:'https://gemini.google.com/',claude:'https://claude.ai/new'};
+  const win=window.open(urls[tipe],'_blank');
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).catch(()=>fallbackCopy(txt));
+  }else{fallbackCopy(txt);}
+  gaEvent('buka_ai_modul_ajar',{tipe,tipe_user:'pro'});
+}
+
+// ============================================================
+// HISTORI
+// ============================================================
+function simpanHistori(prompt,mapel,fase,topik){
+  const list=loadHistori();
+  list.unshift({prompt,mapel,fase,topik,ts:Date.now()});
+  if(list.length>20)list.pop();
+  localStorage.setItem(STORAGE_KEY_HISTORI,JSON.stringify(list));
+}
+function loadHistori(){
+  try{return JSON.parse(localStorage.getItem(STORAGE_KEY_HISTORI)||'[]');}catch(e){return[];}
+}
+function updateHistoriBadge(){
+  const list=loadHistori();
+  const badge=document.getElementById('historiBadge');
+  if(list.length>0){badge.textContent=list.length;badge.style.display='inline-block';}
+  else badge.style.display='none';
+  const menuBadge=document.getElementById('menuBadge');
+  if(menuBadge){menuBadge.textContent=list.length>0?list.length:'';menuBadge.style.display=list.length>0?'block':'none';}
+}
+function renderHistoriList(){
+  const list=loadHistori();
+  const container=document.getElementById('historiList');
+  if(list.length===0){container.innerHTML='<div style="text-align:center;padding:36px 0;color:var(--text-light);font-size:.85rem;">Belum ada histori. Generate dulu ya! 😊</div>';return;}
+  container.innerHTML=list.map((h,i)=>`
+    <div class="histori-item" onclick="loadFromHistori(${i})">
+      <div class="hi-meta">${new Date(h.ts).toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})} &bull; ${h.mapel||''} &bull; ${h.fase||''}</div>
+      <div class="hi-preview">${(h.topik||h.prompt||'').substring(0,120)}...</div>
+    </div>`).join('');
+}
+function loadFromHistori(idx){
+  const list=loadHistori();
+  const h=list[idx];
+  if(!h)return;
+  selectTab('home');
+  document.getElementById('hasilPrompt').textContent=h.prompt||'';
+  document.getElementById('promptPlaceholder').style.display='none';
+  document.getElementById('promptContent').style.display='block';
+  setTimeout(()=>document.getElementById('hasilCard').scrollIntoView({behavior:'smooth'}),200);
+}
+function hapusSemuaHistori(){
+  if(confirm('Hapus semua histori prompt?')){
+    localStorage.removeItem(STORAGE_KEY_HISTORI);
+    updateHistoriBadge();
+    renderHistoriList();
+  }
+}
+
+// ============================================================
+// UPGRADE POPUP
+// ============================================================
+function showUpgradePopup(){document.getElementById('upgradePopup').style.display='flex';}
+document.getElementById('upgradePopup').addEventListener('click',function(e){if(e.target===this)this.style.display='none';});
+</script>
+</body>
+</html>
