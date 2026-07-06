@@ -116,6 +116,51 @@ export interface MayarWebhookPayload {
   };
 }
 
+/**
+ * Check MAYAR transactions for matching payment
+ * Used as fallback when webhook hasn't arrived yet
+ */
+export async function checkMayarTransaction(
+  amount: number,
+  sinceTimestamp: number
+): Promise<{ found: boolean; transaction?: any }> {
+  try {
+    console.log(`[MAYAR] Checking transactions for amount: ${amount}`);
+
+    const response = await fetch(`${MAYAR_BASE_URL}/transactions?limit=20`, {
+      headers: {
+        Authorization: `Bearer ${MAYAR_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      console.warn("[MAYAR] Failed to fetch transactions:", response.status);
+      return { found: false };
+    }
+
+    const data = await response.json();
+    const transactions = data.data || [];
+
+    // Find matching transaction by amount and recent timestamp
+    const match = transactions.find((t: any) => {
+      const tAmount = t.amount || t.total || 0;
+      const tCreated = new Date(t.createdAt || t.created_at || 0).getTime();
+      return tAmount === amount && tCreated >= sinceTimestamp;
+    });
+
+    if (match) {
+      console.log("[MAYAR] Found matching transaction:", match.id || match._id);
+      return { found: true, transaction: match };
+    }
+
+    console.log("[MAYAR] No matching transaction found");
+    return { found: false };
+  } catch (error) {
+    console.error("[MAYAR] Error checking transactions:", error);
+    return { found: false };
+  }
+}
 export function parseMayarWebhook(payload: any): MayarWebhookPayload | null {
   try {
     if (!payload || !payload.event || !payload.data) {

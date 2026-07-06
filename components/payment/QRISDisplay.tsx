@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Clock, X } from "lucide-react";
+import { Clock, X, ShieldCheck } from "lucide-react";
 import Button from "@/components/ui/Button";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
@@ -26,6 +26,7 @@ export default function QRISDisplay({
 }: QRISDisplayProps) {
   const [timeLeft, setTimeLeft] = useState(expiresIn);
   const [isChecking, setIsChecking] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
 
   // Countdown timer
   useEffect(() => {
@@ -76,6 +77,28 @@ export default function QRISDisplay({
       clearInterval(interval);
     };
   }, [transactionId, onSuccess, onExpired]);
+
+  const handleManualVerify = async () => {
+    if (isVerifying) return;
+    setIsVerifying(true);
+    try {
+      const res = await fetch("/api/payments/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ transactionId }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        onSuccess();
+      } else {
+        alert(data.message || "Pembayaran belum terdeteksi. Coba lagi.");
+      }
+    } catch {
+      alert("Gagal memverifikasi. Coba lagi.");
+    } finally {
+      setIsVerifying(false);
+    }
+  };
 
   // Format time left
   const formatTime = (seconds: number) => {
@@ -129,6 +152,14 @@ export default function QRISDisplay({
             style={{ width: "60%" }}
           />
         </div>
+        <button
+          onClick={handleManualVerify}
+          disabled={isVerifying}
+          className="mt-3 inline-flex items-center gap-1.5 text-xs text-teal-600 hover:text-teal-700 transition-colors disabled:opacity-50"
+        >
+          <ShieldCheck size={14} />
+          {isVerifying ? "Memverifikasi..." : "Saya Sudah Bayar"}
+        </button>
       </div>
 
       {/* Instructions */}
