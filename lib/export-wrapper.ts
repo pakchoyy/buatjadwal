@@ -10,6 +10,25 @@ import { ExportType, ExportMetadata } from "./types";
 let pendingExportCallback: (() => void) | null = null;
 let pendingExportType: ExportType | null = null;
 let pendingExportMetadata: ExportMetadata | null = null;
+let downloadNotificationCallback: ((type: ExportType) => void) | null = null;
+
+/**
+ * Set download notification callback
+ */
+export function setDownloadNotificationCallback(
+  callback: (type: ExportType) => void
+): void {
+  downloadNotificationCallback = callback;
+}
+
+/**
+ * Trigger download notification
+ */
+export function notifyDownloadStart(type: ExportType): void {
+  if (downloadNotificationCallback) {
+    downloadNotificationCallback(type);
+  }
+}
 
 /**
  * Check if export requires payment
