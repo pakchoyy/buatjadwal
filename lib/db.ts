@@ -19,7 +19,7 @@ import {
   TimeSlotFormData,
   TeachingAllocationFormData,
 } from "./types";
-import { generateId, safeJsonParse } from "./utils";
+import { generateId, safeJsonParse, sanitizeInput } from "./utils";
 import {
   validateSchoolLimit,
   validateSchoolForm,
@@ -57,13 +57,34 @@ export class LocalDB {
 
   public static get<T>(key: string): T[] {
     if (typeof window === "undefined") return [];
-    const data = localStorage.getItem(key);
-    return safeJsonParse<T[]>(data || "[]", []);
+    try {
+      const data = localStorage.getItem(key);
+      const parsed = safeJsonParse<T[]>(data || "[]", []);
+      
+      // Validate parsed data is an array
+      if (!Array.isArray(parsed)) {
+        console.error(`Data corruption: ${key} is not an array. Resetting to empty array.`);
+        this.set(key, []);
+        return [];
+      }
+      
+      return parsed;
+    } catch (error) {
+      console.error(`Error reading ${key}:`, error);
+      return [];
+    }
   }
 
   public static set<T>(key: string, data: T[]): void {
     if (typeof window === "undefined") return;
-    localStorage.setItem(key, JSON.stringify(data));
+    try {
+      localStorage.setItem(key, JSON.stringify(data));
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'QuotaExceededError') {
+        throw new Error('Penyimpanan penuh. Silakan hapus data lama atau export data Anda terlebih dahulu.');
+      }
+      throw error;
+    }
   }
 
   private static findById<T extends { id: string }>(
@@ -94,6 +115,17 @@ export class LocalDB {
   }
 
   static createSchool(data: SchoolFormData): School {
+    // Sanitize input to prevent XSS
+    const sanitizedData = {
+      ...data,
+      name: sanitizeInput(data.name),
+      address: sanitizeInput(data.address),
+      district: sanitizeInput(data.district),
+      email: sanitizeInput(data.email),
+      academicYear: sanitizeInput(data.academicYear),
+      semester: sanitizeInput(data.semester),
+    };
+
     // Validasi: max 1 school
     const existing = this.get<School>(this.KEYS.SCHOOLS);
     const validation = validateSchoolLimit(existing);
@@ -102,7 +134,7 @@ export class LocalDB {
     }
 
     // Validasi form
-    const formValidation = validateSchoolForm(data);
+    const formValidation = validateSchoolForm(sanitizedData);
     if (!formValidation.valid) {
       throw new Error(formValidation.message);
     }
@@ -110,7 +142,7 @@ export class LocalDB {
     const now = Date.now();
     const school: School = {
       id: generateId(),
-      ...data,
+      ...sanitizedData,
       createdAt: now,
       updatedAt: now,
     };
@@ -191,8 +223,14 @@ export class LocalDB {
   }
 
   static createClass(data: ClassFormData): Class {
+    // Sanitize input to prevent XSS
+    const sanitizedData = {
+      ...data,
+      name: sanitizeInput(data.name),
+    };
+
     // Validasi form
-    const formValidation = validateClassForm(data);
+    const formValidation = validateClassForm(sanitizedData);
     if (!formValidation.valid) {
       throw new Error(formValidation.message);
     }
@@ -200,8 +238,8 @@ export class LocalDB {
     // Validasi uniqueness
     const allClasses = this.get<Class>(this.KEYS.CLASSES);
     const uniqueValidation = validateClassUnique(
-      data.schoolId,
-      data.name,
+      sanitizedData.schoolId,
+      sanitizedData.name,
       allClasses
     );
     if (!uniqueValidation.valid) {
@@ -211,7 +249,7 @@ export class LocalDB {
     const now = Date.now();
     const newClass: Class = {
       id: generateId(),
-      ...data,
+      ...sanitizedData,
       createdAt: now,
       updatedAt: now,
     };
@@ -294,8 +332,16 @@ export class LocalDB {
   }
 
   static createTeacher(data: TeacherFormData): Teacher {
+    // Sanitize input to prevent XSS
+    const sanitizedData = {
+      ...data,
+      code: sanitizeInput(data.code),
+      name: sanitizeInput(data.name),
+      title: data.title ? sanitizeInput(data.title) : undefined,
+    };
+
     // Validasi form
-    const formValidation = validateTeacherForm(data);
+    const formValidation = validateTeacherForm(sanitizedData);
     if (!formValidation.valid) {
       throw new Error(formValidation.message);
     }
@@ -303,8 +349,8 @@ export class LocalDB {
     // Validasi uniqueness
     const allTeachers = this.get<Teacher>(this.KEYS.TEACHERS);
     const uniqueValidation = validateTeacherUnique(
-      data.schoolId,
-      data.code,
+      sanitizedData.schoolId,
+      sanitizedData.code,
       allTeachers
     );
     if (!uniqueValidation.valid) {
@@ -314,7 +360,7 @@ export class LocalDB {
     const now = Date.now();
     const teacher: Teacher = {
       id: generateId(),
-      ...data,
+      ...sanitizedData,
       createdAt: now,
       updatedAt: now,
     };
@@ -397,8 +443,15 @@ export class LocalDB {
   }
 
   static createSubject(data: SubjectFormData): Subject {
+    // Sanitize input to prevent XSS
+    const sanitizedData = {
+      ...data,
+      code: sanitizeInput(data.code),
+      name: sanitizeInput(data.name),
+    };
+
     // Validasi form
-    const formValidation = validateSubjectForm(data);
+    const formValidation = validateSubjectForm(sanitizedData);
     if (!formValidation.valid) {
       throw new Error(formValidation.message);
     }
@@ -406,8 +459,8 @@ export class LocalDB {
     // Validasi uniqueness
     const allSubjects = this.get<Subject>(this.KEYS.SUBJECTS);
     const uniqueValidation = validateSubjectUnique(
-      data.schoolId,
-      data.code,
+      sanitizedData.schoolId,
+      sanitizedData.code,
       allSubjects
     );
     if (!uniqueValidation.valid) {
@@ -417,7 +470,7 @@ export class LocalDB {
     const now = Date.now();
     const subject: Subject = {
       id: generateId(),
-      ...data,
+      ...sanitizedData,
       createdAt: now,
       updatedAt: now,
     };

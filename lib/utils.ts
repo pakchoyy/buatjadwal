@@ -98,7 +98,10 @@ export function isTimeRangeValid(
 export function safeJsonParse<T>(json: string, fallback: T): T {
   try {
     return JSON.parse(json);
-  } catch {
+  } catch (error) {
+    // Log corruption for debugging
+    console.error('Data corruption detected:', error);
+    console.warn('Using fallback value. Corrupted data:', json.substring(0, 100));
     return fallback;
   }
 }
@@ -218,6 +221,19 @@ export function isEmpty(value: any): boolean {
   if (Array.isArray(value)) return value.length === 0;
   if (typeof value === "object") return Object.keys(value).length === 0;
   return false;
+}
+
+/**
+ * Sanitize HTML input to prevent XSS
+ */
+export function sanitizeInput(input: string): string {
+  if (typeof input !== 'string') return '';
+  return input
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+    .replace(/\//g, '&#x2F;');
 }
 
 /**
