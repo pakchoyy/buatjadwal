@@ -4,7 +4,6 @@ import { useState } from "react";
 import "./globals.css";
 import Header from "@/components/layout/Header";
 import Sidebar from "@/components/layout/Sidebar";
-import BottomNav from "@/components/layout/BottomNav";
 import RunningText from "@/components/layout/RunningText";
 
 export default function RootLayout({
@@ -24,7 +23,10 @@ export default function RootLayout({
       </head>
       <body className="antialiased">
         {/* Header - Sticky di atas */}
-        <Header onMenuToggle={setSidebarOpen} />
+        <Header
+          isMenuOpen={sidebarOpen}
+          onMenuToggle={() => setSidebarOpen((prev) => !prev)}
+        />
         
         <div className="flex flex-1">
           {/* Sidebar */}
@@ -34,13 +36,10 @@ export default function RootLayout({
           />
 
           {/* Main Content */}
-          <main className="flex-1 overflow-auto pb-16 lg:pb-10">
+          <main className="flex-1 overflow-auto pb-10">
             {children}
           </main>
         </div>
-
-        {/* Bottom Navigation (Mobile) */}
-        <BottomNav />
 
         {/* Running Text - Bottom Ticker (Desktop) */}
         <div className="hidden lg:block">

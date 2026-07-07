@@ -4,17 +4,15 @@
 
 "use client";
 
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import React, { useState } from "react";
-import HamburgerMenu from "./HamburgerMenu";
-import TentangModal from "./TentangModal";
-import KontakModal from "./KontakModal";
-import { Moon, Sun } from "lucide-react";
+import { Menu, X, Moon, Sun } from "lucide-react";
 
 interface HeaderProps {
   title?: string;
   actions?: React.ReactNode;
-  onMenuToggle?: (isOpen: boolean) => void;
+  isMenuOpen?: boolean;
+  onMenuToggle?: () => void;
 }
 
 const routeTitles: Record<string, string> = {
@@ -31,32 +29,18 @@ const routeTitles: Record<string, string> = {
   "/schedules/class": "Jadwal per Kelas",
 };
 
-export default function Header({ title, onMenuToggle }: HeaderProps) {
+export default function Header({
+  title,
+  isMenuOpen = false,
+  onMenuToggle,
+}: HeaderProps) {
   const pathname = usePathname();
-  const router = useRouter();
   const pageTitle = title || routeTitles[pathname] || "Page";
-  const [menuOpen, setMenuOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
-  const [showTentang, setShowTentang] = useState(false);
-  const [showKontak, setShowKontak] = useState(false);
-
-  const handleMenuToggle = () => {
-    const newState = !menuOpen;
-    setMenuOpen(newState);
-    if (onMenuToggle) {
-      onMenuToggle(newState);
-    }
-  };
 
   const toggleDarkMode = () => {
     setDarkMode(!darkMode);
     document.documentElement.classList.toggle("dark");
-  };
-
-  const handleNavigate = {
-    home: () => router.push("/"),
-    tentang: () => setShowTentang(true),
-    kontak: () => setShowKontak(true),
   };
 
   let subtitle = "| Jadwal Pelajaran";
@@ -88,7 +72,7 @@ export default function Header({ title, onMenuToggle }: HeaderProps) {
             </div>
           </div>
 
-          {/* RIGHT: Dark Mode + Hamburger */}
+          {/* RIGHT: Dark Mode + Sidebar Toggle */}
           <div className="flex items-center gap-[4px] flex-shrink-0">
             <button
               onClick={toggleDarkMode}
@@ -97,26 +81,18 @@ export default function Header({ title, onMenuToggle }: HeaderProps) {
             >
               {darkMode ? <Sun size={14} /> : <Moon size={14} />}
             </button>
-            <HamburgerMenu 
-              isOpen={menuOpen} 
-              onClick={handleMenuToggle}
-              onNavigate={handleNavigate}
-            />
+            <button
+              onClick={onMenuToggle}
+              className="h-[30px] w-[30px] rounded-[6px] border-[1.5px] border-white/30 bg-white/10 text-white flex items-center justify-center flex-shrink-0 active:bg-white/25 cursor-pointer lg:hidden"
+              aria-label="Toggle sidebar"
+              aria-expanded={isMenuOpen}
+              title="Menu"
+            >
+              {isMenuOpen ? <X size={14} /> : <Menu size={14} />}
+            </button>
           </div>
         </div>
       </header>
-
-      {/* Menu Overlay Backdrop */}
-      {menuOpen && (
-        <div
-          className="fixed inset-0 z-[250] bg-black/20"
-          onClick={() => setMenuOpen(false)}
-        />
-      )}
-
-      {/* Modals */}
-      <TentangModal isOpen={showTentang} onClose={() => setShowTentang(false)} />
-      <KontakModal isOpen={showKontak} onClose={() => setShowKontak(false)} />
     </>
   );
 }

@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle2, Heart, X } from "lucide-react";
+import { CheckCircle2, Heart } from "lucide-react";
 import Button from "@/components/ui/Button";
 
 interface PaymentAmountSelectorProps {
-  onSelect: (amount: number) => void;
+  onSelect: (amount: number, isTestMode: boolean) => void;
   onCancel: () => void;
   minAmount?: number;
 }
@@ -56,19 +56,18 @@ export default function PaymentAmountSelector({
     }
   };
 
-  const effectiveMinAmount = testMode ? 100 : minAmount;
-
   const handleContinue = () => {
     if (customAmount) {
       const amount = parseInt(customAmount);
+      const isAllowedTestAmount = testMode && amount === 100;
 
       if (isNaN(amount)) {
         setError("Nominal tidak valid");
         return;
       }
 
-      if (amount < effectiveMinAmount) {
-        setError(`Minimal donasi Rp${effectiveMinAmount.toLocaleString("id-ID")}`);
+      if (amount < minAmount && !isAllowedTestAmount) {
+        setError(`Minimal donasi Rp${minAmount.toLocaleString("id-ID")}`);
         return;
       }
 
@@ -77,13 +76,13 @@ export default function PaymentAmountSelector({
         return;
       }
 
-      if (!testMode && amount % 1000 !== 0) {
+      if (!isAllowedTestAmount && amount % 1000 !== 0) {
         setError("Nominal harus kelipatan Rp1.000");
         return;
       }
     }
 
-    onSelect(selectedAmount);
+    onSelect(selectedAmount, testMode);
   };
 
   return (
@@ -95,7 +94,7 @@ export default function PaymentAmountSelector({
           <h2 className="text-sm font-bold text-gray-900" onClick={handleTitleTap}>Jadwal Berhasil Dibuat</h2>
         </div>
         {testMode && (
-          <p className="mt-0.5 text-[10px] text-amber-600 font-semibold">⚡ Testing Mode</p>
+          <p className="mt-0.5 text-[10px] font-semibold text-amber-600">Testing Mode</p>
         )}
         <p className="mt-0.5 text-[11px] text-gray-500">
           Aplikasi ini untuk membantu guru menyusun jadwal dengan lebih mudah.
@@ -152,14 +151,14 @@ export default function PaymentAmountSelector({
             <input
               type="radio"
               name="amount"
-              checked={isCustomSelected}
-              onChange={() => {
-                setIsCustomSelected(true);
-                setCustomAmount("");
-                setSelectedAmount(minAmount);
-              }}
-              className="h-3.5 w-3.5 border-gray-300 text-teal-600 focus:ring-2 focus:ring-teal-500"
-            />
+                checked={isCustomSelected}
+                onChange={() => {
+                  setIsCustomSelected(true);
+                  setCustomAmount("");
+                  setSelectedAmount(minAmount);
+                }}
+                className="h-3.5 w-3.5 border-gray-300 text-teal-600 focus:ring-2 focus:ring-teal-500"
+              />
             <div className="ml-2 flex-1">
               <div className="mb-1 text-sm font-medium text-gray-900">
                 Custom Amount
@@ -168,7 +167,7 @@ export default function PaymentAmountSelector({
                 type="text"
                 value={customAmount}
                 onChange={(e) => handleCustomAmountChange(e.target.value)}
-                placeholder={`Min. Rp${effectiveMinAmount.toLocaleString("id-ID")}`}
+                placeholder={`Min. Rp${minAmount.toLocaleString("id-ID")}`}
                 className="w-full rounded-lg border border-gray-300 px-2 py-1.5 text-xs focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500"
                 onClick={(e) => e.stopPropagation()}
               />
@@ -188,18 +187,13 @@ export default function PaymentAmountSelector({
       </div>
 
       {/* Actions */}
-      <div className="flex items-center gap-2">
-        <button onClick={onCancel} className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors" aria-label="Tutup">
-          <X size={16} />
-        </button>
-        <div className="flex-1 flex gap-2">
-          <Button onClick={onCancel} variant="secondary" size="sm" className="flex-1">
-            Kembali
-          </Button>
-          <Button onClick={handleContinue} variant="primary" size="sm" className="flex-1">
-            Lanjutkan →
-          </Button>
-        </div>
+      <div className="flex gap-2">
+        <Button onClick={onCancel} variant="secondary" size="sm" className="flex-1">
+          Kembali
+        </Button>
+        <Button onClick={handleContinue} variant="primary" size="sm" className="flex-1">
+          Lanjutkan →
+        </Button>
       </div>
     </div>
   );

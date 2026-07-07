@@ -43,9 +43,9 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { amount, exportType, exportMetadata } = body;
+    const { amount, isTestMode, exportType, exportMetadata } = body;
 
-    console.log(`[${traceId}] Request body:`, { amount, exportType });
+    console.log(`[${traceId}] Request body:`, { amount, isTestMode, exportType });
 
     if (!amount || typeof amount !== "number") {
       return NextResponse.json({ error: "Amount tidak valid" }, { status: 400 });
@@ -54,14 +54,16 @@ export async function POST(req: NextRequest) {
     const minAmount = parseInt(
       process.env.NEXT_PUBLIC_MIN_PAYMENT_AMOUNT || "10000"
     );
-    if (amount < minAmount) {
+    const isAllowedTestAmount = isTestMode === true && amount === 100;
+
+    if (amount < minAmount && !isAllowedTestAmount) {
       return NextResponse.json(
         { error: `Minimal donasi Rp${minAmount.toLocaleString("id-ID")}` },
         { status: 400 }
       );
     }
 
-    if (amount > 1000000 || amount % 1000 !== 0) {
+    if (amount > 1000000 || (!isAllowedTestAmount && amount % 1000 !== 0)) {
       return NextResponse.json({ error: "Nominal tidak valid" }, { status: 400 });
     }
 

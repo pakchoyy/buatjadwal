@@ -16,7 +16,6 @@ import {
   GraduationCap,
   Home,
   Users,
-  X,
   Zap,
   type LucideIcon,
 } from "lucide-react";
@@ -52,7 +51,7 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
       {/* Backdrop (Mobile only) */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
           onClick={onClose}
         />
       )}
@@ -67,18 +66,8 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
           ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         `}
       >
-      {/* Close button (Mobile only) - di atas */}
-      <div className="lg:hidden p-3 border-b border-[var(--border)] flex justify-end">
-        <button
-          onClick={onClose}
-          className="text-[var(--text-light)] hover:text-[var(--text)] p-1"
-        >
-          <X size={24} />
-        </button>
-      </div>
-
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto p-4 pt-3">
+      <nav className="flex-1 overflow-y-auto p-4 pt-6 lg:pt-3">
         <div className="text-[0.6rem] font-bold uppercase tracking-[0.8px] text-[var(--text-light)] mb-2 px-1">
           Menu
         </div>
@@ -98,7 +87,7 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
                     }
                   `}
                   onClick={() => {
-                    if (onClose && window.innerWidth < 768) {
+                    if (onClose && window.innerWidth < 1024) {
                       onClose();
                     }
                   }}

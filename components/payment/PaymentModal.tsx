@@ -33,7 +33,7 @@ export default function PaymentModal({
   const [error, setError] = useState<string>("");
   const [loading, setLoading] = useState(false);
 
-  const handleAmountSelect = async (amount: number) => {
+  const handleAmountSelect = async (amount: number, isTestMode = false) => {
     setSelectedAmount(amount);
     setLoading(true);
     setError("");
@@ -46,6 +46,7 @@ export default function PaymentModal({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           amount,
+          isTestMode,
           exportType,
           exportMetadata,
         }),
