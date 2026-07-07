@@ -71,23 +71,23 @@ export default function StaticQrisProvider({
         />
 
         <div
-          className="relative w-full max-w-[440px] animate-in fade-in zoom-in-95 duration-200"
+          className="relative w-full max-w-[430px] animate-in fade-in zoom-in-95 duration-200"
         >
           <div className="rounded-2xl bg-white/90 dark:bg-gray-800/90 backdrop-blur-md shadow-2xl border border-white/20 dark:border-gray-700/30">
-            <div className="px-5 pt-4 pb-2 flex items-center justify-between">
-              <h2 className="text-base font-bold text-gray-900 dark:text-gray-100">
+            <div className="px-4 pt-3 pb-2 flex items-center justify-between">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 flex-1 text-center">
                 Dukung Pengembangan Aplikasi
               </h2>
               <button
                 onClick={onClose}
-                className="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-600 dark:hover:text-gray-300"
+                className="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-600 dark:hover:text-gray-300 absolute right-3 top-3"
                 aria-label="Tutup modal"
               >
                 <X size={16} />
               </button>
             </div>
 
-            <div className="px-5 py-3 space-y-4">
+            <div className="px-4 py-2 space-y-2.5 text-center">
               <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
                 Jika aplikasi ini bermanfaat, berikan dukungan mulai Rp10.000
                 untuk melanjutkan download.
@@ -96,7 +96,7 @@ export default function StaticQrisProvider({
                 Terima kasih telah mendukung pengembangan aplikasi ini.
               </p>
 
-              <div className="flex flex-col items-center gap-3">
+              <div className="flex flex-col items-center gap-2 pt-1">
                 <div className="w-40 h-40 rounded-xl border border-gray-200 dark:border-gray-600 shadow-md bg-white p-1">
                   <img
                     src="/payment/qris.png"
@@ -104,15 +104,15 @@ export default function StaticQrisProvider({
                     className="w-full h-full rounded-lg object-contain"
                   />
                 </div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 text-center max-w-xs">
+                <p className="text-xs text-gray-500 dark:text-gray-400 max-w-xs">
                   Mendukung pembayaran melalui seluruh aplikasi yang mendukung QRIS.
                 </p>
               </div>
             </div>
 
-            <div className="px-5 pb-5 pt-1 space-y-2">
+            <div className="px-4 pb-4 pt-1 space-y-2">
               <Button
-                className="w-full"
+                className="w-full h-[42px]"
                 onClick={handleDonate}
                 isLoading={isLoading}
               >
@@ -122,7 +122,7 @@ export default function StaticQrisProvider({
 
               <Button
                 variant="secondary"
-                className="w-full"
+                className="w-full h-[42px]"
                 onClick={onClose}
                 disabled={isLoading}
               >
