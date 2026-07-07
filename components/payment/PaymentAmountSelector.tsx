@@ -19,6 +19,17 @@ export default function PaymentAmountSelector({
   const [customAmount, setCustomAmount] = useState<string>("");
   const [isCustomSelected, setIsCustomSelected] = useState(false);
   const [error, setError] = useState<string>("");
+  const [testMode, setTestMode] = useState(false);
+  const [testTapCount, setTestTapCount] = useState(0);
+
+  const handleTitleTap = () => {
+    const newCount = testTapCount + 1;
+    setTestTapCount(newCount);
+    if (newCount >= 5) {
+      setTestMode(true);
+      setTestTapCount(0);
+    }
+  };
 
   const presetAmounts = [
     { value: 10000, label: "Rp10.000" },
@@ -45,6 +56,8 @@ export default function PaymentAmountSelector({
     }
   };
 
+  const effectiveMinAmount = testMode ? 100 : minAmount;
+
   const handleContinue = () => {
     if (customAmount) {
       const amount = parseInt(customAmount);
@@ -54,8 +67,8 @@ export default function PaymentAmountSelector({
         return;
       }
 
-      if (amount < minAmount) {
-        setError(`Minimal donasi Rp${minAmount.toLocaleString("id-ID")}`);
+      if (amount < effectiveMinAmount) {
+        setError(`Minimal donasi Rp${effectiveMinAmount.toLocaleString("id-ID")}`);
         return;
       }
 
@@ -64,7 +77,7 @@ export default function PaymentAmountSelector({
         return;
       }
 
-      if (amount % 1000 !== 0) {
+      if (!testMode && amount % 1000 !== 0) {
         setError("Nominal harus kelipatan Rp1.000");
         return;
       }
@@ -79,8 +92,11 @@ export default function PaymentAmountSelector({
       <div className="text-center">
         <div className="flex items-center justify-center gap-1.5">
           <CheckCircle2 size={16} className="text-teal-600" />
-          <h2 className="text-sm font-bold text-gray-900">Jadwal Berhasil Dibuat</h2>
+          <h2 className="text-sm font-bold text-gray-900" onClick={handleTitleTap}>Jadwal Berhasil Dibuat</h2>
         </div>
+        {testMode && (
+          <p className="mt-0.5 text-[10px] text-amber-600 font-semibold">⚡ Testing Mode</p>
+        )}
         <p className="mt-0.5 text-[11px] text-gray-500">
           Aplikasi ini untuk membantu guru menyusun jadwal dengan lebih mudah.
         </p>
@@ -114,6 +130,23 @@ export default function PaymentAmountSelector({
             </label>
           ))}
 
+          {/* Testing Amount (hidden, tap title 5x to unlock) */}
+          {testMode && (
+            <label className="flex cursor-pointer items-center rounded-lg border-2 border-amber-300 bg-amber-50 p-3 transition-all hover:border-amber-400 hover:shadow-md">
+              <input
+                type="radio"
+                name="amount"
+                value={100}
+                checked={selectedAmount === 100 && !isCustomSelected}
+                onChange={() => handlePresetSelect(100)}
+                className="h-3.5 w-3.5 border-gray-300 text-amber-600 focus:ring-2 focus:ring-amber-500"
+              />
+              <span className="ml-2 flex-1 text-sm font-medium text-amber-900">
+                Rp100 (Testing)
+              </span>
+            </label>
+          )}
+
           {/* Custom Amount */}
           <label className="flex cursor-pointer items-center rounded-lg border-2 border-teal-200 bg-white p-3 transition-all hover:border-teal-400 hover:shadow-md">
             <input
@@ -135,7 +168,7 @@ export default function PaymentAmountSelector({
                 type="text"
                 value={customAmount}
                 onChange={(e) => handleCustomAmountChange(e.target.value)}
-                placeholder={`Min. Rp${minAmount.toLocaleString("id-ID")}`}
+                placeholder={`Min. Rp${effectiveMinAmount.toLocaleString("id-ID")}`}
                 className="w-full rounded-lg border border-gray-300 px-2 py-1.5 text-xs focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500"
                 onClick={(e) => e.stopPropagation()}
               />
