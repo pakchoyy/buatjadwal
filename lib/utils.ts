@@ -2,7 +2,12 @@
  * Utility Functions
  */
 
-import { Day, DAY_LABELS } from "./types";
+import {
+  Day,
+  DAY_LABELS,
+  EducationLevel,
+  EDUCATION_LEVEL_LABELS,
+} from "./types";
 
 /**
  * Generate UUID v4
@@ -117,6 +122,20 @@ export function debounce<T extends (...args: any[]) => any>(
  */
 export function getGradeLabel(grade: number): string {
   return `Kelas ${grade}`;
+}
+
+/**
+ * Get education level label
+ */
+export function getEducationLevelLabel(level: EducationLevel): string {
+  return EDUCATION_LEVEL_LABELS[level];
+}
+
+/**
+ * Build class summary label
+ */
+export function formatClassLevel(level: EducationLevel, grade: number): string {
+  return `${getEducationLevelLabel(level)} ${grade}`;
 }
 
 /**

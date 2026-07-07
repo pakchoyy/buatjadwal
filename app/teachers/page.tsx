@@ -4,8 +4,8 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
-import { Pencil, Plus, Trash2, Users } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Download, Pencil, Plus, Trash2, Upload, Users } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
 import Input from "@/components/ui/Input";
@@ -14,6 +14,7 @@ import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import { LocalDB } from "@/lib/db";
 import { Teacher, AlertState, TeacherFormData } from "@/lib/types";
 import { filterBySearch } from "@/lib/utils";
+import { downloadTemplate, parseExcelFile } from "@/lib/spreadsheet-import";
 
 export default function TeachersPage() {
   const [teachers, setTeachers] = useState<Teacher[]>([]);
@@ -37,6 +38,13 @@ export default function TeachersPage() {
     isOpen: boolean;
     teacherId: string | null;
   }>({ isOpen: false, teacherId: null });
+  const [importResult, setImportResult] = useState<{
+    isOpen: boolean;
+    imported: number;
+    errors: { row: number; message: string }[];
+  }>({ isOpen: false, imported: 0, errors: [] });
+  const [isImporting, setIsImporting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     loadTeachers();
@@ -52,6 +60,71 @@ export default function TeachersPage() {
     if (school) {
       const data = LocalDB.listTeachers(school.id);
       setTeachers(data);
+    }
+  };
+
+  const handleDownloadTemplate = () => {
+    downloadTemplate(
+      "Template_Import_Guru.xlsx",
+      ["Kode", "Nama", "Gelar"],
+      [
+        ["01", "SITI AMINAH", "S.Pd"],
+        ["02", "ABDUL RAHMAN", "M.Pd"],
+      ]
+    );
+  };
+
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsImporting(true);
+
+    try {
+      const { rows } = await parseExcelFile(file);
+      const school = LocalDB.getSchool();
+      if (!school) throw new Error("Silakan buat data sekolah terlebih dahulu");
+
+      const errors: { row: number; message: string }[] = [];
+      let imported = 0;
+
+      for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        const code = row["kode"] || "";
+        const name = row["nama"] || "";
+        const title = row["gelar"] || "";
+
+        if (!code) {
+          errors.push({ row: i + 2, message: "Kode kosong" });
+          continue;
+        }
+        if (!name) {
+          errors.push({ row: i + 2, message: "Nama kosong" });
+          continue;
+        }
+
+        try {
+          LocalDB.createTeacher({ schoolId: school.id, code, name, title });
+          imported++;
+        } catch (err) {
+          errors.push({ row: i + 2, message: err instanceof Error ? err.message : "Error" });
+        }
+      }
+
+      setImportResult({ isOpen: true, imported, errors });
+      loadTeachers();
+    } catch (err) {
+      setAlert({
+        show: true,
+        type: "error",
+        message: err instanceof Error ? err.message : "Gagal import",
+      });
+    } finally {
+      setIsImporting(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
@@ -145,13 +218,28 @@ export default function TeachersPage() {
   return (
     <>
       {/* Action button */}
-      <div className="p-4 md:p-6 pb-0">
-        <div className="flex justify-center">
-          <Button onClick={handleCreate}>
-            <Plus size={16} />
-            Tambah Guru
-          </Button>
-        </div>
+        <div className="p-4 md:p-6 pb-0">
+          <div className="flex flex-wrap justify-center gap-3">
+            <Button onClick={handleCreate}>
+              <Plus size={16} />
+              Tambah Guru
+            </Button>
+            <Button variant="secondary" onClick={handleDownloadTemplate}>
+              <Download size={16} />
+              <span className="hidden sm:inline">Download Template</span>
+            </Button>
+            <Button variant="secondary" onClick={handleImportClick} isLoading={isImporting}>
+              <Upload size={16} />
+              <span className="hidden sm:inline">Import Excel</span>
+            </Button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".xlsx,.xls"
+              className="hidden"
+              onChange={handleFileChange}
+            />
+          </div>
       </div>
 
       <div className="p-4 md:p-6">
@@ -176,8 +264,8 @@ export default function TeachersPage() {
         </div>
 
         {/* Table */}
-        <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-          {filteredTeachers.length === 0 ? (
+          <div className="bg-white rounded-lg shadow-sm overflow-x-auto">
+            {filteredTeachers.length === 0 ? (
             <div className="p-12 text-center">
               <div className="flex flex-col items-center gap-3">
                 <Users size={48} className="text-gray-300" />
@@ -232,7 +320,7 @@ export default function TeachersPage() {
                           title="Edit guru"
                         >
                           <Pencil size={14} />
-                          Edit
+                          <span className="hidden sm:inline">Edit</span>
                         </button>
                         <button
                           onClick={() => setDeleteDialog({ isOpen: true, teacherId: teacher.id })}
@@ -240,7 +328,7 @@ export default function TeachersPage() {
                           title="Hapus guru"
                         >
                           <Trash2 size={14} />
-                          Hapus
+                          <span className="hidden sm:inline">Hapus</span>
                         </button>
                       </div>
                     </td>
@@ -311,6 +399,42 @@ export default function TeachersPage() {
         confirmText="Hapus"
         confirmVariant="danger"
       />
+
+      <Modal
+        isOpen={importResult.isOpen}
+        onClose={() => setImportResult({ ...importResult, isOpen: false })}
+        title="Hasil Import"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-gray-700">
+            Berhasil: <strong className="text-green-700">{importResult.imported}</strong> guru
+            {importResult.errors.length > 0 && (
+              <span>
+                {" "}| Gagal: <strong className="text-red-700">{importResult.errors.length}</strong> baris
+              </span>
+            )}
+          </p>
+
+          {importResult.errors.length > 0 && (
+            <div>
+              <h4 className="text-sm font-semibold text-red-800 mb-2">Detail Error:</h4>
+              <div className="max-h-48 overflow-y-auto space-y-1">
+                {importResult.errors.map((err, i) => (
+                  <p key={i} className="text-xs text-red-700">
+                    Baris {err.row}: {err.message}
+                  </p>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="flex justify-end pt-2">
+            <Button onClick={() => setImportResult({ ...importResult, isOpen: false })}>
+              Tutup
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </>
   );
 }

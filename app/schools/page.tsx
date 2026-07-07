@@ -59,12 +59,12 @@ export default function SchoolsPage() {
 
   const handleCreate = () => {
     setFormData({
-      name: "",
+      name: "SDN MBG Nusantara",
       address: "",
-      district: "",
+      district: "Kabupaten Jaya",
       email: "",
-      academicYear: "",
-      semester: "",
+      academicYear: "2026/2027",
+      semester: "Ganjil",
     });
     setIsModalOpen(true);
   };
@@ -219,59 +219,59 @@ export default function SchoolsPage() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input
             label="Nama Sekolah"
-            value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            error={errors.name}
-            required
-            placeholder="Contoh: SMP NEGERI 1 BATUMARMAR"
-          />
+             value={formData.name}
+             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+             error={errors.name}
+             required
+             placeholder="Contoh: SDN MBG Nusantara, SMP Negeri 1 Batumarmar"
+           />
 
-          <Input
-            label="Alamat"
-            value={formData.address}
-            onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-            error={errors.address}
-            required
-            placeholder="Alamat lengkap sekolah"
-          />
+           <Input
+             label="Alamat"
+             value={formData.address}
+             onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+             error={errors.address}
+             required
+             placeholder="Jl. Raya Mulus Sekali No. 1"
+           />
 
-          <Input
-            label="Kabupaten/Kota"
-            value={formData.district}
-            onChange={(e) => setFormData({ ...formData, district: e.target.value })}
-            error={errors.district}
-            required
-            placeholder="Contoh: KABUPATEN PAMEKASAN"
-          />
+           <Input
+             label="Kabupaten/Kota"
+             value={formData.district}
+             onChange={(e) => setFormData({ ...formData, district: e.target.value })}
+             error={errors.district}
+             required
+             placeholder="Contoh: Kabupaten Jaya"
+           />
 
-          <Input
-            label="Email"
-            type="email"
-            value={formData.email}
-            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            error={errors.email}
-            required
-            placeholder="email@sekolah.com"
-          />
+           <Input
+             label="Email"
+             type="email"
+             value={formData.email}
+             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+             error={errors.email}
+             required
+             placeholder="email@sekolah.com"
+           />
 
-          <div className="grid grid-cols-2 gap-4">
-            <Input
-              label="Tahun Ajaran"
-              value={formData.academicYear}
-              onChange={(e) => setFormData({ ...formData, academicYear: e.target.value })}
-              error={errors.academicYear}
-              required
-              placeholder="2025-2026"
-            />
+           <div className="grid grid-cols-2 gap-4">
+             <Input
+               label="Tahun Ajaran"
+               value={formData.academicYear}
+               onChange={(e) => setFormData({ ...formData, academicYear: e.target.value })}
+               error={errors.academicYear}
+               required
+               placeholder="2026/2027"
+             />
 
-            <Input
-              label="Semester"
-              value={formData.semester}
-              onChange={(e) => setFormData({ ...formData, semester: e.target.value })}
-              error={errors.semester}
-              required
-              placeholder="Ganjil/Genap"
-            />
+             <Input
+               label="Semester"
+               value={formData.semester}
+               onChange={(e) => setFormData({ ...formData, semester: e.target.value })}
+               error={errors.semester}
+               required
+               placeholder="Ganjil"
+             />
           </div>
 
           <div className="flex justify-end space-x-3 pt-4">

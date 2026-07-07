@@ -7,7 +7,7 @@ import autoTable, { type RowInput } from "jspdf-autotable";
 import * as XLSX from "xlsx";
 import { LocalDB } from "./db";
 import { getAllScheduleEntries } from "./scheduler";
-import { DAYS, DAY_LABELS, Day } from "./types";
+import { DAYS, DAY_LABELS, Day, EducationLevel, EDUCATION_LEVEL_LABELS } from "./types";
 
 type SheetRow = Array<string | number | undefined | null>;
 type PdfOrientation = "portrait" | "landscape";
@@ -255,7 +255,7 @@ export function exportClassScheduleToPdf(schoolId: string, classId: string): voi
     title: "Jadwal per Kelas",
     detailLines: [
       school?.name || "-",
-      `Kelas ${cls?.name || "-"} | Tingkat ${cls?.grade || "-"}`,
+      `Kelas ${cls?.name || "-"} | ${EDUCATION_LEVEL_LABELS[cls?.educationLevel as EducationLevel] || "-"} ${cls?.grade || ""}`,
       `Tahun Ajaran ${school?.academicYear || "-"} | Semester ${school?.semester || "-"}`,
     ],
     headers: ["Jam", "Waktu", ...activeDays.map((day) => DAY_LABELS[day])],
@@ -381,7 +381,7 @@ export function exportClassScheduleToXlsx(schoolId: string, classId: string): vo
     "Jadwal per Kelas",
     [
       school?.name || "",
-      `Kelas ${cls?.name || "-"} | Tahun Ajaran ${school?.academicYear || "-"} | Semester ${school?.semester || "-"}`,
+      `Kelas ${cls?.name || "-"} | ${EDUCATION_LEVEL_LABELS[cls?.educationLevel as EducationLevel] || "-"} ${cls?.grade || ""} | Tahun Ajaran ${school?.academicYear || "-"} | Semester ${school?.semester || "-"}`,
       `Dicetak: ${new Date().toLocaleString("id-ID")}`,
     ],
     headerRow

@@ -31,7 +31,8 @@ export interface Class {
   id: string;
   schoolId: string;
   name: string; // "7A", "8B", "9C"
-  grade: number; // 7, 8, atau 9
+  educationLevel: EducationLevel;
+  grade: number; // 1-6 (SD), 7-9 (SMP), 10-12 (SMA)
   createdAt: number;
   updatedAt: number;
 }
@@ -118,8 +119,21 @@ export const DAY_LABELS: Record<Day, string> = {
   saturday: "Sabtu",
 };
 
-export const GRADES = [7, 8, 9] as const;
-export type Grade = typeof GRADES[number];
+export type EducationLevel = "sd" | "smp" | "sma";
+
+export const EDUCATION_LEVELS: EducationLevel[] = ["sd", "smp", "sma"];
+
+export const EDUCATION_LEVEL_LABELS: Record<EducationLevel, string> = {
+  sd: "SD",
+  smp: "SMP",
+  sma: "SMA",
+};
+
+export const GRADE_OPTIONS: Record<EducationLevel, readonly number[]> = {
+  sd: [1, 2, 3, 4, 5, 6],
+  smp: [7, 8, 9],
+  sma: [10, 11, 12],
+};
 
 // ==================== FORM DATA TYPES ====================
 
@@ -170,6 +184,7 @@ export interface TeachingAllocationView extends TeachingAllocation {
   subjectName: string;
   subjectCode: string;
   className: string;
+  classEducationLevel: EducationLevel;
   classGrade: number;
 }
 

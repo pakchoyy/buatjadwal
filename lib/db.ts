@@ -6,6 +6,7 @@
 import {
   School,
   Class,
+  EducationLevel,
   Teacher,
   Subject,
   TimeSlot,
@@ -70,6 +71,19 @@ export class LocalDB {
     id: string
   ): T | undefined {
     return items.find((item) => item.id === id);
+  }
+
+  private static inferEducationLevel(grade: number): EducationLevel {
+    if (grade >= 1 && grade <= 6) return "sd";
+    if (grade >= 10 && grade <= 12) return "sma";
+    return "smp";
+  }
+
+  private static normalizeClassData(cls: Partial<Class>): Class {
+    return {
+      ...cls,
+      educationLevel: cls.educationLevel || this.inferEducationLevel(cls.grade || 7),
+    } as Class;
   }
 
   // ==================== SCHOOLS ====================
@@ -165,12 +179,15 @@ export class LocalDB {
 
   static listClasses(schoolId: string): Class[] {
     const classes = this.get<Class>(this.KEYS.CLASSES);
-    return classes.filter((c) => c.schoolId === schoolId);
+    return classes
+      .filter((c) => c.schoolId === schoolId)
+      .map((c) => this.normalizeClassData(c));
   }
 
   static getClass(id: string): Class | null {
     const classes = this.get<Class>(this.KEYS.CLASSES);
-    return this.findById(classes, id) || null;
+    const cls = this.findById(classes, id);
+    return cls ? this.normalizeClassData(cls) : null;
   }
 
   static createClass(data: ClassFormData): Class {
@@ -212,7 +229,7 @@ export class LocalDB {
       throw new Error("Kelas tidak ditemukan");
     }
 
-    const existingClass = classes[classIndex];
+    const existingClass = this.normalizeClassData(classes[classIndex]);
     const updatedClass: Class = {
       ...existingClass,
       ...updates,

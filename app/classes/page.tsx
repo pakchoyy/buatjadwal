@@ -1,7 +1,3 @@
-/**
- * Classes Page - CRUD untuk kelas
- */
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -13,7 +9,15 @@ import Select from "@/components/ui/Select";
 import Alert from "@/components/ui/Alert";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import { LocalDB } from "@/lib/db";
-import { Class, AlertState, ClassFormData, GRADES } from "@/lib/types";
+import {
+  Class,
+  AlertState,
+  ClassFormData,
+  EducationLevel,
+  EDUCATION_LEVELS,
+  EDUCATION_LEVEL_LABELS,
+  GRADE_OPTIONS,
+} from "@/lib/types";
 import { filterBySearch } from "@/lib/utils";
 
 export default function ClassesPage() {
@@ -25,6 +29,7 @@ export default function ClassesPage() {
   const [formData, setFormData] = useState<ClassFormData>({
     schoolId: "",
     name: "",
+    educationLevel: "smp",
     grade: 7,
   });
   const [alert, setAlert] = useState<AlertState>({
@@ -37,6 +42,9 @@ export default function ClassesPage() {
     isOpen: boolean;
     classId: string | null;
   }>({ isOpen: false, classId: null });
+
+  const selectedLevel = formData.educationLevel as EducationLevel;
+  const gradeOptions = GRADE_OPTIONS[selectedLevel] || GRADE_OPTIONS.smp;
 
   useEffect(() => {
     loadClasses();
@@ -70,6 +78,7 @@ export default function ClassesPage() {
     setFormData({
       schoolId: school.id,
       name: "",
+      educationLevel: "smp",
       grade: 7,
     });
     setIsModalOpen(true);
@@ -80,6 +89,7 @@ export default function ClassesPage() {
     setFormData({
       schoolId: cls.schoolId,
       name: cls.name,
+      educationLevel: cls.educationLevel,
       grade: cls.grade,
     });
     setIsModalOpen(true);
@@ -142,7 +152,6 @@ export default function ClassesPage() {
 
   return (
     <>
-      {/* Action button */}
       <div className="p-4 md:p-6 pb-0">
         <div className="flex justify-center">
           <Button onClick={handleCreate}>
@@ -163,7 +172,6 @@ export default function ClassesPage() {
           </div>
         )}
 
-        {/* Search Bar */}
         <div className="mb-4">
           <Input
             label="Cari Kelas"
@@ -173,8 +181,7 @@ export default function ClassesPage() {
           />
         </div>
 
-        {/* Table */}
-        <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+        <div className="bg-white rounded-lg shadow-sm overflow-x-auto">
           {filteredClasses.length === 0 ? (
             <div className="p-12 text-center">
               <div className="flex flex-col items-center gap-3">
@@ -197,6 +204,9 @@ export default function ClassesPage() {
                     Nama Kelas
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Jenjang
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Tingkat
                   </th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -214,7 +224,10 @@ export default function ClassesPage() {
                       {cls.name}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      Kelas {cls.grade}
+                      {EDUCATION_LEVEL_LABELS[cls.educationLevel]}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {cls.grade}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex items-center justify-end gap-2">
@@ -224,7 +237,7 @@ export default function ClassesPage() {
                           title="Edit kelas"
                         >
                           <Pencil size={14} />
-                          Edit
+                          <span className="hidden sm:inline">Edit</span>
                         </button>
                         <button
                           onClick={() => setDeleteDialog({ isOpen: true, classId: cls.id })}
@@ -232,7 +245,7 @@ export default function ClassesPage() {
                           title="Hapus kelas"
                         >
                           <Trash2 size={14} />
-                          Hapus
+                          <span className="hidden sm:inline">Hapus</span>
                         </button>
                       </div>
                     </td>
@@ -248,7 +261,6 @@ export default function ClassesPage() {
         </div>
       </div>
 
-      {/* Form Modal */}
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
@@ -260,14 +272,33 @@ export default function ClassesPage() {
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             required
-            placeholder="Contoh: 7A, 8B, 9C"
+            placeholder="Contoh: 1A, 7B, 10C"
+          />
+
+          <Select
+            label="Jenjang"
+            value={formData.educationLevel}
+            onChange={(e) => {
+              const level = e.target.value as EducationLevel;
+              const grades = GRADE_OPTIONS[level];
+              setFormData({
+                ...formData,
+                educationLevel: level,
+                grade: grades ? grades[0] : 7,
+              });
+            }}
+            options={EDUCATION_LEVELS.map((l) => ({
+              value: l,
+              label: EDUCATION_LEVEL_LABELS[l],
+            }))}
+            required
           />
 
           <Select
             label="Tingkat"
             value={String(formData.grade)}
             onChange={(e) => setFormData({ ...formData, grade: Number(e.target.value) })}
-            options={GRADES.map((g) => ({ value: String(g), label: `Kelas ${g}` }))}
+            options={gradeOptions.map((g) => ({ value: String(g), label: `Kelas ${g}` }))}
             required
           />
 
@@ -286,7 +317,6 @@ export default function ClassesPage() {
         </form>
       </Modal>
 
-      {/* Delete Confirmation */}
       <ConfirmDialog
         isOpen={deleteDialog.isOpen}
         onClose={() => setDeleteDialog({ isOpen: false, classId: null })}

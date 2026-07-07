@@ -41,8 +41,7 @@ export default function RootLayout({
           </main>
         </div>
 
-        {/* Running Text - Bottom Ticker (Desktop) */}
-        <div className="hidden lg:block">
+        {/* Running Text - Bottom Ticker */}
           <RunningText
             messages={[
               "Generate jadwal otomatis",
@@ -51,7 +50,6 @@ export default function RootLayout({
               "Lihat per guru atau per kelas",
             ]}
           />
-        </div>
       </body>
     </html>
   );

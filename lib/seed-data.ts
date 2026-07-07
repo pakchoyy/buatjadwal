@@ -5,7 +5,6 @@
 
 import { LocalDB } from "./db";
 import { Day } from "./types";
-
 // ==================== SCHOOL DATA ====================
 
 const SCHOOL_DATA = {
@@ -13,48 +12,45 @@ const SCHOOL_DATA = {
   address: "Jl. Raya Mulus Sekali",
   district: "KABUPATEN JAYA",
   email: "mbgjaya@gmail.com",
-  academicYear: "2026-2027",
+  academicYear: "2026/2027",
   semester: "Ganjil",
 };
 
 // ==================== CLASSES DATA (30 kelas) ====================
 
-const CLASSES_DATA = [
-  // Tingkat 7 (10 kelas)
-  { name: "7A", grade: 7 },
-  { name: "7B", grade: 7 },
-  { name: "7C", grade: 7 },
-  { name: "7D", grade: 7 },
-  { name: "7E", grade: 7 },
-  { name: "7F", grade: 7 },
-  { name: "7G", grade: 7 },
-  { name: "7H", grade: 7 },
-  { name: "7I", grade: 7 },
-  { name: "7J", grade: 7 },
+const CLASSES_DATA: { name: string; educationLevel: "sd" | "smp" | "sma"; grade: number }[] = [
+  { name: "7A", educationLevel: "smp", grade: 7 },
+  { name: "7B", educationLevel: "smp", grade: 7 },
+  { name: "7C", educationLevel: "smp", grade: 7 },
+  { name: "7D", educationLevel: "smp", grade: 7 },
+  { name: "7E", educationLevel: "smp", grade: 7 },
+  { name: "7F", educationLevel: "smp", grade: 7 },
+  { name: "7G", educationLevel: "smp", grade: 7 },
+  { name: "7H", educationLevel: "smp", grade: 7 },
+  { name: "7I", educationLevel: "smp", grade: 7 },
+  { name: "7J", educationLevel: "smp", grade: 7 },
 
-  // Tingkat 8 (10 kelas)
-  { name: "8A", grade: 8 },
-  { name: "8B", grade: 8 },
-  { name: "8C", grade: 8 },
-  { name: "8D", grade: 8 },
-  { name: "8E", grade: 8 },
-  { name: "8F", grade: 8 },
-  { name: "8G", grade: 8 },
-  { name: "8H", grade: 8 },
-  { name: "8I", grade: 8 },
-  { name: "8J", grade: 8 },
+  { name: "8A", educationLevel: "smp", grade: 8 },
+  { name: "8B", educationLevel: "smp", grade: 8 },
+  { name: "8C", educationLevel: "smp", grade: 8 },
+  { name: "8D", educationLevel: "smp", grade: 8 },
+  { name: "8E", educationLevel: "smp", grade: 8 },
+  { name: "8F", educationLevel: "smp", grade: 8 },
+  { name: "8G", educationLevel: "smp", grade: 8 },
+  { name: "8H", educationLevel: "smp", grade: 8 },
+  { name: "8I", educationLevel: "smp", grade: 8 },
+  { name: "8J", educationLevel: "smp", grade: 8 },
 
-  // Tingkat 9 (10 kelas)
-  { name: "9A", grade: 9 },
-  { name: "9B", grade: 9 },
-  { name: "9C", grade: 9 },
-  { name: "9D", grade: 9 },
-  { name: "9E", grade: 9 },
-  { name: "9F", grade: 9 },
-  { name: "9G", grade: 9 },
-  { name: "9H", grade: 9 },
-  { name: "9I", grade: 9 },
-  { name: "9J", grade: 9 },
+  { name: "9A", educationLevel: "smp", grade: 9 },
+  { name: "9B", educationLevel: "smp", grade: 9 },
+  { name: "9C", educationLevel: "smp", grade: 9 },
+  { name: "9D", educationLevel: "smp", grade: 9 },
+  { name: "9E", educationLevel: "smp", grade: 9 },
+  { name: "9F", educationLevel: "smp", grade: 9 },
+  { name: "9G", educationLevel: "smp", grade: 9 },
+  { name: "9H", educationLevel: "smp", grade: 9 },
+  { name: "9I", educationLevel: "smp", grade: 9 },
+  { name: "9J", educationLevel: "smp", grade: 9 },
 ];
 
 // ==================== TEACHERS DATA (52 guru) ====================

@@ -20,7 +20,7 @@ import {
   exportTeacherScheduleToPdf,
   exportTeacherScheduleToXlsx,
 } from "@/lib/export";
-import { getDayLabel, formatDateTime } from "@/lib/utils";
+import { getDayLabel, formatDateTime, formatClassLevel } from "@/lib/utils";
 import PaymentModal from "@/components/payment/PaymentModal";
 import { hasUserPaid } from "@/lib/payment-storage";
 import {
@@ -429,7 +429,7 @@ export default function UnifiedSchedulesPage() {
               <h1 className="text-xl font-bold text-gray-900">Jadwal per Kelas</h1>
               <p className="text-sm text-gray-700">{school?.name || "-"}</p>
               <p className="text-sm text-gray-700">
-                Kelas {selectedClass.name} | Tingkat {selectedClass.grade} | Tahun Ajaran {school?.academicYear || "-"} | Semester {school?.semester || "-"}
+                Kelas {selectedClass.name} | {formatClassLevel(selectedClass.educationLevel, selectedClass.grade)} | Tahun Ajaran {school?.academicYear || "-"} | Semester {school?.semester || "-"}
               </p>
               <p className="text-xs text-gray-600">Dicetak: {printedAt}</p>
             </div>

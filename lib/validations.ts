@@ -7,7 +7,9 @@ import {
   DependencyCheck,
   Day,
   DAYS,
-  GRADES,
+  EducationLevel,
+  EDUCATION_LEVELS,
+  GRADE_OPTIONS,
 } from "./types";
 import { isValidTimeFormat, isTimeRangeValid, isEmpty } from "./utils";
 
@@ -100,11 +102,18 @@ export function validateClassForm(data: any): ValidationResult {
   if (isEmpty(data.name)) {
     return { valid: false, message: "Nama kelas wajib diisi" };
   }
+  if (!data.educationLevel) {
+    return { valid: false, message: "Jenjang kelas wajib diisi" };
+  }
+  if (!EDUCATION_LEVELS.includes(data.educationLevel)) {
+    return { valid: false, message: "Jenjang kelas harus SD, SMP, atau SMA" };
+  }
   if (!data.grade) {
     return { valid: false, message: "Tingkat kelas wajib diisi" };
   }
-  if (!GRADES.includes(data.grade)) {
-    return { valid: false, message: "Tingkat kelas harus 7, 8, atau 9" };
+  const validGrades = GRADE_OPTIONS[data.educationLevel as EducationLevel];
+  if (!validGrades || !validGrades.includes(data.grade)) {
+    return { valid: false, message: `Tingkat tidak valid untuk jenjang ${data.educationLevel}` };
   }
 
   return { valid: true };
