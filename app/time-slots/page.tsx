@@ -15,6 +15,7 @@ import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import { LocalDB } from "@/lib/db";
 import { TimeSlot, AlertState, TimeSlotFormData, DAYS, DAY_LABELS } from "@/lib/types";
 import { getDayLabel, formatTimeRange } from "@/lib/utils";
+import { Analytics } from "@/lib/analytics";
 
 export default function TimeSlotsPage() {
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
@@ -108,6 +109,10 @@ export default function TimeSlotsPage() {
         });
       } else {
         LocalDB.createTimeSlot(formData);
+        Analytics.timeSlotCreated({
+          page_name: "Time Slots",
+          feature: "master_data",
+        });
         setAlert({
           show: true,
           type: "success",
@@ -133,6 +138,10 @@ export default function TimeSlotsPage() {
 
     try {
       LocalDB.deleteTimeSlot(deleteDialog.slotId);
+      Analytics.timeSlotDeleted({
+        page_name: "Time Slots",
+        feature: "master_data",
+      });
       setAlert({
         show: true,
         type: "success",

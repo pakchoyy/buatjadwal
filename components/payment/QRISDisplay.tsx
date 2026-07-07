@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Clock, X, ShieldCheck, Download } from "lucide-react";
 import Button from "@/components/ui/Button";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import { Analytics } from "@/lib/analytics";
 
 interface QRISDisplayProps {
   qrisUrl: string;
@@ -108,6 +109,11 @@ export default function QRISDisplay({
   };
 
   const handleDownloadQRIS = async () => {
+    Analytics.downloadQris({
+      page_name: "Schedule",
+      feature: "qris",
+    });
+
     try {
       const response = await fetch(qrisUrl);
       const blob = await response.blob();

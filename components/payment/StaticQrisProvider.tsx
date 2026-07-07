@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { CircleCheck, Download, Info, LoaderCircle, X } from "lucide-react";
 import Button from "@/components/ui/Button";
 import { savePaymentStatus } from "@/lib/payment-storage";
+import { Analytics } from "@/lib/analytics";
 
 interface StaticQrisProviderProps {
   isOpen: boolean;
@@ -68,6 +69,11 @@ export default function StaticQrisProvider({
     link.click();
     document.body.removeChild(link);
 
+    Analytics.downloadQris({
+      page_name: "Schedule",
+      feature: "qris",
+    });
+
     setToast({
       type: "qris-downloaded",
       title: "QRIS berhasil diunduh.",
@@ -82,6 +88,11 @@ export default function StaticQrisProvider({
   const handleConfirmDownload = () => {
     setShowConfirmDialog(false);
     setIsLoading(true);
+
+    Analytics.supportDownloadClick({
+      page_name: "Schedule",
+      feature: "qris",
+    });
 
     // Show preparing toast
     setToast({

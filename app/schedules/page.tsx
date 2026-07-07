@@ -5,7 +5,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { CalendarRange, FileSpreadsheet, FileText, GraduationCap, Users } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Select from "@/components/ui/Select";
@@ -28,6 +28,7 @@ import {
   executePendingExport,
   getPendingExportInfo,
 } from "@/lib/export-wrapper";
+import { Analytics, trackError } from "@/lib/analytics";
 import {
   ScheduleEntry,
   TimeSlot,
@@ -59,6 +60,7 @@ export default function UnifiedSchedulesPage() {
   const [showDonationBanner, setShowDonationBanner] = useState(true);
   const [printedAt, setPrintedAt] = useState("");
   const [downloadToast, setDownloadToast] = useState<{ show: boolean; message: string }>({ show: false, message: "" });
+  const lastTrackedPrintAtRef = useRef(0);
 
   useEffect(() => {
     loadData();
@@ -70,6 +72,30 @@ export default function UnifiedSchedulesPage() {
     loadSchedule();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [viewMode, selectedDay, selectedTeacherId, selectedClassId]);
+
+  useEffect(() => {
+    const handleBeforePrint = () => {
+      const now = Date.now();
+      if (now - lastTrackedPrintAtRef.current < 1000) {
+        return;
+      }
+
+      lastTrackedPrintAtRef.current = now;
+      Analytics.printSchedule({
+        page_name:
+          viewMode === "all"
+            ? "Schedule All"
+            : viewMode === "teacher"
+              ? "Schedule Teacher"
+              : "Schedule Class",
+        feature: "export",
+        total_items: scheduleEntries.length,
+      });
+    };
+
+    window.addEventListener("beforeprint", handleBeforePrint);
+    return () => window.removeEventListener("beforeprint", handleBeforePrint);
+  }, [scheduleEntries.length, viewMode]);
 
   const loadData = () => {
     const school = LocalDB.getSchool();
@@ -122,16 +148,46 @@ export default function UnifiedSchedulesPage() {
     if (!school) return;
 
     const executeExport = () => {
+      const startedAt = Date.now();
+
       // Show download toast
       setDownloadToast({ show: true, message: "Download PDF dimulai..." });
       setTimeout(() => setDownloadToast({ show: false, message: "" }), 3000);
 
-      if (viewMode === "all") {
-        exportAllSchedulesToPdf(school.id, selectedDay);
-      } else if (viewMode === "teacher" && selectedTeacherId) {
-        exportTeacherScheduleToPdf(school.id, selectedTeacherId);
-      } else if (viewMode === "class" && selectedClassId) {
-        exportClassScheduleToPdf(school.id, selectedClassId);
+      try {
+        if (viewMode === "all") {
+          exportAllSchedulesToPdf(school.id, selectedDay);
+        } else if (viewMode === "teacher" && selectedTeacherId) {
+          exportTeacherScheduleToPdf(school.id, selectedTeacherId);
+        } else if (viewMode === "class" && selectedClassId) {
+          exportClassScheduleToPdf(school.id, selectedClassId);
+        }
+
+        Analytics.exportPdf({
+          page_name:
+            viewMode === "all"
+              ? "Schedule All"
+              : viewMode === "teacher"
+                ? "Schedule Teacher"
+                : "Schedule Class",
+          feature: "export",
+          success: true,
+          duration: Date.now() - startedAt,
+          total_items: scheduleEntries.length,
+        });
+      } catch (error) {
+        trackError("export_pdf", error instanceof Error ? error : new Error("Unknown error"), {
+          page_name:
+            viewMode === "all"
+              ? "Schedule All"
+              : viewMode === "teacher"
+                ? "Schedule Teacher"
+                : "Schedule Class",
+          feature: "export",
+          duration: Date.now() - startedAt,
+          total_items: scheduleEntries.length,
+        });
+        throw error;
       }
     };
 
@@ -160,16 +216,46 @@ export default function UnifiedSchedulesPage() {
     if (!school) return;
 
     const executeExport = () => {
+      const startedAt = Date.now();
+
       // Show download toast
       setDownloadToast({ show: true, message: "Download Excel dimulai..." });
       setTimeout(() => setDownloadToast({ show: false, message: "" }), 3000);
 
-      if (viewMode === "all") {
-        exportAllSchedulesToXlsx(school.id, selectedDay);
-      } else if (viewMode === "teacher" && selectedTeacherId) {
-        exportTeacherScheduleToXlsx(school.id, selectedTeacherId);
-      } else if (viewMode === "class" && selectedClassId) {
-        exportClassScheduleToXlsx(school.id, selectedClassId);
+      try {
+        if (viewMode === "all") {
+          exportAllSchedulesToXlsx(school.id, selectedDay);
+        } else if (viewMode === "teacher" && selectedTeacherId) {
+          exportTeacherScheduleToXlsx(school.id, selectedTeacherId);
+        } else if (viewMode === "class" && selectedClassId) {
+          exportClassScheduleToXlsx(school.id, selectedClassId);
+        }
+
+        Analytics.exportExcel({
+          page_name:
+            viewMode === "all"
+              ? "Schedule All"
+              : viewMode === "teacher"
+                ? "Schedule Teacher"
+                : "Schedule Class",
+          feature: "export",
+          success: true,
+          duration: Date.now() - startedAt,
+          total_items: scheduleEntries.length,
+        });
+      } catch (error) {
+        trackError("export_excel", error instanceof Error ? error : new Error("Unknown error"), {
+          page_name:
+            viewMode === "all"
+              ? "Schedule All"
+              : viewMode === "teacher"
+                ? "Schedule Teacher"
+                : "Schedule Class",
+          feature: "export",
+          duration: Date.now() - startedAt,
+          total_items: scheduleEntries.length,
+        });
+        throw error;
       }
     };
 
@@ -198,11 +284,30 @@ export default function UnifiedSchedulesPage() {
     if (!school) return;
 
     const executeExport = () => {
+      const startedAt = Date.now();
+
       // Show download toast
       setDownloadToast({ show: true, message: "Download Excel Multi-Sheet dimulai..." });
       setTimeout(() => setDownloadToast({ show: false, message: "" }), 3000);
 
-      exportAllSchedulesToXlsxMultiSheet(school.id);
+      try {
+        exportAllSchedulesToXlsxMultiSheet(school.id);
+        Analytics.exportExcel({
+          page_name: "Schedule Multi-Sheet",
+          feature: "export",
+          success: true,
+          duration: Date.now() - startedAt,
+          total_items: scheduleEntries.length,
+        });
+      } catch (error) {
+        trackError("export_excel", error instanceof Error ? error : new Error("Unknown error"), {
+          page_name: "Schedule Multi-Sheet",
+          feature: "export",
+          duration: Date.now() - startedAt,
+          total_items: scheduleEntries.length,
+        });
+        throw error;
+      }
     };
 
     if (hasUserPaid()) {

@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import "./globals.css";
 import Header from "@/components/layout/Header";
 import Sidebar from "@/components/layout/Sidebar";
 import RunningText from "@/components/layout/RunningText";
+import GoogleAnalytics from "@/components/GoogleAnalytics";
+import AnalyticsRouteTracker from "@/components/AnalyticsRouteTracker";
 
 export default function RootLayout({
   children,
@@ -35,6 +37,10 @@ export default function RootLayout({
         <meta name="theme-color" content="#0ea5a0" />
       </head>
       <body className="antialiased">
+        <GoogleAnalytics />
+        <Suspense fallback={null}>
+          <AnalyticsRouteTracker />
+        </Suspense>
         {/* Header - Sticky di atas */}
         <Header
           isMenuOpen={sidebarOpen}

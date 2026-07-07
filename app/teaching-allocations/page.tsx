@@ -21,6 +21,7 @@ import {
   AlertState, 
   TeachingAllocationFormData 
 } from "@/lib/types";
+import { Analytics } from "@/lib/analytics";
 
 export default function TeachingAllocationsPage() {
   const [allocations, setAllocations] = useState<TeachingAllocation[]>([]);
@@ -124,6 +125,10 @@ export default function TeachingAllocationsPage() {
         });
       } else {
         LocalDB.createTeachingAllocation(formData);
+        Analytics.teachingAssignmentCreated({
+          page_name: "Teaching Allocations",
+          feature: "master_data",
+        });
         setAlert({
           show: true,
           type: "success",
@@ -149,6 +154,10 @@ export default function TeachingAllocationsPage() {
 
     try {
       LocalDB.deleteTeachingAllocation(deleteDialog.allocationId);
+      Analytics.teachingAssignmentDeleted({
+        page_name: "Teaching Allocations",
+        feature: "master_data",
+      });
       setAlert({
         show: true,
         type: "success",

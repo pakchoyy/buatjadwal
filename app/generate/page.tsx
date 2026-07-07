@@ -13,6 +13,7 @@ import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import { LocalDB } from "@/lib/db";
 import { Scheduler, clearSchedule } from "@/lib/scheduler";
 import { AlertState } from "@/lib/types";
+import { Analytics, trackError } from "@/lib/analytics";
 
 export default function GeneratePage() {
   const router = useRouter();
@@ -44,6 +45,16 @@ export default function GeneratePage() {
         await new Promise(resolve => setTimeout(resolve, 1500 - elapsed));
       }
 
+      // Track generate event
+      Analytics.generateSchedule({
+        page_name: "Generate Jadwal",
+        feature: "generator",
+        success: scheduleResult.success,
+        duration: Date.now() - startTime,
+        total_items: scheduleResult.stats.totalTickets,
+        failed_items: scheduleResult.stats.failed,
+      });
+
       if (scheduleResult.success) {
         setAlert({
           show: true,
@@ -58,6 +69,13 @@ export default function GeneratePage() {
         });
       }
     } catch (error) {
+      // Track error
+      trackError("generate_schedule", error instanceof Error ? error : new Error("Unknown error"), {
+        page_name: "Generate Jadwal",
+        feature: "generator",
+        duration: Date.now() - startTime,
+      });
+
       setAlert({
         show: true,
         type: "error",

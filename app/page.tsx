@@ -13,6 +13,7 @@ import LoadingScreen from "@/components/ui/LoadingScreen";
 import { LocalDB } from "@/lib/db";
 import { seedDatabase } from "@/lib/seed-data";
 import { AlertState } from "@/lib/types";
+import { Analytics } from "@/lib/analytics";
 import { 
   BookCopy,
   School, 
@@ -92,6 +93,13 @@ export default function DashboardPage() {
   });
 
   // Load stats on mount; show branded loading once per browser session
+  useEffect(() => {
+    Analytics.appOpen({
+      page_name: "Dashboard",
+      feature: "dashboard",
+    });
+  }, []);
+
   useEffect(() => {
     const hasShownLoading = window.sessionStorage.getItem("bgy-initial-loading-done");
 

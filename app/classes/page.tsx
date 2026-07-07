@@ -19,6 +19,7 @@ import {
   GRADE_OPTIONS,
 } from "@/lib/types";
 import { filterBySearch } from "@/lib/utils";
+import { Analytics } from "@/lib/analytics";
 
 export default function ClassesPage() {
   const [classes, setClasses] = useState<Class[]>([]);
@@ -109,6 +110,10 @@ export default function ClassesPage() {
         });
       } else {
         LocalDB.createClass(formData);
+        Analytics.studentCreated({
+          page_name: "Classes",
+          feature: "master_data",
+        });
         setAlert({
           show: true,
           type: "success",
@@ -134,6 +139,10 @@ export default function ClassesPage() {
 
     try {
       LocalDB.deleteClass(deleteDialog.classId);
+      Analytics.studentDeleted({
+        page_name: "Classes",
+        feature: "master_data",
+      });
       setAlert({
         show: true,
         type: "success",

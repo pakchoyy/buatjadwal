@@ -15,6 +15,7 @@ import { LocalDB } from "@/lib/db";
 import { Teacher, AlertState, TeacherFormData } from "@/lib/types";
 import { filterBySearch } from "@/lib/utils";
 import { downloadTemplate, parseExcelFile } from "@/lib/spreadsheet-import";
+import { Analytics } from "@/lib/analytics";
 
 export default function TeachersPage() {
   const [teachers, setTeachers] = useState<Teacher[]>([]);
@@ -174,6 +175,10 @@ export default function TeachersPage() {
         });
       } else {
         LocalDB.createTeacher(formData);
+        Analytics.teacherCreated({
+          page_name: "Teachers",
+          feature: "master_data",
+        });
         setAlert({
           show: true,
           type: "success",
@@ -199,6 +204,10 @@ export default function TeachersPage() {
 
     try {
       LocalDB.deleteTeacher(deleteDialog.teacherId);
+      Analytics.teacherDeleted({
+        page_name: "Teachers",
+        feature: "master_data",
+      });
       setAlert({
         show: true,
         type: "success",

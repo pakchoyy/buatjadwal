@@ -15,6 +15,7 @@ import { LocalDB } from "@/lib/db";
 import { Subject, AlertState, SubjectFormData } from "@/lib/types";
 import { filterBySearch } from "@/lib/utils";
 import { downloadTemplate, parseExcelFile } from "@/lib/spreadsheet-import";
+import { Analytics } from "@/lib/analytics";
 
 export default function SubjectsPage() {
   const [subjects, setSubjects] = useState<Subject[]>([]);
@@ -171,6 +172,10 @@ export default function SubjectsPage() {
         });
       } else {
         LocalDB.createSubject(formData);
+        Analytics.subjectCreated({
+          page_name: "Subjects",
+          feature: "master_data",
+        });
         setAlert({
           show: true,
           type: "success",
@@ -196,6 +201,10 @@ export default function SubjectsPage() {
 
     try {
       LocalDB.deleteSubject(deleteDialog.subjectId);
+      Analytics.subjectDeleted({
+        page_name: "Subjects",
+        feature: "master_data",
+      });
       setAlert({
         show: true,
         type: "success",
