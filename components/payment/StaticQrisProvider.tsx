@@ -28,6 +28,7 @@ export default function StaticQrisProvider({
 }: StaticQrisProviderProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [toast, setToast] = useState<ToastState | null>(null);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -73,7 +74,13 @@ export default function StaticQrisProvider({
     });
   };
 
-  const handleDonate = () => {
+  const handleDonateClick = () => {
+    // Show confirmation dialog
+    setShowConfirmDialog(true);
+  };
+
+  const handleConfirmDownload = () => {
+    setShowConfirmDialog(false);
     setIsLoading(true);
 
     // Show preparing toast
@@ -162,7 +169,7 @@ export default function StaticQrisProvider({
             <div className="px-4 pb-4 pt-1 space-y-2">
               <Button
                 className="w-full h-[42px]"
-                onClick={handleDonate}
+                onClick={handleDonateClick}
                 isLoading={isLoading}
               >
                 <Download size={16} />
@@ -181,6 +188,44 @@ export default function StaticQrisProvider({
           </div>
         </div>
       </div>
+
+      {/* Confirmation Dialog */}
+      {showConfirmDialog && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => setShowConfirmDialog(false)}
+          />
+          <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-sm w-full p-6 animate-in fade-in zoom-in-95 duration-200">
+            <div className="text-center space-y-3">
+              <div className="w-12 h-12 rounded-full bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center mx-auto">
+                <Info size={24} className="text-teal-600 dark:text-teal-400" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">
+                Konfirmasi Download
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Apakah Anda sudah melakukan donasi melalui QRIS?
+              </p>
+            </div>
+            <div className="flex gap-3 mt-6">
+              <Button
+                variant="secondary"
+                className="flex-1"
+                onClick={() => setShowConfirmDialog(false)}
+              >
+                Belum
+              </Button>
+              <Button
+                className="flex-1"
+                onClick={handleConfirmDownload}
+              >
+                Sudah Donasi
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modern Toast */}
       {toast && (
