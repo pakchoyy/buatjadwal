@@ -10,6 +10,7 @@ interface ModalProps {
   title?: string;
   showClose?: boolean;
   size?: "sm" | "md" | "lg" | "xl";
+  closeOnBackdropClick?: boolean;
 }
 
 export default function Modal({
@@ -19,6 +20,7 @@ export default function Modal({
   title,
   showClose = true,
   size = "md",
+  closeOnBackdropClick = true,
 }: ModalProps) {
   // Prevent body scroll when modal is open
   useEffect(() => {
@@ -59,7 +61,7 @@ export default function Modal({
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
-        onClick={onClose}
+        onClick={closeOnBackdropClick ? onClose : undefined}
       />
 
       {/* Modal */}

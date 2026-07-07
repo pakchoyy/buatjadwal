@@ -21,7 +21,7 @@ import {
   exportTeacherScheduleToXlsx,
 } from "@/lib/export";
 import { getDayLabel, formatDateTime, formatClassLevel } from "@/lib/utils";
-import PaymentModal from "@/components/payment/PaymentModal";
+import PaymentProvider from "@/components/payment/PaymentProvider";
 import { hasUserPaid } from "@/lib/payment-storage";
 import {
   setPendingExport,
@@ -673,7 +673,7 @@ export default function UnifiedSchedulesPage() {
       </div>
 
       {showPaymentModal && (
-        <PaymentModal
+        <PaymentProvider
           isOpen={showPaymentModal}
           onClose={() => setShowPaymentModal(false)}
           onSuccess={handlePaymentSuccess}
