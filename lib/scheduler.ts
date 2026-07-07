@@ -57,44 +57,66 @@ export class Scheduler {
   }
 
   /**
-   * Main method - Generate complete schedule
+   * Main method - Generate complete schedule with retry mechanism
    */
   public generateSchedule(): ScheduleResult {
-    // Step 1: Clear existing schedule
-    this.clearExistingSchedule();
+    const MAX_ATTEMPTS = 3;
+    let bestResult: ScheduleResult | null = null;
+    let bestSuccessCount = 0;
 
-    // Step 2: Build tickets from allocations
-    const tickets = this.buildTickets();
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+      // Clear and reset for this attempt
+      this.clearExistingSchedule();
 
-    // Step 3: Sort tickets by priority (hardest first)
-    const sortedTickets = this.sortTickets(tickets);
+      // Build tickets
+      const tickets = this.buildTickets();
 
-    // Step 4: Assign tickets to slots
-    const failedTickets: ScheduleTicket[] = [];
-    let successCount = 0;
+      // Sort tickets with different shuffle per attempt
+      const sortedTickets = this.sortTickets(tickets, attempt);
 
-    for (const ticket of sortedTickets) {
-      const assigned = this.assignTicket(ticket);
-      if (assigned) {
-        successCount++;
-        ticket.remainingHours--;
+      // Assign tickets to slots
+      const failedTickets: ScheduleTicket[] = [];
+      let successCount = 0;
 
-        // If ticket still has remaining hours, add back to queue
-        if (ticket.remainingHours > 0) {
-          sortedTickets.push(ticket);
+      for (const ticket of sortedTickets) {
+        const assigned = this.assignTicket(ticket);
+        if (assigned) {
+          successCount++;
+          ticket.remainingHours--;
+
+          // If ticket still has remaining hours, add back to queue
+          if (ticket.remainingHours > 0) {
+            sortedTickets.push(ticket);
+          }
+        } else {
+          failedTickets.push(ticket);
         }
-      } else {
-        failedTickets.push(ticket);
+      }
+
+      // Build result for this attempt
+      const result = this.buildResult(tickets.length, successCount, failedTickets, attempt);
+
+      // Track best result
+      if (successCount > bestSuccessCount) {
+        bestSuccessCount = successCount;
+        bestResult = result;
+
+        // If perfect solution found, use it immediately
+        if (failedTickets.length === 0) {
+          this.saveSchedule();
+          return result;
+        }
+      }
+
+      // If not last attempt, don't save yet
+      if (attempt < MAX_ATTEMPTS) {
+        console.log(`Attempt ${attempt} - Success: ${successCount}/${tickets.length}`);
       }
     }
 
-    // Step 5: Save schedule to database
+    // Save the best result
     this.saveSchedule();
-
-    // Step 6: Build result
-    const result = this.buildResult(tickets.length, successCount, failedTickets);
-
-    return result;
+    return bestResult!;
   }
 
   /**
@@ -140,8 +162,10 @@ export class Scheduler {
    * 1. Teachers with most total hours (less flexible)
    * 2. Classes with fewer available slots
    * 3. Random shuffle within same priority to vary distribution
+   * 
+   * @param attempt - Current attempt number (for seeded randomness)
    */
-  private sortTickets(tickets: ScheduleTicket[]): ScheduleTicket[] {
+  private sortTickets(tickets: ScheduleTicket[], attempt: number = 1): ScheduleTicket[] {
     // Count total hours per teacher
     const teacherHours = new Map<string, number>();
     for (const ticket of tickets) {
@@ -151,8 +175,20 @@ export class Scheduler {
       );
     }
 
+    // Create a copy to avoid mutating original
+    const ticketsCopy = [...tickets];
+
+    // Shuffle more aggressively on retry attempts
+    if (attempt > 1) {
+      // Fisher-Yates shuffle
+      for (let i = ticketsCopy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [ticketsCopy[i], ticketsCopy[j]] = [ticketsCopy[j], ticketsCopy[i]];
+      }
+    }
+
     // Sort: teachers with most hours first, then random within same count
-    return tickets.sort((a, b) => {
+    return ticketsCopy.sort((a, b) => {
       const aHours = teacherHours.get(a.teacherId) || 0;
       const bHours = teacherHours.get(b.teacherId) || 0;
       
@@ -275,7 +311,8 @@ export class Scheduler {
   private buildResult(
     totalTickets: number,
     successCount: number,
-    failedTickets: ScheduleTicket[]
+    failedTickets: ScheduleTicket[],
+    attempt: number = 1
   ): ScheduleResult {
     const teachers = LocalDB.listTeachers(this.schoolId);
     const subjects = LocalDB.listSubjects(this.schoolId);
@@ -292,12 +329,15 @@ export class Scheduler {
       };
     });
 
+    const successMessage = failedTickets.length === 0
+      ? `✅ Jadwal berhasil dibuat! ${successCount} jam pelajaran terjadwal.`
+      : attempt > 1
+      ? `⚠️ Jadwal terbaik dari ${attempt} percobaan: ${successCount} dari ${totalTickets} jam terjadwal. ${failedTickets.length} jam gagal.`
+      : `⚠️ Jadwal sebagian berhasil: ${successCount} dari ${totalTickets} jam terjadwal. ${failedTickets.length} jam gagal.`;
+
     return {
       success: failedTickets.length === 0,
-      message:
-        failedTickets.length === 0
-          ? `Jadwal berhasil dibuat! ${successCount} jam pelajaran terjadwal.`
-          : `Jadwal sebagian berhasil. ${successCount} dari ${totalTickets} jam terjadwal. ${failedTickets.length} jam gagal dijadwalkan.`,
+      message: successMessage,
       stats: {
         totalTickets,
         successfullyScheduled: successCount,

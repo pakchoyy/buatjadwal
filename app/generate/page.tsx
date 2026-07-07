@@ -6,7 +6,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Eye, RotateCcw, Sparkles, Trash2 } from "lucide-react";
+import { AlertCircle, Eye, Info, Lightbulb, RotateCcw, Sparkles, Trash2 } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Alert from "@/components/ui/Alert";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
@@ -143,13 +143,34 @@ export default function GeneratePage() {
             <li>Memastikan tidak ada bentrok guru (1 guru tidak ngajar 2 kelas di jam sama)</li>
             <li>Memastikan tidak ada bentrok kelas (1 kelas tidak ada 2 mapel di jam sama)</li>
             <li>Mengutamakan guru dengan beban mengajar paling banyak</li>
+            <li>Mencoba 3x dengan urutan berbeda untuk hasil optimal</li>
           </ul>
 
+          {/* Tips Box */}
+          <div className="bg-teal-50 border border-teal-200 rounded-lg p-4 mb-4">
+            <div className="flex items-start gap-2">
+              <Lightbulb size={18} className="text-teal-600 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-semibold text-teal-900 mb-2">Tips untuk Hasil Terbaik:</p>
+                <ul className="text-sm text-teal-800 space-y-1">
+                  <li>• Pastikan total jam alokasi ≤ total slot (minimal buffer 20%)</li>
+                  <li>• Atur slot waktu merata di setiap hari</li>
+                  <li>• Hindari guru part-time dengan beban mengajar terlalu banyak</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* Info Box */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <p className="text-sm text-blue-800">
-              <strong>Catatan:</strong> Jika ada alokasi yang tidak bisa dijadwalkan
-              (tidak cukup slot), sistem akan memberi laporan untuk ditangani manual.
-            </p>
+            <div className="flex items-start gap-2">
+              <Info size={18} className="text-blue-600 shrink-0 mt-0.5" />
+              <p className="text-sm text-blue-800">
+                <strong>Catatan:</strong> Jika ada alokasi yang tidak bisa dijadwalkan
+                (tidak cukup slot), sistem akan mencoba 3x dengan urutan berbeda, lalu
+                memberi laporan untuk ditangani manual.
+              </p>
+            </div>
           </div>
         </div>
 
@@ -261,15 +282,27 @@ export default function GeneratePage() {
                 </div>
 
                 <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <p className="text-sm text-yellow-800">
-                    <strong>Saran:</strong> Untuk menyelesaikan alokasi yang gagal,
-                    Anda bisa:
-                  </p>
-                  <ul className="list-disc list-inside text-sm text-yellow-800 mt-2 space-y-1">
-                    <li>Tambah slot waktu di menu Slot Waktu</li>
-                    <li>Kurangi jumlah jam per minggu di Alokasi Mengajar</li>
-                    <li>Edit jadwal secara manual setelah melihat hasilnya</li>
-                  </ul>
+                  <div className="flex items-start gap-2">
+                    <AlertCircle size={18} className="text-yellow-600 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-semibold text-yellow-900 mb-2">
+                        Kenapa Gagal?
+                      </p>
+                      <p className="text-sm text-yellow-800 mb-2">
+                        Kemungkinan slot waktu tidak cukup atau bentrok dengan alokasi lain.
+                        Sistem sudah mencoba 3x dengan urutan berbeda.
+                      </p>
+                      <p className="text-sm font-semibold text-yellow-900 mb-1">
+                        Solusi:
+                      </p>
+                      <ul className="text-sm text-yellow-800 space-y-1">
+                        <li>• Tambah slot waktu di menu Slot Waktu (terutama di hari yang kurang slot)</li>
+                        <li>• Kurangi jumlah jam per minggu di Alokasi Mengajar</li>
+                        <li>• Coba generate ulang (sistem akan coba urutan berbeda lagi)</li>
+                        <li>• Edit jadwal secara manual setelah melihat hasilnya</li>
+                      </ul>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
