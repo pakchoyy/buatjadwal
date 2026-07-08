@@ -1,74 +1,45 @@
-"use client";
-
-import { Suspense, useState, useEffect } from "react";
+import { Suspense } from "react";
+import { Metadata } from "next";
 import "./globals.css";
-import Header from "@/components/layout/Header";
-import Sidebar from "@/components/layout/Sidebar";
-import RunningText from "@/components/layout/RunningText";
+import ClientLayout from "@/components/layout/ClientLayout";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
 import AnalyticsRouteTracker from "@/components/AnalyticsRouteTracker";
+
+export const metadata: Metadata = {
+  title: "Bantu Guru Yuk | Jadwal Pelajaran",
+  description: "Aplikasi Manajemen Jadwal Pelajaran SMP/MTs - Generate jadwal otomatis tanpa bentrok",
+  icons: {
+    icon: [
+      { url: "/icon.png", sizes: "any" },
+      { url: "/icon.png", sizes: "16x16", type: "image/png" },
+      { url: "/icon.png", sizes: "32x32", type: "image/png" },
+    ],
+    apple: [
+      { url: "/apple-icon.png", sizes: "180x180", type: "image/png" },
+    ],
+  },
+  manifest: "/manifest.json",
+  themeColor: "#0ea5a0",
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    viewportFit: "cover",
+  },
+};
 
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-
-  // Sync state across multiple tabs
-  useEffect(() => {
-    const handleStorageChange = (e: StorageEvent) => {
-      // Reload page when data changes in another tab
-      if (e.key && e.key.startsWith('jadwal_')) {
-        window.location.reload();
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
-
   return (
     <html lang="id">
-      <head>
-        <title>Bantu Guru Yuk | Jadwal Pelajaran</title>
-        <meta name="description" content="Aplikasi Manajemen Jadwal Pelajaran SMP/MTs" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-        <meta name="theme-color" content="#0ea5a0" />
-      </head>
       <body className="antialiased">
         <GoogleAnalytics />
         <Suspense fallback={null}>
           <AnalyticsRouteTracker />
         </Suspense>
-        {/* Header - Sticky di atas */}
-        <Header
-          isMenuOpen={sidebarOpen}
-          onMenuToggle={() => setSidebarOpen((prev) => !prev)}
-        />
-        
-        <div className="flex flex-1">
-          {/* Sidebar */}
-          <Sidebar 
-            isOpen={sidebarOpen} 
-            onClose={() => setSidebarOpen(false)} 
-          />
-
-          {/* Main Content */}
-          <main className="flex-1 overflow-auto pb-10">
-            {children}
-          </main>
-        </div>
-
-        {/* Running Text - Bottom Ticker */}
-          <RunningText
-            messages={[
-              "Generate jadwal otomatis",
-              "Tanpa bentrok guru dan kelas",
-              "Export PDF dan Excel",
-              "Lihat per guru atau per kelas",
-            ]}
-          />
+        <ClientLayout>{children}</ClientLayout>
       </body>
     </html>
   );
