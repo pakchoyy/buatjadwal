@@ -12,9 +12,10 @@ import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import LoadingScreen from "@/components/ui/LoadingScreen";
 import DraftCard from "@/components/dashboard/DraftCard";
 import SaveIndicator from "@/components/ui/SaveIndicator";
+import SchoolLevelMigration from "@/components/migration/SchoolLevelMigration";
 import { LocalDB } from "@/lib/db";
 import { seedDatabase } from "@/lib/seed-data";
-import { AlertState } from "@/lib/types";
+import { AlertState, SchoolLevel, SCHOOL_LEVELS, SCHOOL_LEVEL_LABELS } from "@/lib/types";
 import { Analytics } from "@/lib/analytics";
 import { ProjectManager } from "@/lib/project-manager";
 import { 
@@ -89,6 +90,8 @@ export default function DashboardPage() {
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [showSeedConfirm, setShowSeedConfirm] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [showLevelDialog, setShowLevelDialog] = useState(false);
+  const [selectedLevel, setSelectedLevel] = useState<SchoolLevel>("smp");
   const [alert, setAlert] = useState<AlertState>({
     show: false,
     type: "info",
@@ -145,7 +148,7 @@ export default function DashboardPage() {
     }
   };
 
-  const doSeed = () => {
+  const doSeed = (level: SchoolLevel) => {
     setIsSeeding(true);
     setAlert({ show: false, type: "info", message: "" });
 
@@ -155,7 +158,7 @@ export default function DashboardPage() {
         LocalDB.clearAll();
       }
       
-      const result = seedDatabase();
+      const result = seedDatabase(level);
       if (result.success) {
         setAlert({
           show: true,
@@ -178,6 +181,7 @@ export default function DashboardPage() {
       });
     } finally {
       setIsSeeding(false);
+      setShowLevelDialog(false);
     }
   };
 
@@ -186,7 +190,7 @@ export default function DashboardPage() {
     if (existingSchool) {
       setShowSeedConfirm(true);
     } else {
-      doSeed();
+      setShowLevelDialog(true);
     }
   };
 
@@ -207,6 +211,7 @@ export default function DashboardPage() {
     <>
       <LoadingScreen show={isInitialLoading} message="Memuat dashboard..." />
       <SaveIndicator />
+      <SchoolLevelMigration />
 
       <div className="p-4 md:p-6">
         {/* Draft Card */}
@@ -264,16 +269,7 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Confirm Dialogs */}
-        <ConfirmDialog
-          isOpen={showSeedConfirm}
-          onClose={() => setShowSeedConfirm(false)}
-          onConfirm={() => { setShowSeedConfirm(false); doSeed(); }}
-          title="Isi Data Contoh"
-          message="Data yang sudah ada akan dihapus dan diganti dengan data contoh. Lanjutkan?"
-          confirmText="Ya, Isi Data"
-          confirmVariant="primary"
-        />
+        {/* Old Confirm Dialog - Removed, replaced by level dialog */}
         <ConfirmDialog
           isOpen={showClearConfirm}
           onClose={() => setShowClearConfirm(false)}
@@ -490,6 +486,48 @@ export default function DashboardPage() {
           </section>
         )}
       </div>
+
+      {/* Level Selection Dialog */}
+      <ConfirmDialog
+        isOpen={showLevelDialog}
+        onClose={() => setShowLevelDialog(false)}
+        onConfirm={() => doSeed(selectedLevel)}
+        title="Pilih Jenjang Sekolah"
+        message="Pilih jenjang sekolah untuk data contoh yang akan dimuat:"
+        confirmText="Isi Data Contoh"
+      >
+        <div className="mt-4">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Jenjang Sekolah
+          </label>
+          <select
+            value={selectedLevel}
+            onChange={(e) => setSelectedLevel(e.target.value as SchoolLevel)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            {SCHOOL_LEVELS.map((level) => (
+              <option key={level} value={level}>
+                {SCHOOL_LEVEL_LABELS[level]}
+              </option>
+            ))}
+          </select>
+        </div>
+      </ConfirmDialog>
+
+      {/* Seed Confirm Dialog */}
+      <ConfirmDialog
+        isOpen={showSeedConfirm}
+        onClose={() => setShowSeedConfirm(false)}
+        onConfirm={() => {
+          setShowSeedConfirm(false);
+          setShowLevelDialog(true);
+        }}
+        title="Konfirmasi Isi Data Contoh"
+        message="Data sekolah sudah ada. Mengisi data contoh akan menghapus semua data yang ada sekarang. Lanjutkan?"
+        warning="Semua data sekolah, kelas, guru, mata pelajaran, slot waktu, alokasi mengajar, dan jadwal akan dihapus permanen."
+        confirmText="Ya, Isi Data Contoh"
+        confirmVariant="danger"
+      />
     </>
   );
 }

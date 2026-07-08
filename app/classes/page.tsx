@@ -20,6 +20,7 @@ import {
 } from "@/lib/types";
 import { filterBySearch } from "@/lib/utils";
 import { Analytics } from "@/lib/analytics";
+import { getDefaultClassName, getEducationLevelFromSchoolLevel, getDefaultGrade } from "@/lib/template-data";
 
 export default function ClassesPage() {
   const [classes, setClasses] = useState<Class[]>([]);
@@ -75,12 +76,16 @@ export default function ClassesPage() {
       return;
     }
 
+    const defaultEducationLevel = getEducationLevelFromSchoolLevel(school.level);
+    const defaultGrade = getDefaultGrade(school.level);
+    const defaultName = getDefaultClassName(school.level);
+
     setEditingClass(null);
     setFormData({
       schoolId: school.id,
-      name: "",
-      educationLevel: "smp",
-      grade: 7,
+      name: defaultName,
+      educationLevel: defaultEducationLevel,
+      grade: defaultGrade,
     });
     setIsModalOpen(true);
   };

@@ -19,6 +19,7 @@ interface ConfirmDialogProps {
   cancelText?: string;
   confirmVariant?: "danger" | "primary";
   isLoading?: boolean;
+  children?: React.ReactNode;
 }
 
 export default function ConfirmDialog({
@@ -32,6 +33,7 @@ export default function ConfirmDialog({
   cancelText = "Batal",
   confirmVariant = "danger",
   isLoading = false,
+  children,
 }: ConfirmDialogProps) {
   if (!isOpen) return null;
 
@@ -75,6 +77,9 @@ export default function ConfirmDialog({
                 </div>
               </div>
             )}
+
+            {/* Children (custom content) */}
+            {children && <div className="mb-4">{children}</div>}
 
             {/* Actions */}
             <div className="flex items-center justify-end space-x-3">

@@ -9,13 +9,12 @@ import { Building2, Pencil, Plus, School as SchoolIcon, Trash2 } from "lucide-re
 import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
 import Input from "@/components/ui/Input";
-// import Select from "@/components/ui/Select";
+import Select from "@/components/ui/Select";
 import Alert from "@/components/ui/Alert";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import SaveIndicator from "@/components/ui/SaveIndicator";
 import { LocalDB } from "@/lib/db";
-import { School, AlertState, SchoolFormData } from "@/lib/types";
-// import { SCHOOL_LEVELS, SCHOOL_LEVEL_LABELS } from "@/lib/types";
+import { School, AlertState, SchoolFormData, SCHOOL_LEVELS, SCHOOL_LEVEL_LABELS } from "@/lib/types";
 import { autoSave } from "@/lib/auto-save";
 
 export default function SchoolsPage() {
@@ -174,6 +173,13 @@ export default function SchoolsPage() {
                 <p className="text-lg font-semibold text-gray-900 mt-1">{school.name}</p>
               </div>
 
+              {school.level && (
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Jenjang</label>
+                  <p className="text-gray-900 mt-1">{SCHOOL_LEVEL_LABELS[school.level]}</p>
+                </div>
+              )}
+
               <div>
                 <label className="text-sm font-medium text-gray-500">Alamat</label>
                 <p className="text-gray-900 mt-1">{school.address}</p>
@@ -234,6 +240,18 @@ export default function SchoolsPage() {
              error={errors.name}
              required
              placeholder="Contoh: SDN MBG Nusantara, SMP Negeri 1 Batumarmar"
+           />
+
+           <Select
+             label="Jenjang Sekolah"
+             value={formData.level || ""}
+             onChange={(e) => setFormData({ ...formData, level: e.target.value as any })}
+             options={SCHOOL_LEVELS.map(level => ({
+               value: level,
+               label: SCHOOL_LEVEL_LABELS[level]
+             }))}
+             placeholder="Pilih jenjang sekolah"
+             required
            />
 
            <Input

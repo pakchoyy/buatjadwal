@@ -15,6 +15,7 @@ import { LocalDB } from "@/lib/db";
 import { Subject, AlertState, SubjectFormData } from "@/lib/types";
 import { filterBySearch } from "@/lib/utils";
 import { downloadTemplate, parseExcelFile } from "@/lib/spreadsheet-import";
+import { getSubjectTemplateByLevel } from "@/lib/template-data";
 import { Analytics } from "@/lib/analytics";
 
 export default function SubjectsPage() {
@@ -64,14 +65,13 @@ export default function SubjectsPage() {
   };
 
   const handleDownloadTemplate = () => {
+    const school = LocalDB.getSchool();
+    const template = getSubjectTemplateByLevel(school?.level);
+    
     downloadTemplate(
       "Template_Import_Mata_Pelajaran.xlsx",
       ["Kode", "Nama"],
-      [
-        ["A1", "Matematika"],
-        ["A2", "Bahasa Indonesia"],
-        ["A3", "IPA"],
-      ]
+      template
     );
   };
 
