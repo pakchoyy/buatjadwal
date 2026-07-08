@@ -10,10 +10,13 @@ import Button from "@/components/ui/Button";
 import Alert from "@/components/ui/Alert";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import LoadingScreen from "@/components/ui/LoadingScreen";
+import DraftCard from "@/components/dashboard/DraftCard";
+import SaveIndicator from "@/components/ui/SaveIndicator";
 import { LocalDB } from "@/lib/db";
 import { seedDatabase } from "@/lib/seed-data";
 import { AlertState } from "@/lib/types";
 import { Analytics } from "@/lib/analytics";
+import { ProjectManager } from "@/lib/project-manager";
 import { 
   BookCopy,
   School, 
@@ -98,6 +101,9 @@ export default function DashboardPage() {
       page_name: "Dashboard",
       feature: "dashboard",
     });
+    
+    // Initialize project system
+    ProjectManager.initialize();
   }, []);
 
   useEffect(() => {
@@ -190,11 +196,24 @@ export default function DashboardPage() {
 
 
 
+  const handleCreateNew = () => {
+    ProjectManager.createProject();
+    window.location.href = "/schools";
+  };
+
+  const activeProject = ProjectManager.getActiveProject();
+
   return (
     <>
       <LoadingScreen show={isInitialLoading} message="Memuat dashboard..." />
+      <SaveIndicator />
 
       <div className="p-4 md:p-6">
+        {/* Draft Card */}
+        <section className="mb-6">
+          <DraftCard project={activeProject} onCreateNew={handleCreateNew} />
+        </section>
+
         {/* Quick Actions Section */}
         <section className="mb-6">
           <div className="mb-3 flex items-center gap-2">

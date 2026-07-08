@@ -9,16 +9,21 @@ import { Building2, Pencil, Plus, School as SchoolIcon, Trash2 } from "lucide-re
 import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
 import Input from "@/components/ui/Input";
+// import Select from "@/components/ui/Select";
 import Alert from "@/components/ui/Alert";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
+import SaveIndicator from "@/components/ui/SaveIndicator";
 import { LocalDB } from "@/lib/db";
 import { School, AlertState, SchoolFormData } from "@/lib/types";
+// import { SCHOOL_LEVELS, SCHOOL_LEVEL_LABELS } from "@/lib/types";
+import { autoSave } from "@/lib/auto-save";
 
 export default function SchoolsPage() {
   const [school, setSchool] = useState<School | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState<SchoolFormData>({
     name: "",
+    level: undefined,
     address: "",
     district: "",
     email: "",
@@ -47,6 +52,7 @@ export default function SchoolsPage() {
     if (school) {
       setFormData({
         name: school.name,
+        level: school.level,
         address: school.address,
         district: school.district,
         email: school.email,
@@ -60,6 +66,7 @@ export default function SchoolsPage() {
   const handleCreate = () => {
     setFormData({
       name: "SDN MBG Nusantara",
+      level: "sd",
       address: "",
       district: "Kabupaten Jaya",
       email: "",
@@ -78,6 +85,7 @@ export default function SchoolsPage() {
       if (school) {
         // Update existing school
         LocalDB.updateSchool(school.id, formData);
+        autoSave(() => {});
         setAlert({
           show: true,
           type: "success",
@@ -86,6 +94,7 @@ export default function SchoolsPage() {
       } else {
         // Create new school
         LocalDB.createSchool(formData);
+        autoSave(() => {});
         setAlert({
           show: true,
           type: "success",
@@ -129,6 +138,7 @@ export default function SchoolsPage() {
 
   return (
     <>
+      <SaveIndicator />
       {/* Action button */}
       <div className="p-4 md:p-6 pb-0">
         <div className="flex flex-wrap justify-center gap-3">

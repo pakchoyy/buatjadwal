@@ -18,6 +18,7 @@ export interface ExportMetadata {
 export interface School {
   id: string;
   name: string;
+  level?: SchoolLevel; // Jenjang sekolah
   address: string;
   district: string;
   email: string;
@@ -129,6 +130,23 @@ export const EDUCATION_LEVEL_LABELS: Record<EducationLevel, string> = {
   sma: "SMA",
 };
 
+// School Level (jenjang lengkap untuk UI)
+export type SchoolLevel = "sd" | "mi" | "sdit" | "smp" | "mts" | "sma" | "ma" | "smk" | "other";
+
+export const SCHOOL_LEVELS: SchoolLevel[] = ["sd", "mi", "sdit", "smp", "mts", "sma", "ma", "smk", "other"];
+
+export const SCHOOL_LEVEL_LABELS: Record<SchoolLevel, string> = {
+  sd: "SD",
+  mi: "MI",
+  sdit: "SDIT",
+  smp: "SMP",
+  mts: "MTs",
+  sma: "SMA",
+  ma: "MA",
+  smk: "SMK",
+  other: "Lainnya",
+};
+
 export const GRADE_OPTIONS: Record<EducationLevel, readonly number[]> = {
   sd: [1, 2, 3, 4, 5, 6],
   smp: [7, 8, 9],
@@ -206,6 +224,36 @@ export interface AlertState {
   type: AlertType;
   message: string;
 }
+
+// ==================== PROJECT MANAGEMENT ====================
+
+export type ProjectStatus = "draft" | "in_progress" | "completed";
+
+export interface Project {
+  id: string;
+  schoolName: string;
+  schoolLevel?: SchoolLevel;
+  academicYear: string;
+  semester: string;
+  status: ProjectStatus;
+  createdAt: number;
+  lastEditedAt: number;
+  
+  // Snapshot metadata (untuk tampilan card)
+  dataSnapshot: {
+    schoolId: string;
+    classCount: number;
+    teacherCount: number;
+    subjectCount: number;
+    hasSchedule: boolean;
+  };
+}
+
+export const PROJECT_STATUS_LABELS: Record<ProjectStatus, string> = {
+  draft: "Draft",
+  in_progress: "Sedang Dikerjakan",
+  completed: "Selesai",
+};
 
 export interface ModalState {
   isOpen: boolean;
