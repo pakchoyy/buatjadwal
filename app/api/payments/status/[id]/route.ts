@@ -36,8 +36,15 @@ export async function GET(
       return NextResponse.json({ status: transaction.status });
     }
 
-    if (transaction.status === "paid") {
+    const safeStatus = transaction.status;
+
+    if (safeStatus === "paid") {
+      console.log(`[${traceId}] Status already paid, returning immediately`);
       return NextResponse.json({ status: "paid" });
+    }
+
+    if (safeStatus === "expired" || safeStatus === "cancelled") {
+      return NextResponse.json({ status: safeStatus });
     }
 
     if (new Date(transaction.expires_at).getTime() < now) {
@@ -50,7 +57,7 @@ export async function GET(
     }
 
     // Fallback: cek ke API Mayar kalau masih pending
-    console.log(`[${traceId}] Still pending, checking Mayar API...`);
+    console.log(`[${traceId}] Still pending, checking Mayar API with mayar_qris_id:`, transaction.mayar_qris_id);
     const result = await checkMayarTransaction(
       transaction.amount,
       transaction.created_at,

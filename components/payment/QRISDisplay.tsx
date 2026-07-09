@@ -46,25 +46,29 @@ export default function QRISDisplay({
     return () => clearInterval(timer);
   }, [onExpired]);
 
-  // Poll payment status every 5 seconds
+// Poll payment status every 2 seconds
   useEffect(() => {
-    const checkStatus = async () => {
-      if (isChecking) return;
+    let cancelled = false;
 
+    const checkStatus = async () => {
+      if (isChecking || cancelled) return;
       setIsChecking(true);
       try {
         const response = await fetch(`/api/payments/status/${transactionId}`);
         const data = await response.json();
+        console.log(`[poll] Status response:`, data);
 
         if (data.status === "paid") {
+          cancelled = true;
           onSuccess();
         } else if (data.status === "expired") {
+          cancelled = true;
           onExpired();
         }
       } catch (error) {
         console.error("Error checking payment status:", error);
       } finally {
-        setIsChecking(false);
+        if (!cancelled) setIsChecking(false);
       }
     };
 
@@ -75,6 +79,7 @@ export default function QRISDisplay({
     const interval = setInterval(checkStatus, 2000);
 
     return () => {
+      cancelled = true;
       clearTimeout(initialTimer);
       clearInterval(interval);
     };
