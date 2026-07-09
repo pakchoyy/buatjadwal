@@ -27,6 +27,8 @@ const routeTitles: Record<string, string> = {
   "/schedules": "Jadwal Umum",
   "/schedules/teacher": "Jadwal per Guru",
   "/schedules/class": "Jadwal per Kelas",
+  "/about": "Tentang",
+  "/contact": "Kontak",
 };
 
 export default function Header({
