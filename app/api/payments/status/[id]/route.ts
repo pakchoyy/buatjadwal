@@ -58,7 +58,8 @@ export async function GET(
     console.log(`[${traceId}] Still pending, checking Mayar API...`);
     const result = await checkMayarTransaction(
       transaction.amount,
-      transaction.createdAt
+      transaction.createdAt,
+      transaction.mayarQrisId || undefined
     );
 
     if (result.found) {

@@ -133,7 +133,8 @@ export interface MayarWebhookPayload {
  */
 export async function checkMayarTransaction(
   amount: number,
-  sinceTimestamp: number
+  sinceTimestamp: number,
+  expectedQrisId?: string
 ): Promise<{ found: boolean; transaction?: any }> {
   let config: { apiKey: string; baseUrl: string };
 
@@ -145,9 +146,12 @@ export async function checkMayarTransaction(
   }
 
   try {
-    console.log(`[MAYAR] Checking transactions for amount: ${amount}`);
+    console.log(`[MAYAR] Checking transactions for amount: ${amount}`, {
+      sinceTimestamp,
+      expectedQrisId,
+    });
 
-    const response = await fetch(`${config.baseUrl}/transactions?limit=100`, {
+    const response = await fetch(`${config.baseUrl}/transactions?limit=200`, {
       headers: {
         Authorization: `Bearer ${config.apiKey}`,
         "Content-Type": "application/json",
@@ -163,9 +167,19 @@ export async function checkMayarTransaction(
     const transactions = data.data || [];
 
     const match = transactions.find((t: any) => {
-      const tAmount = t.amount || t.total || 0;
-      const tCreated = new Date(t.createdAt || t.created_at || 0).getTime();
-      return tAmount === amount && tCreated >= sinceTimestamp;
+      const tAmount = Number(t.amount ?? t.total ?? t.value ?? 0);
+      const tCreated = new Date(
+        t.createdAt ?? t.created_at ?? t.created ?? t.dateCreated ?? 0
+      ).getTime();
+      const tQrisId = String(
+        t.id ?? t.qrisId ?? t.qris_id ?? t.transactionId ?? ""
+      );
+
+      const amountMatches = Number.isFinite(tAmount) && tAmount === amount;
+      const timeMatches = Number.isFinite(tCreated) && tCreated >= sinceTimestamp;
+      const idMatches = expectedQrisId ? tQrisId === expectedQrisId : true;
+
+      return amountMatches && timeMatches && idMatches;
     });
 
     if (match) {

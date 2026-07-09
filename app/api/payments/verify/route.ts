@@ -46,7 +46,8 @@ export async function POST(req: NextRequest) {
 
     const result = await checkMayarTransaction(
       transaction.amount,
-      transaction.createdAt
+      transaction.createdAt,
+      transaction.mayarQrisId || undefined
     );
 
     if (result.found) {
