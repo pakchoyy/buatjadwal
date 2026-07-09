@@ -44,35 +44,28 @@ export async function POST(req: NextRequest) {
 
     if (isPaymentEvent && isSuccessEvent) {
       const { amount } = webhookData.data;
-
       const convex = getConvexClient();
-
-      // Try to find matching transaction using MAYAR's QRIS ID if available
       const mayarId = webhookData.data.id;
+      const thirtyMinAgo = Date.now() - 30 * 60 * 1000;
+
       let matchingTransaction = null;
 
+      // Cari berdasarkan mayarQrisId dulu (lebih akurat)
       if (mayarId) {
-        // Search by QRIS ID
-        const allTransactions = await convex.query(api.transactions.listAll);
-        matchingTransaction = allTransactions.find(
-          (t) =>
-            t.status === "pending" &&
-            (t.mayarQrisId === mayarId ||
-              (t.amount === amount &&
-                Date.now() - t.createdAt < 30 * 60 * 1000))
-        );
+        const byQrisId = await convex.query(api.transactions.getPendingByAmount, {
+          amount,
+          since: thirtyMinAgo,
+        });
+        matchingTransaction = byQrisId.find((t) => t.mayarQrisId === mayarId);
       }
 
+      // Fallback: cocokkan amount + waktu
       if (!matchingTransaction) {
-        // Fallback: match by amount + recent timestamp
-        const now = Date.now();
-        const allTransactions = await convex.query(api.transactions.listAll);
-        matchingTransaction = allTransactions.find(
-          (t) =>
-            t.status === "pending" &&
-            t.amount === amount &&
-            now - t.createdAt < 30 * 60 * 1000
-        );
+        const byAmount = await convex.query(api.transactions.getPendingByAmount, {
+          amount,
+          since: thirtyMinAgo,
+        });
+        matchingTransaction = byAmount[0] || null;
       }
 
       if (matchingTransaction) {
@@ -89,13 +82,33 @@ export async function POST(req: NextRequest) {
           message: "Payment recorded",
           transactionId: matchingTransaction._id,
         });
-      } else {
-        console.warn(`[${traceId}] No matching transaction found for amount: ${amount}`);
-        return NextResponse.json(
-          { success: false, message: "No matching transaction found" },
-          { status: 404 }
-        );
       }
+
+      // Jika tidak ditemukan, coba cek ke Mayar API sebagai fallback terakhir
+      console.log(`[${traceId}] No Convex match for amount ${amount}, checking Mayar API...`);
+      const mayarCheck = await convex.query(api.transactions.getPendingByAmount, {
+        amount,
+        since: thirtyMinAgo,
+      });
+
+      if (mayarCheck.length > 0) {
+        console.log(`[${traceId}] Found pending transaction via amount match, marking paid`);
+        await convex.mutation(api.transactions.updateStatus, {
+          id: mayarCheck[0]._id as Id<"transactions">,
+          status: "paid",
+        });
+        return NextResponse.json({
+          success: true,
+          message: "Payment recorded via amount match",
+          transactionId: mayarCheck[0]._id,
+        });
+      }
+
+      console.warn(`[${traceId}] No matching transaction found for amount: ${amount}`);
+      return NextResponse.json(
+        { success: false, message: "No matching transaction found" },
+        { status: 404 }
+      );
     }
 
     console.log(`[${traceId}] Event "${webhookData.event}" not processed as payment.`);

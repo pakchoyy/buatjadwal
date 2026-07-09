@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { getConvexClient } from "@/lib/convex";
+import { checkMayarTransaction } from "@/lib/mayar";
 
 export async function GET(
   req: NextRequest,
@@ -33,12 +34,19 @@ export async function GET(
     }
 
     const now = Date.now();
-    if (transaction.status === "pending" && transaction.expiresAt < now) {
+    if (transaction.status === "expired" || transaction.status === "cancelled") {
+      return NextResponse.json({ status: transaction.status });
+    }
+
+    if (transaction.status === "paid") {
+      return NextResponse.json({ status: "paid" });
+    }
+
+    if (transaction.expiresAt < now) {
       await convex.mutation(api.transactions.updateStatus, {
         id: id as Id<"transactions">,
         status: "expired",
       });
-
       console.log(`[${traceId}] Transaction auto-expired`);
       return NextResponse.json({
         status: "expired",
@@ -46,14 +54,30 @@ export async function GET(
       });
     }
 
-    console.log(`[${traceId}] Transaction status: ${transaction.status}`);
+    // Fallback: cek ke API Mayar kalau masih pending
+    console.log(`[${traceId}] Still pending, checking Mayar API...`);
+    const result = await checkMayarTransaction(
+      transaction.amount,
+      transaction.createdAt
+    );
+
+    if (result.found) {
+      console.log(`[${traceId}] Payment confirmed via Mayar API, updating...`);
+      await convex.mutation(api.transactions.updateStatus, {
+        id: id as Id<"transactions">,
+        status: "paid",
+      });
+      return NextResponse.json({
+        status: "paid",
+        message: "Pembayaran terverifikasi",
+      });
+    }
 
     return NextResponse.json({
-      status: transaction.status,
+      status: "pending",
       amount: transaction.amount,
       createdAt: transaction.createdAt,
       expiresAt: transaction.expiresAt,
-      paidAt: transaction.paidAt,
     });
   } catch (error) {
     console.error(`[${traceId}] Status check error:`, error);

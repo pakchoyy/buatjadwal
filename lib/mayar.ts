@@ -147,7 +147,7 @@ export async function checkMayarTransaction(
   try {
     console.log(`[MAYAR] Checking transactions for amount: ${amount}`);
 
-    const response = await fetch(`${config.baseUrl}/transactions?limit=20`, {
+    const response = await fetch(`${config.baseUrl}/transactions?limit=100`, {
       headers: {
         Authorization: `Bearer ${config.apiKey}`,
         "Content-Type": "application/json",
@@ -169,11 +169,16 @@ export async function checkMayarTransaction(
     });
 
     if (match) {
-      console.log("[MAYAR] Found matching transaction:", match.id || match._id);
+      console.log("[MAYAR] Found matching transaction:", {
+        id: match.id || match._id,
+        amount: match.amount || match.total,
+        status: match.status,
+        createdAt: match.createdAt || match.created_at,
+      });
       return { found: true, transaction: match };
     }
 
-    console.log("[MAYAR] No matching transaction found");
+    console.log("[MAYAR] No matching transaction found among", transactions.length, "transactions");
     return { found: false };
   } catch (error) {
     console.error("[MAYAR] Error checking transactions:", error);

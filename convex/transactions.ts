@@ -111,3 +111,20 @@ export const listAll = query({
     return await ctx.db.query("transactions").order("desc").take(100);
   },
 });
+
+// Get pending transaction by amount within time window (for webhook matching)
+export const getPendingByAmount = query({
+  args: { amount: v.number(), since: v.number() },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("transactions")
+      .withIndex("by_status", (q) => q.eq("status", "pending"))
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("amount"), args.amount),
+          q.gt(q.field("createdAt"), args.since)
+        )
+      )
+      .take(10);
+  },
+});
