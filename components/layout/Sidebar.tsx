@@ -6,7 +6,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import React from "react";
+import React, { useState } from "react";
+import TentangModal from "./TentangModal";
+import KontakModal from "./KontakModal";
 import {
   BookOpen,
   Building2,
@@ -15,6 +17,8 @@ import {
   ClipboardList,
   GraduationCap,
   Home,
+  Info,
+  Mail,
   Users,
   Zap,
   type LucideIcon,
@@ -45,6 +49,8 @@ interface SidebarProps {
 
 export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   const pathname = usePathname();
+  const [showTentang, setShowTentang] = useState(false);
+  const [showKontak, setShowKontak] = useState(false);
 
   return (
     <>
@@ -99,6 +105,28 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
             );
           })}
         </ul>
+
+        {/* Separator */}
+        <div className="mt-4 mb-2 border-t border-[var(--border)]" />
+
+        {/* Tentang & Kontak */}
+        <div className="space-y-1">
+          <button
+            onClick={() => setShowTentang(true)}
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-sm font-semibold w-full text-left text-[var(--text)] hover:bg-[var(--input-bg)]"
+          >
+            <Info size={18} />
+            <span>Tentang</span>
+          </button>
+
+          <button
+            onClick={() => setShowKontak(true)}
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-sm font-semibold w-full text-left text-[var(--text)] hover:bg-[var(--input-bg)]"
+          >
+            <Mail size={18} />
+            <span>Kontak</span>
+          </button>
+        </div>
       </nav>
 
       {/* Footer */}
@@ -120,6 +148,10 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
           </a>
         </div>
       </div>
+
+      {/* TentangModal & KontakModal */}
+      <TentangModal isOpen={showTentang} onClose={() => setShowTentang(false)} />
+      <KontakModal isOpen={showKontak} onClose={() => setShowKontak(false)} />
     </aside>
     </>
   );
