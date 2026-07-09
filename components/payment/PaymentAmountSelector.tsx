@@ -86,34 +86,34 @@ export default function PaymentAmountSelector({
   };
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2.5">
       {/* Title */}
       <div className="text-center">
-        <div className="flex items-center justify-center gap-1.5">
-          <CheckCircle2 size={16} className="text-teal-600" />
-          <h2 className="text-sm font-bold text-gray-900" onClick={handleTitleTap}>Jadwal Berhasil Dibuat</h2>
+        <div className="flex items-center justify-center gap-1">
+          <CheckCircle2 size={15} className="text-teal-600" />
+          <h2 className="text-[13px] font-bold text-gray-900" onClick={handleTitleTap}>Jadwal Berhasil Dibuat</h2>
         </div>
         {testMode && (
           <p className="mt-0.5 text-[10px] font-semibold text-amber-600">Testing Mode</p>
         )}
-        <p className="mt-0.5 text-[11px] text-gray-500">
+        <p className="mt-0.5 text-[10px] leading-snug text-gray-500">
           Aplikasi ini untuk membantu guru menyusun jadwal dengan lebih mudah.
         </p>
       </div>
 
       {/* Amount Selection */}
-      <div className="rounded-xl bg-gradient-to-br from-teal-50 to-cyan-50 p-3">
-        <h3 className="mb-2 text-center text-xs font-semibold text-teal-900 flex items-center justify-center gap-1">
-          <Heart size={13} className="text-teal-600" />
+      <div className="rounded-xl bg-gradient-to-br from-teal-50 to-cyan-50 p-2.5">
+        <h3 className="mb-1.5 text-center text-[11px] font-semibold text-teal-900 flex items-center justify-center gap-1">
+          <Heart size={12} className="text-teal-600" />
           Pilih Nominal Dukungan
         </h3>
 
         {/* Preset Amounts */}
-        <div className="mb-3 space-y-2">
+        <div className="mb-2.5 space-y-1.5">
           {presetAmounts.map((preset) => (
             <label
               key={preset.value}
-              className="flex cursor-pointer items-center rounded-lg border-2 border-teal-200 bg-white p-3 transition-all hover:border-teal-400 hover:shadow-md"
+              className="flex cursor-pointer items-center rounded-lg border-2 border-teal-200 bg-white px-2.5 py-2 transition-all hover:border-teal-400 hover:shadow-md"
             >
               <input
                 type="radio"
@@ -121,9 +121,9 @@ export default function PaymentAmountSelector({
                 value={preset.value}
                 checked={selectedAmount === preset.value && !isCustomSelected}
                 onChange={() => handlePresetSelect(preset.value)}
-                className="h-3.5 w-3.5 border-gray-300 text-teal-600 focus:ring-2 focus:ring-teal-500"
+                className="h-3 w-3 border-gray-300 text-teal-600 focus:ring-2 focus:ring-teal-500"
               />
-              <span className="ml-2 flex-1 text-sm font-medium text-gray-900">
+              <span className="ml-2 flex-1 text-[13px] font-medium text-gray-900">
                 {preset.label}
               </span>
             </label>
@@ -131,36 +131,36 @@ export default function PaymentAmountSelector({
 
           {/* Testing Amount (hidden, tap title 5x to unlock) */}
           {testMode && (
-            <label className="flex cursor-pointer items-center rounded-lg border-2 border-amber-300 bg-amber-50 p-3 transition-all hover:border-amber-400 hover:shadow-md">
+            <label className="flex cursor-pointer items-center rounded-lg border-2 border-amber-300 bg-amber-50 px-2.5 py-2 transition-all hover:border-amber-400 hover:shadow-md">
               <input
                 type="radio"
                 name="amount"
                 value={100}
                 checked={selectedAmount === 100 && !isCustomSelected}
                 onChange={() => handlePresetSelect(100)}
-                className="h-3.5 w-3.5 border-gray-300 text-amber-600 focus:ring-2 focus:ring-amber-500"
+                className="h-3 w-3 border-gray-300 text-amber-600 focus:ring-2 focus:ring-amber-500"
               />
-              <span className="ml-2 flex-1 text-sm font-medium text-amber-900">
+              <span className="ml-2 flex-1 text-[13px] font-medium text-amber-900">
                 Rp100 (Testing)
               </span>
             </label>
           )}
 
           {/* Custom Amount */}
-          <label className="flex cursor-pointer items-center rounded-lg border-2 border-teal-200 bg-white p-3 transition-all hover:border-teal-400 hover:shadow-md">
+          <label className="flex cursor-pointer items-center rounded-lg border-2 border-teal-200 bg-white px-2.5 py-2 transition-all hover:border-teal-400 hover:shadow-md">
             <input
               type="radio"
               name="amount"
-                checked={isCustomSelected}
-                onChange={() => {
-                  setIsCustomSelected(true);
-                  setCustomAmount("");
-                  setSelectedAmount(minAmount);
-                }}
-                className="h-3.5 w-3.5 border-gray-300 text-teal-600 focus:ring-2 focus:ring-teal-500"
-              />
+              checked={isCustomSelected}
+              onChange={() => {
+                setIsCustomSelected(true);
+                setCustomAmount("");
+                setSelectedAmount(minAmount);
+              }}
+              className="h-3 w-3 border-gray-300 text-teal-600 focus:ring-2 focus:ring-teal-500"
+            />
             <div className="ml-2 flex-1">
-              <div className="mb-1 text-sm font-medium text-gray-900">
+              <div className="mb-0.5 text-[13px] font-medium text-gray-900">
                 Custom Amount
               </div>
               <input
@@ -168,7 +168,7 @@ export default function PaymentAmountSelector({
                 value={customAmount}
                 onChange={(e) => handleCustomAmountChange(e.target.value)}
                 placeholder={`Min. Rp${minAmount.toLocaleString("id-ID")}`}
-                className="w-full rounded-lg border border-gray-300 px-2 py-1.5 text-xs focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className="w-full rounded-lg border border-gray-300 px-2 py-1 text-[11px] focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500"
                 onClick={(e) => e.stopPropagation()}
               />
             </div>
@@ -176,22 +176,22 @@ export default function PaymentAmountSelector({
         </div>
 
         {error && (
-          <div className="rounded-lg bg-red-50 p-2 text-center text-xs text-red-600">
+          <div className="rounded-lg bg-red-50 px-2 py-1.5 text-center text-[11px] text-red-600">
             {error}
           </div>
         )}
 
-        <div className="mt-2 text-center text-[10px] text-teal-700">
+        <div className="mt-1.5 text-center text-[10px] text-teal-700">
           Donasi sekali, Download otomatis setelah pembayaran
         </div>
       </div>
 
       {/* Actions */}
       <div className="flex gap-2">
-        <Button onClick={onCancel} variant="secondary" size="sm" className="flex-1">
+        <Button onClick={onCancel} variant="secondary" size="sm" className="flex-1 h-8 text-xs">
           Kembali
         </Button>
-        <Button onClick={handleContinue} variant="primary" size="sm" className="flex-1">
+        <Button onClick={handleContinue} variant="primary" size="sm" className="flex-1 h-8 text-xs">
           Lanjutkan →
         </Button>
       </div>

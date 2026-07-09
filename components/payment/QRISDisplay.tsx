@@ -28,6 +28,7 @@ export default function QRISDisplay({
   const [timeLeft, setTimeLeft] = useState(expiresIn);
   const [isChecking, setIsChecking] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   // Countdown timer
   useEffect(() => {
@@ -67,11 +68,11 @@ export default function QRISDisplay({
       }
     };
 
-    // Initial check after 3 seconds
-    const initialTimer = setTimeout(checkStatus, 3000);
+    // Initial check after 1 second
+    const initialTimer = setTimeout(checkStatus, 1000);
 
-    // Then check every 5 seconds
-    const interval = setInterval(checkStatus, 5000);
+    // Then check every 2 seconds
+    const interval = setInterval(checkStatus, 2000);
 
     return () => {
       clearTimeout(initialTimer);
@@ -109,64 +110,66 @@ export default function QRISDisplay({
   };
 
   const handleDownloadQRIS = async () => {
+    if (isDownloading) return;
+    setIsDownloading(true);
+
     Analytics.downloadQris({
       page_name: "Schedule",
       feature: "qris",
     });
 
     try {
-      const response = await fetch(qrisUrl);
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
-      a.href = url;
+      a.href = `/api/payments/qris?url=${encodeURIComponent(qrisUrl)}`;
       a.download = `qris-donasi-${amount}.png`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      URL.revokeObjectURL(url);
     } catch {
-      window.open(qrisUrl, "_blank");
+      window.location.href = `/api/payments/qris?url=${encodeURIComponent(qrisUrl)}`;
+    } finally {
+      setTimeout(() => setIsDownloading(false), 500);
     }
   };
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2.5">
       {/* Title */}
       <div className="text-center">
-        <h2 className="text-base font-bold text-gray-900">
+        <h2 className="text-sm font-bold text-gray-900">
           Scan QRIS untuk Donasi
         </h2>
-        <p className="mt-1 text-sm font-semibold text-teal-600">
+        <p className="mt-0.5 text-xs font-semibold text-teal-600">
           Rp{amount.toLocaleString("id-ID")}
         </p>
       </div>
 
       {/* QRIS Image */}
       <div className="flex justify-center">
-        <div className="rounded-xl bg-white p-2 shadow-lg">
+        <div className="rounded-lg bg-white p-1.5 shadow-lg">
           <img
             src={qrisUrl}
             alt="QRIS Code"
-            className="h-44 w-44 object-contain"
+            className="h-36 w-36 object-contain"
           />
         </div>
       </div>
       <div className="text-center -mt-1">
         <button
           onClick={handleDownloadQRIS}
-          className="inline-flex items-center gap-1 text-[10px] text-gray-400 hover:text-teal-600 transition-colors"
+          disabled={isDownloading}
+          className="inline-flex items-center gap-1 text-[10px] text-gray-400 hover:text-teal-600 transition-colors disabled:opacity-50"
         >
           <Download size={12} />
-          Simpan gambar QRIS
+          {isDownloading ? "Menyiapkan unduhan..." : "Simpan gambar QRIS"}
         </button>
       </div>
 
       {/* Timer */}
       <div className="text-center">
-        <div className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1.5 text-amber-800">
-          <Clock size={14} />
-          <span className="font-mono text-sm font-semibold">
+        <div className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-amber-800">
+          <Clock size={13} />
+          <span className="font-mono text-xs font-semibold">
             {formatTime(timeLeft)}
           </span>
         </div>
@@ -176,9 +179,9 @@ export default function QRISDisplay({
       <div className="text-center">
         <div className="flex items-center justify-center gap-2">
           <LoadingSpinner size="sm" />
-          <span className="text-xs text-gray-600">Menunggu pembayaran...</span>
+          <span className="text-[11px] text-gray-600">Menunggu pembayaran...</span>
         </div>
-        <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-gray-200">
+        <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-gray-200">
           <div
             className="h-full animate-pulse bg-gradient-to-r from-teal-500 to-cyan-500 transition-all"
             style={{ width: "60%" }}
@@ -187,26 +190,26 @@ export default function QRISDisplay({
         <button
           onClick={handleManualVerify}
           disabled={isVerifying}
-          className="mt-3 inline-flex items-center gap-1.5 text-xs text-teal-600 hover:text-teal-700 transition-colors disabled:opacity-50"
+          className="mt-2 inline-flex items-center gap-1.5 text-[11px] text-teal-600 hover:text-teal-700 transition-colors disabled:opacity-50"
         >
-          <ShieldCheck size={14} />
+          <ShieldCheck size={13} />
           {isVerifying ? "Memverifikasi..." : "Saya Sudah Bayar"}
         </button>
       </div>
 
       {/* Instructions */}
-      <div className="rounded-lg bg-blue-50 p-3">
-        <p className="text-center text-xs text-blue-800">
+      <div className="rounded-lg bg-blue-50 px-3 py-2">
+        <p className="text-center text-[11px] leading-snug text-blue-800">
           Scan dengan aplikasi e-wallet (Gopay, OVO, Dana, ShopeePay, dll)
         </p>
       </div>
 
       {/* Cancel Button */}
       <div className="flex items-center justify-center gap-2">
-        <button onClick={onCancel} className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors" aria-label="Tutup">
-          <X size={16} />
+        <button onClick={onCancel} className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors" aria-label="Tutup">
+          <X size={14} />
         </button>
-        <Button onClick={onCancel} variant="secondary" size="sm">
+        <Button onClick={onCancel} variant="secondary" size="sm" className="h-8 px-3 text-xs">
           Batalkan
         </Button>
       </div>

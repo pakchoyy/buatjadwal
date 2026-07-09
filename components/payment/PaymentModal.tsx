@@ -86,11 +86,11 @@ export default function PaymentModal({
     // Show success animation
     setStep("success");
 
-    // After 3 seconds, trigger download and close
+    // After 1.2 seconds, trigger download and close
     setTimeout(() => {
       onSuccess();
       handleClose();
-    }, 3000);
+    }, 1200);
   };
 
   const handleExpired = () => {
@@ -121,13 +121,13 @@ export default function PaymentModal({
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
-      size="md"
+      size="sm"
     >
       {loading ? (
-        <div className="flex items-center justify-center py-8">
+        <div className="flex items-center justify-center py-4">
           <div className="text-center">
-            <div className="mx-auto h-10 w-10 animate-spin rounded-full border-[3px] border-solid border-teal-600 border-t-transparent" />
-            <p className="mt-3 text-sm text-gray-600">Memproses pembayaran...</p>
+            <div className="mx-auto h-8 w-8 animate-spin rounded-full border-[3px] border-solid border-teal-600 border-t-transparent" />
+            <p className="mt-2 text-xs text-gray-600">Memproses pembayaran...</p>
           </div>
         </div>
       ) : (
