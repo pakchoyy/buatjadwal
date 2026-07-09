@@ -64,6 +64,8 @@ export async function GET(
       transaction.mayar_qris_id || undefined
     );
 
+    console.log(`[${traceId}] Mayar API result:`, JSON.stringify(result));
+
     if (result.found) {
       console.log(`[${traceId}] Payment confirmed via Mayar API, updating...`);
       await updatePaymentTransactionStatus(id, "paid");
