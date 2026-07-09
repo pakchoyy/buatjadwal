@@ -4,8 +4,8 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
-import { Pencil, Plus, Trash2, Clock } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Clock, Download, Pencil, Plus, Trash2, Upload } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
 import Input from "@/components/ui/Input";
@@ -13,8 +13,9 @@ import Select from "@/components/ui/Select";
 import Alert from "@/components/ui/Alert";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import { LocalDB } from "@/lib/db";
-import { TimeSlot, AlertState, TimeSlotFormData, DAYS, DAY_LABELS } from "@/lib/types";
+import { TimeSlot, AlertState, TimeSlotFormData, DAYS, DAY_LABELS, Day } from "@/lib/types";
 import { getDayLabel, formatTimeRange } from "@/lib/utils";
+import { downloadTemplate, parseExcelFile } from "@/lib/spreadsheet-import";
 import { Analytics } from "@/lib/analytics";
 
 export default function TimeSlotsPage() {
@@ -39,6 +40,13 @@ export default function TimeSlotsPage() {
     isOpen: boolean;
     slotId: string | null;
   }>({ isOpen: false, slotId: null });
+  const [importResult, setImportResult] = useState<{
+    isOpen: boolean;
+    imported: number;
+    errors: { row: number; message: string }[];
+  }>({ isOpen: false, imported: 0, errors: [] });
+  const [isImporting, setIsImporting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     loadTimeSlots();
@@ -56,6 +64,89 @@ export default function TimeSlotsPage() {
         return a.slotNumber - b.slotNumber;
       });
       setTimeSlots(data);
+    }
+  };
+
+  const handleDownloadTemplate = () => {
+    downloadTemplate(
+      "Template_Import_Slot_Waktu.xlsx",
+      ["Hari", "Slot", "Mulai", "Selesai", "Istirahat"],
+      [
+        ["Senin", "1", "07:00", "07:45", "Tidak"],
+        ["Senin", "2", "07:45", "08:30", "Tidak"],
+        ["Senin", "3", "08:30", "08:45", "Ya"],
+      ]
+    );
+  };
+
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsImporting(true);
+
+    try {
+      const { rows } = await parseExcelFile(file);
+      const school = LocalDB.getSchool();
+      if (!school) throw new Error("Silakan buat data sekolah terlebih dahulu");
+
+      const dayMap: Record<string, Day> = {
+        senin: "monday", selasa: "tuesday", rabu: "wednesday",
+        kamis: "thursday", jumat: "friday", sabtu: "saturday",
+      };
+
+      const errors: { row: number; message: string }[] = [];
+      let imported = 0;
+
+      for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        const hari = (row["hari"] || "").toLowerCase().trim();
+        const slotStr = row["slot"] || "";
+        const mulai = row["mulai"] || "";
+        const selesai = row["selesai"] || "";
+        const istirahat = (row["istirahat"] || "").toLowerCase().trim();
+
+        const day = dayMap[hari];
+        if (!day) {
+          errors.push({ row: i + 2, message: `Hari tidak valid: ${hari}` });
+          continue;
+        }
+
+        const slotNumber = parseInt(slotStr);
+        if (isNaN(slotNumber)) {
+          errors.push({ row: i + 2, message: "Slot harus berupa angka" });
+          continue;
+        }
+
+        if (!mulai || !selesai) {
+          errors.push({ row: i + 2, message: "Waktu mulai/selesai kosong" });
+          continue;
+        }
+
+        const isBreak = istirahat === "ya" || istirahat === "1" || istirahat === "true";
+
+        try {
+          LocalDB.createTimeSlot({ schoolId: school.id, day, slotNumber, startTime: mulai, endTime: selesai, isBreak });
+          imported++;
+        } catch (err) {
+          errors.push({ row: i + 2, message: err instanceof Error ? err.message : "Error" });
+        }
+      }
+
+      setImportResult({ isOpen: true, imported, errors });
+      loadTimeSlots();
+    } catch (err) {
+      setAlert({
+        show: true,
+        type: "error",
+        message: err instanceof Error ? err.message : "Gagal import",
+      });
+    } finally {
+      setIsImporting(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
@@ -160,13 +251,28 @@ export default function TimeSlotsPage() {
 
   return (
     <>
-      {/* Action button */}
+      {/* Action buttons */}
       <div className="p-4 md:p-6 pb-0">
-        <div className="flex justify-center">
+        <div className="flex flex-wrap justify-center gap-3">
           <Button onClick={handleCreate}>
             <Plus size={16} />
             Tambah Slot
           </Button>
+          <Button variant="secondary" onClick={handleDownloadTemplate}>
+            <Download size={16} />
+            <span className="hidden sm:inline">Download Template</span>
+          </Button>
+          <Button variant="secondary" onClick={handleImportClick} isLoading={isImporting}>
+            <Upload size={16} />
+            <span className="hidden sm:inline">Import Excel</span>
+          </Button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".xlsx,.xls"
+            className="hidden"
+            onChange={handleFileChange}
+          />
         </div>
       </div>
 
@@ -358,6 +464,42 @@ export default function TimeSlotsPage() {
         confirmText="Hapus"
         confirmVariant="danger"
       />
+
+      <Modal
+        isOpen={importResult.isOpen}
+        onClose={() => setImportResult({ ...importResult, isOpen: false })}
+        title="Hasil Import"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-gray-700">
+            Berhasil: <strong className="text-green-700">{importResult.imported}</strong> slot waktu
+            {importResult.errors.length > 0 && (
+              <span>
+                {" "}| Gagal: <strong className="text-red-700">{importResult.errors.length}</strong> baris
+              </span>
+            )}
+          </p>
+
+          {importResult.errors.length > 0 && (
+            <div>
+              <h4 className="text-sm font-semibold text-red-800 mb-2">Detail Error:</h4>
+              <div className="max-h-48 overflow-y-auto space-y-1">
+                {importResult.errors.map((err, i) => (
+                  <p key={i} className="text-xs text-red-700">
+                    Baris {err.row}: {err.message}
+                  </p>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="flex justify-end pt-2">
+            <Button onClick={() => setImportResult({ ...importResult, isOpen: false })}>
+              Tutup
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </>
   );
 }

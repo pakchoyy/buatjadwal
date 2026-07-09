@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Pencil, Plus, Trash2, School } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Download, Pencil, Plus, School, Trash2, Upload } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
 import Input from "@/components/ui/Input";
@@ -19,6 +19,7 @@ import {
   GRADE_OPTIONS,
 } from "@/lib/types";
 import { filterBySearch } from "@/lib/utils";
+import { downloadTemplate, parseExcelFile } from "@/lib/spreadsheet-import";
 import { Analytics } from "@/lib/analytics";
 import { getDefaultClassName, getEducationLevelFromSchoolLevel, getDefaultGrade } from "@/lib/template-data";
 
@@ -44,6 +45,13 @@ export default function ClassesPage() {
     isOpen: boolean;
     classId: string | null;
   }>({ isOpen: false, classId: null });
+  const [importResult, setImportResult] = useState<{
+    isOpen: boolean;
+    imported: number;
+    errors: { row: number; message: string }[];
+  }>({ isOpen: false, imported: 0, errors: [] });
+  const [isImporting, setIsImporting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const selectedLevel = formData.educationLevel as EducationLevel;
   const gradeOptions = GRADE_OPTIONS[selectedLevel] || GRADE_OPTIONS.smp;
@@ -62,6 +70,83 @@ export default function ClassesPage() {
     if (school) {
       const data = LocalDB.listClasses(school.id);
       setClasses(data);
+    }
+  };
+
+  const handleDownloadTemplate = () => {
+    downloadTemplate(
+      "Template_Import_Kelas.xlsx",
+      ["Nama Kelas", "Jenjang", "Tingkat"],
+      [
+        ["1A", "SMP", "7"],
+        ["1B", "SMP", "7"],
+        ["7A", "SMA", "10"],
+      ]
+    );
+  };
+
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsImporting(true);
+
+    try {
+      const { rows } = await parseExcelFile(file);
+      const school = LocalDB.getSchool();
+      if (!school) throw new Error("Silakan buat data sekolah terlebih dahulu");
+
+      const errors: { row: number; message: string }[] = [];
+      let imported = 0;
+
+      for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        const name = row["nama kelas"] || "";
+        const jenjang = (row["jenjang"] || "").toLowerCase();
+        const tingkatStr = row["tingkat"] || "";
+
+        if (!name) {
+          errors.push({ row: i + 2, message: "Nama Kelas kosong" });
+          continue;
+        }
+
+        const levelMap: Record<string, EducationLevel> = {
+          sd: "sd", smp: "smp", sma: "sma",
+        };
+        const educationLevel = levelMap[jenjang];
+        if (!educationLevel) {
+          errors.push({ row: i + 2, message: `Jenjang tidak valid: ${jenjang}. Gunakan SD/SMP/SMA` });
+          continue;
+        }
+
+        const grade = parseInt(tingkatStr);
+        if (isNaN(grade)) {
+          errors.push({ row: i + 2, message: "Tingkat harus berupa angka" });
+          continue;
+        }
+
+        try {
+          LocalDB.createClass({ schoolId: school.id, name, educationLevel, grade });
+          imported++;
+        } catch (err) {
+          errors.push({ row: i + 2, message: err instanceof Error ? err.message : "Error" });
+        }
+      }
+
+      setImportResult({ isOpen: true, imported, errors });
+      loadClasses();
+    } catch (err) {
+      setAlert({
+        show: true,
+        type: "error",
+        message: err instanceof Error ? err.message : "Gagal import",
+      });
+    } finally {
+      setIsImporting(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
@@ -167,11 +252,26 @@ export default function ClassesPage() {
   return (
     <>
       <div className="p-4 md:p-6 pb-0">
-        <div className="flex justify-center">
+        <div className="flex flex-wrap justify-center gap-3">
           <Button onClick={handleCreate}>
             <Plus size={16} />
             Tambah Kelas
           </Button>
+          <Button variant="secondary" onClick={handleDownloadTemplate}>
+            <Download size={16} />
+            <span className="hidden sm:inline">Download Template</span>
+          </Button>
+          <Button variant="secondary" onClick={handleImportClick} isLoading={isImporting}>
+            <Upload size={16} />
+            <span className="hidden sm:inline">Import Excel</span>
+          </Button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".xlsx,.xls"
+            className="hidden"
+            onChange={handleFileChange}
+          />
         </div>
       </div>
 
@@ -340,6 +440,42 @@ export default function ClassesPage() {
         confirmText="Hapus"
         confirmVariant="danger"
       />
+
+      <Modal
+        isOpen={importResult.isOpen}
+        onClose={() => setImportResult({ ...importResult, isOpen: false })}
+        title="Hasil Import"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-gray-700">
+            Berhasil: <strong className="text-green-700">{importResult.imported}</strong> kelas
+            {importResult.errors.length > 0 && (
+              <span>
+                {" "}| Gagal: <strong className="text-red-700">{importResult.errors.length}</strong> baris
+              </span>
+            )}
+          </p>
+
+          {importResult.errors.length > 0 && (
+            <div>
+              <h4 className="text-sm font-semibold text-red-800 mb-2">Detail Error:</h4>
+              <div className="max-h-48 overflow-y-auto space-y-1">
+                {importResult.errors.map((err, i) => (
+                  <p key={i} className="text-xs text-red-700">
+                    Baris {err.row}: {err.message}
+                  </p>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="flex justify-end pt-2">
+            <Button onClick={() => setImportResult({ ...importResult, isOpen: false })}>
+              Tutup
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </>
   );
 }
