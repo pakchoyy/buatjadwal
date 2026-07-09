@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { api } from "@/convex/_generated/api";
-import { getConvexClient } from "@/lib/convex";
 import { createDynamicQRIS } from "@/lib/mayar";
+import { createPaymentTransaction } from "@/lib/supabase-payment";
 
 function generateTraceId(): string {
   return `tx_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
@@ -83,9 +82,8 @@ export async function POST(req: NextRequest) {
       amount: qrisResponse.data.amount,
     });
 
-    // Store in Convex
-    const convex = getConvexClient();
-    const transactionId = await convex.mutation(api.transactions.create, {
+    // Store in Supabase
+    const transaction = await createPaymentTransaction({
       amount,
       qrisUrl: qrisResponse.data.url,
       mayarQrisId: qrisResponse.data.id,
@@ -94,12 +92,12 @@ export async function POST(req: NextRequest) {
       ipAddress: ip,
     });
 
-    console.log(`[${traceId}] Transaction stored in Convex:`, transactionId);
+    console.log(`[${traceId}] Transaction stored in Supabase:`, transaction.id);
 
     return NextResponse.json({
       success: true,
       traceId,
-      transactionId,
+      transactionId: transaction.id,
       qrisUrl: qrisResponse.data.url,
       amount: qrisResponse.data.amount,
       expiresIn: 1800,

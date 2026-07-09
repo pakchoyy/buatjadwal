@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { api } from "@/convex/_generated/api";
-import { Id } from "@/convex/_generated/dataModel";
-import { getConvexClient } from "@/lib/convex";
 import { checkMayarTransaction } from "@/lib/mayar";
+import {
+  getPaymentTransactionById,
+  updatePaymentTransactionStatus,
+} from "@/lib/supabase-payment";
 
 export async function GET(
   req: NextRequest,
@@ -21,10 +22,7 @@ export async function GET(
       );
     }
 
-    const convex = getConvexClient();
-    const transaction = await convex.query(api.transactions.getById, {
-      id: id as Id<"transactions">,
-    });
+    const transaction = await getPaymentTransactionById(id);
 
     if (!transaction) {
       return NextResponse.json(
@@ -42,11 +40,8 @@ export async function GET(
       return NextResponse.json({ status: "paid" });
     }
 
-    if (transaction.expiresAt < now) {
-      await convex.mutation(api.transactions.updateStatus, {
-        id: id as Id<"transactions">,
-        status: "expired",
-      });
+    if (new Date(transaction.expires_at).getTime() < now) {
+      await updatePaymentTransactionStatus(id, "expired");
       console.log(`[${traceId}] Transaction auto-expired`);
       return NextResponse.json({
         status: "expired",
@@ -58,16 +53,13 @@ export async function GET(
     console.log(`[${traceId}] Still pending, checking Mayar API...`);
     const result = await checkMayarTransaction(
       transaction.amount,
-      transaction.createdAt,
-      transaction.mayarQrisId || undefined
+      transaction.created_at,
+      transaction.mayar_qris_id || undefined
     );
 
     if (result.found) {
       console.log(`[${traceId}] Payment confirmed via Mayar API, updating...`);
-      await convex.mutation(api.transactions.updateStatus, {
-        id: id as Id<"transactions">,
-        status: "paid",
-      });
+      await updatePaymentTransactionStatus(id, "paid");
       return NextResponse.json({
         status: "paid",
         message: "Pembayaran terverifikasi",
@@ -77,8 +69,8 @@ export async function GET(
     return NextResponse.json({
       status: "pending",
       amount: transaction.amount,
-      createdAt: transaction.createdAt,
-      expiresAt: transaction.expiresAt,
+      createdAt: transaction.created_at,
+      expiresAt: transaction.expires_at,
     });
   } catch (error) {
     console.error(`[${traceId}] Status check error:`, error);

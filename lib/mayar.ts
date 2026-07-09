@@ -133,7 +133,7 @@ export interface MayarWebhookPayload {
  */
 export async function checkMayarTransaction(
   amount: number,
-  sinceTimestamp: number,
+  sinceTimestamp: number | string | Date,
   expectedQrisId?: string
 ): Promise<{ found: boolean; transaction?: any }> {
   let config: { apiKey: string; baseUrl: string };
@@ -146,6 +146,13 @@ export async function checkMayarTransaction(
   }
 
   try {
+    const sinceMs =
+      sinceTimestamp instanceof Date
+        ? sinceTimestamp.getTime()
+        : typeof sinceTimestamp === "string"
+          ? new Date(sinceTimestamp).getTime()
+          : sinceTimestamp;
+
     console.log(`[MAYAR] Checking transactions for amount: ${amount}`, {
       sinceTimestamp,
       expectedQrisId,
@@ -176,7 +183,7 @@ export async function checkMayarTransaction(
       );
 
       const amountMatches = Number.isFinite(tAmount) && tAmount === amount;
-      const timeMatches = Number.isFinite(tCreated) && tCreated >= sinceTimestamp;
+      const timeMatches = Number.isFinite(tCreated) && tCreated >= sinceMs;
       const idMatches = expectedQrisId ? tQrisId === expectedQrisId : true;
 
       return amountMatches && timeMatches && idMatches;

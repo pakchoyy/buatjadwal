@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { api } from "@/convex/_generated/api";
-import { Id } from "@/convex/_generated/dataModel";
-import { getConvexClient } from "@/lib/convex";
 import { checkMayarTransaction } from "@/lib/mayar";
+import {
+  getPaymentTransactionById,
+  updatePaymentTransactionStatus,
+} from "@/lib/supabase-payment";
 
 export async function POST(req: NextRequest) {
   const traceId = `vr_${Date.now()}`;
@@ -20,11 +21,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const convex = getConvexClient();
-
-    const transaction = await convex.query(api.transactions.getById, {
-      id: transactionId as Id<"transactions">,
-    });
+    const transaction = await getPaymentTransactionById(transactionId);
 
     if (!transaction) {
       return NextResponse.json(
@@ -46,17 +43,14 @@ export async function POST(req: NextRequest) {
 
     const result = await checkMayarTransaction(
       transaction.amount,
-      transaction.createdAt,
-      transaction.mayarQrisId || undefined
+      transaction.created_at,
+      transaction.mayar_qris_id || undefined
     );
 
     if (result.found) {
       console.log(`[${traceId}] Payment confirmed via MAYAR API`);
 
-      await convex.mutation(api.transactions.updateStatus, {
-        id: transactionId as Id<"transactions">,
-        status: "paid",
-      });
+      await updatePaymentTransactionStatus(transactionId, "paid");
 
       return NextResponse.json({
         success: true,

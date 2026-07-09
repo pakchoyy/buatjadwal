@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { api } from "@/convex/_generated/api";
-import { Id } from "@/convex/_generated/dataModel";
-import { getConvexClient } from "@/lib/convex";
 import { verifyWebhookSignature, parseMayarWebhook } from "@/lib/mayar";
+import {
+  findPendingTransactionsByAmount,
+  findPendingTransactionsByMayarQrisId,
+  updatePaymentTransactionStatus,
+} from "@/lib/supabase-payment";
 
 export async function POST(req: NextRequest) {
   const traceId = `wh_${Date.now()}`;
@@ -44,63 +46,35 @@ export async function POST(req: NextRequest) {
 
     if (isPaymentEvent && isSuccessEvent) {
       const { amount } = webhookData.data;
-      const convex = getConvexClient();
       const mayarId = webhookData.data.id;
-      const thirtyMinAgo = Date.now() - 30 * 60 * 1000;
+      const thirtyMinAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
 
       let matchingTransaction = null;
 
       // Cari berdasarkan mayarQrisId dulu (lebih akurat)
       if (mayarId) {
-        const byQrisId = await convex.query(api.transactions.getPendingByAmount, {
-          amount,
-          since: thirtyMinAgo,
-        });
-        matchingTransaction = byQrisId.find((t) => t.mayarQrisId === mayarId);
+        const byQrisId = await findPendingTransactionsByMayarQrisId(mayarId);
+        matchingTransaction = byQrisId.find(
+          (t) => t.amount === Number(amount) && t.created_at >= thirtyMinAgo
+        );
       }
 
       // Fallback: cocokkan amount + waktu
       if (!matchingTransaction) {
-        const byAmount = await convex.query(api.transactions.getPendingByAmount, {
-          amount,
-          since: thirtyMinAgo,
-        });
+        const byAmount = await findPendingTransactionsByAmount(Number(amount), thirtyMinAgo);
         matchingTransaction = byAmount[0] || null;
       }
 
       if (matchingTransaction) {
-        console.log(`[${traceId}] Matching transaction: ${matchingTransaction._id}`);
+        console.log(`[${traceId}] Matching transaction: ${matchingTransaction.id}`);
 
-        await convex.mutation(api.transactions.updateStatus, {
-          id: matchingTransaction._id as Id<"transactions">,
-          status: "paid",
-        });
+        await updatePaymentTransactionStatus(matchingTransaction.id, "paid");
 
         console.log(`[${traceId}] Transaction marked as paid`);
         return NextResponse.json({
           success: true,
           message: "Payment recorded",
-          transactionId: matchingTransaction._id,
-        });
-      }
-
-      // Jika tidak ditemukan, coba cek ke Mayar API sebagai fallback terakhir
-      console.log(`[${traceId}] No Convex match for amount ${amount}, checking Mayar API...`);
-      const mayarCheck = await convex.query(api.transactions.getPendingByAmount, {
-        amount,
-        since: thirtyMinAgo,
-      });
-
-      if (mayarCheck.length > 0) {
-        console.log(`[${traceId}] Found pending transaction via amount match, marking paid`);
-        await convex.mutation(api.transactions.updateStatus, {
-          id: mayarCheck[0]._id as Id<"transactions">,
-          status: "paid",
-        });
-        return NextResponse.json({
-          success: true,
-          message: "Payment recorded via amount match",
-          transactionId: mayarCheck[0]._id,
+          transactionId: matchingTransaction.id,
         });
       }
 
