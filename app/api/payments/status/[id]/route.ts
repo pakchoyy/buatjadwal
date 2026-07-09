@@ -36,7 +36,7 @@ export async function GET(
       return NextResponse.json({ status: transaction.status });
     }
 
-    const safeStatus = transaction.status;
+    const safeStatus: string = transaction.status;
 
     if (safeStatus === "paid") {
       console.log(`[${traceId}] Status already paid, returning immediately`);

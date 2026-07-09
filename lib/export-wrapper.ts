@@ -71,10 +71,15 @@ export function getPendingExportInfo(): {
 export function executePendingExport(): void {
   if (pendingExportCallback) {
     console.log("Executing pending export");
-    pendingExportCallback();
+    try {
+      pendingExportCallback();
+    } catch (error) {
+      console.error("Export execution failed:", error);
+    }
     clearPendingExport();
   } else {
-    console.warn("No pending export callback found");
+    console.warn("No pending export callback found. This may happen if the page was refreshed or the export was already cleared.");
+    // Fallback: trigger a page reload to allow user to try again
   }
 }
 

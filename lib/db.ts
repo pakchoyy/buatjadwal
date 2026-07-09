@@ -788,6 +788,9 @@ export class LocalDB {
     Object.values(this.KEYS).forEach((key) => {
       localStorage.removeItem(key);
     });
+
+    // Reset payment status agar testing tidak terkunci
+    localStorage.removeItem("jadwal_payment_status");
   }
 
   /**

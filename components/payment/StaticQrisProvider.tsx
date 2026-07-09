@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CircleCheck, Download, Info, LoaderCircle, X } from "lucide-react";
+import { Download, Info, X } from "lucide-react";
 import Button from "@/components/ui/Button";
 import { savePaymentStatus } from "@/lib/payment-storage";
 import { Analytics } from "@/lib/analytics";
@@ -14,22 +14,14 @@ interface StaticQrisProviderProps {
   exportMetadata?: any;
 }
 
-type ToastType = "preparing" | "success" | "qris-downloaded";
-
-interface ToastState {
-  type: ToastType;
-  title: string;
-  subtitle?: string;
-}
-
 export default function StaticQrisProvider({
   isOpen,
   onClose,
   onSuccess,
 }: StaticQrisProviderProps) {
-  const [isLoading, setIsLoading] = useState(false);
-  const [toast, setToast] = useState<ToastState | null>(null);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [testMode, setTestMode] = useState(false);
+  const [testTapCount, setTestTapCount] = useState(0);
 
   useEffect(() => {
     if (isOpen) {
@@ -52,16 +44,16 @@ export default function StaticQrisProvider({
     return () => document.removeEventListener("keydown", handleEscape);
   }, [isOpen, onClose]);
 
-  useEffect(() => {
-    if (toast) {
-      const duration = toast.type === "success" ? 4000 : 2500;
-      const timer = setTimeout(() => setToast(null), duration);
-      return () => clearTimeout(timer);
+  const handleTitleTap = () => {
+    const newCount = testTapCount + 1;
+    setTestTapCount(newCount);
+    if (newCount >= 5) {
+      setTestMode(true);
+      setTestTapCount(0);
     }
-  }, [toast]);
+  };
 
   const handleDownloadQris = () => {
-    // Download QRIS image
     const link = document.createElement("a");
     link.href = "/payment/qris.png";
     link.download = "QRIS-Donasi.png";
@@ -73,48 +65,22 @@ export default function StaticQrisProvider({
       page_name: "Schedule",
       feature: "qris",
     });
-
-    setToast({
-      type: "qris-downloaded",
-      title: "QRIS berhasil diunduh.",
-    });
   };
 
   const handleDonateClick = () => {
-    // Show confirmation dialog
     setShowConfirmDialog(true);
   };
 
   const handleConfirmDownload = () => {
     setShowConfirmDialog(false);
-    setIsLoading(true);
 
     Analytics.supportDownloadClick({
       page_name: "Schedule",
       feature: "qris",
     });
 
-    // Show preparing toast
-    setToast({
-      type: "preparing",
-      title: "Menyiapkan file...",
-    });
-
-    setTimeout(() => {
-      savePaymentStatus("qris-static", 0);
-
-      // Show success toast
-      setToast({
-        type: "success",
-        title: "Download Dimulai",
-        subtitle: "Silakan periksa folder Downloads atau daftar unduhan browser Anda.",
-      });
-
-      setTimeout(() => {
-        setIsLoading(false);
-        onSuccess();
-      }, 800);
-    }, 1200);
+    savePaymentStatus("qris-static", testMode ? 100 : 0);
+    onSuccess();
   };
 
   if (!isOpen) return null;
@@ -127,7 +93,10 @@ export default function StaticQrisProvider({
         <div className="relative w-full max-w-[430px] animate-in fade-in zoom-in-95 duration-200">
           <div className="rounded-2xl bg-white/90 dark:bg-gray-800/90 backdrop-blur-md shadow-2xl border border-white/20 dark:border-gray-700/30">
             <div className="px-4 pt-3 pb-2 flex items-center justify-between">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 flex-1 text-center">
+              <h2
+                className="text-xl font-bold text-gray-900 dark:text-gray-100 flex-1 text-center cursor-default"
+                onClick={handleTitleTap}
+              >
                 Bantu Aplikasi Ini Terus Berkembang
               </h2>
               <button
@@ -139,13 +108,20 @@ export default function StaticQrisProvider({
               </button>
             </div>
 
+            {testMode && (
+              <p className="text-center text-[10px] font-semibold text-amber-600 -mt-1 mb-1">
+                Testing Mode
+              </p>
+            )}
+
             <div className="px-4 py-2 space-y-2.5 text-center">
               <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-                Berikan dukungan mulai Rp10.000 untuk melanjutkan download.
+                {testMode
+                  ? "Mode testing: scan QRIS atau cukup klik konfirmasi."
+                  : "Berikan dukungan mulai Rp10.000 untuk melanjutkan download."}
               </p>
 
               <div className="flex flex-col items-center gap-2 pt-1">
-                {/* Download QRIS Button */}
                 <button
                   onClick={handleDownloadQris}
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-teal-700 dark:text-teal-400 bg-teal-50 dark:bg-teal-950/30 hover:bg-teal-100 dark:hover:bg-teal-950/50 rounded-lg transition-colors mb-1"
@@ -154,7 +130,6 @@ export default function StaticQrisProvider({
                   Download QRIS
                 </button>
 
-                {/* QRIS Image */}
                 <div className="w-40 h-40 rounded-xl border border-gray-200 dark:border-gray-600 shadow-md bg-white p-1 transition-transform hover:scale-105">
                   <img
                     src="/payment/qris.png"
@@ -163,13 +138,19 @@ export default function StaticQrisProvider({
                   />
                 </div>
 
-                {/* Info 1 */}
+                {testMode && (
+                  <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 w-full">
+                    <p className="text-xs font-medium text-amber-800">
+                      Rp100 (Testing) &mdash; Klik &ldquo;Saya Sudah Donasi&rdquo; untuk simulasi
+                    </p>
+                  </div>
+                )}
+
                 <div className="flex items-start gap-1.5 text-xs text-gray-500 dark:text-gray-400 max-w-xs mt-1">
                   <Info size={14} className="shrink-0 mt-0.5" />
-                  <span>Satu kali dukungan • Download berkali-kali pada perangkat & browser yang sama.</span>
+                  <span>Satu kali dukungan &bull; Download berkali-kali pada perangkat & browser yang sama.</span>
                 </div>
 
-                {/* Info 2 */}
                 <div className="flex items-start gap-1.5 text-xs text-gray-500 dark:text-gray-400 max-w-xs">
                   <Info size={14} className="shrink-0 mt-0.5" />
                   <span>Dapat dipindai menggunakan semua aplikasi yang mendukung QRIS.</span>
@@ -181,17 +162,15 @@ export default function StaticQrisProvider({
               <Button
                 className="w-full h-[42px]"
                 onClick={handleDonateClick}
-                isLoading={isLoading}
               >
                 <Download size={16} />
-                Saya Sudah Donasi & Download
+                {testMode ? "Saya Sudah Donasi (Testing)" : "Saya Sudah Donasi & Download"}
               </Button>
 
               <Button
                 variant="secondary"
                 className="w-full h-[42px]"
                 onClick={onClose}
-                disabled={isLoading}
               >
                 Batal
               </Button>
@@ -200,7 +179,6 @@ export default function StaticQrisProvider({
         </div>
       </div>
 
-      {/* Confirmation Dialog */}
       {showConfirmDialog && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
           <div
@@ -216,7 +194,9 @@ export default function StaticQrisProvider({
                 Konfirmasi Download
               </h3>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                Apakah Anda sudah melakukan donasi melalui QRIS?
+                {testMode
+                  ? "Mode testing: klik konfirmasi untuk simulasi download."
+                  : "Apakah Anda sudah melakukan donasi melalui QRIS?"}
               </p>
             </div>
             <div className="flex gap-3 mt-6">
@@ -225,43 +205,14 @@ export default function StaticQrisProvider({
                 className="flex-1"
                 onClick={() => setShowConfirmDialog(false)}
               >
-                Belum
+                {testMode ? "Batal" : "Belum"}
               </Button>
               <Button
                 className="flex-1"
                 onClick={handleConfirmDownload}
               >
-                Sudah Donasi
+                {testMode ? "Konfirmasi Testing" : "Sudah Donasi"}
               </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modern Toast */}
-      {toast && (
-        <div className="fixed bottom-5 right-5 z-[60] animate-in slide-in-from-right-5 fade-in duration-300">
-          <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-md border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg px-4 py-3 min-w-[280px] max-w-sm">
-            <div className="flex items-start gap-3">
-              {toast.type === "preparing" && (
-                <LoaderCircle size={20} className="shrink-0 text-teal-600 dark:text-teal-400 animate-spin" />
-              )}
-              {toast.type === "success" && (
-                <CircleCheck size={20} className="shrink-0 text-green-600 dark:text-green-400" />
-              )}
-              {toast.type === "qris-downloaded" && (
-                <CircleCheck size={20} className="shrink-0 text-teal-600 dark:text-teal-400" />
-              )}
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                  {toast.title}
-                </p>
-                {toast.subtitle && (
-                  <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
-                    {toast.subtitle}
-                  </p>
-                )}
-              </div>
             </div>
           </div>
         </div>
