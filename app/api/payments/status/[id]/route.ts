@@ -4,6 +4,7 @@ import {
   getPaymentTransactionById,
   updatePaymentTransactionStatus,
 } from "@/lib/supabase-payment";
+import { getTestTransactionStatus } from "@/lib/test-store";
 
 export async function GET(
   req: NextRequest,
@@ -22,7 +23,29 @@ export async function GET(
       );
     }
 
-    const transaction = await getPaymentTransactionById(id);
+    // Check in-memory test store first
+    const testTx = getTestTransactionStatus(id);
+    if (testTx) {
+      console.log(`[${traceId}] Test transaction status:`, testTx.status);
+      return NextResponse.json({
+        status: testTx.status,
+        isTest: true,
+        amount: testTx.amount,
+        paidAt: testTx.paidAt,
+      });
+    }
+
+    // Check Supabase
+    let transaction;
+    try {
+      transaction = await getPaymentTransactionById(id);
+    } catch (err) {
+      console.error(`[${traceId}] Supabase check failed:`, err);
+      return NextResponse.json(
+        { error: "Gagal memeriksa status pembayaran", traceId },
+        { status: 500 }
+      );
+    }
 
     if (!transaction) {
       return NextResponse.json(
@@ -39,7 +62,7 @@ export async function GET(
     const safeStatus: string = transaction.status;
 
     if (safeStatus === "paid") {
-      console.log(`[${traceId}] Status already paid, returning immediately`);
+      console.log(`[${traceId}] Already paid`);
       return NextResponse.json({ status: "paid" });
     }
 
@@ -48,31 +71,33 @@ export async function GET(
     }
 
     if (new Date(transaction.expires_at).getTime() < now) {
-      await updatePaymentTransactionStatus(id, "expired");
+      try {
+        await updatePaymentTransactionStatus(id, "expired");
+      } catch (err) {
+        console.error(`[${traceId}] Failed to mark as expired:`, err);
+      }
       console.log(`[${traceId}] Transaction auto-expired`);
-      return NextResponse.json({
-        status: "expired",
-        message: "Pembayaran telah expired",
-      });
+      return NextResponse.json({ status: "expired" });
     }
 
-    // Fallback: cek ke API Mayar kalau masih pending
-    console.log(`[${traceId}] Still pending, checking Mayar API with mayar_qris_id:`, transaction.mayar_qris_id);
-    const result = await checkMayarTransaction(
-      transaction.amount,
-      transaction.created_at,
-      transaction.mayar_qris_id || undefined
-    );
+    // Check Mayar API
+    console.log(`[${traceId}] Checking Mayar API for transaction ${id}`);
+    try {
+      const result = await checkMayarTransaction(
+        transaction.amount,
+        transaction.created_at,
+        transaction.mayar_qris_id || undefined
+      );
 
-    console.log(`[${traceId}] Mayar API result:`, JSON.stringify(result));
+      console.log(`[${traceId}] Mayar check result:`, JSON.stringify(result));
 
-    if (result.found) {
-      console.log(`[${traceId}] Payment confirmed via Mayar API, updating...`);
-      await updatePaymentTransactionStatus(id, "paid");
-      return NextResponse.json({
-        status: "paid",
-        message: "Pembayaran terverifikasi",
-      });
+      if (result.found) {
+        console.log(`[${traceId}] Payment confirmed via Mayar API`);
+        await updatePaymentTransactionStatus(id, "paid");
+        return NextResponse.json({ status: "paid" });
+      }
+    } catch (err) {
+      console.error(`[${traceId}] Mayar API check error:`, err);
     }
 
     return NextResponse.json({

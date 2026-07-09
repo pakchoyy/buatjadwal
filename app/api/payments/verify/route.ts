@@ -4,6 +4,7 @@ import {
   getPaymentTransactionById,
   updatePaymentTransactionStatus,
 } from "@/lib/supabase-payment";
+import { getTestTransactionStatus, updateTestTransactionStatus } from "@/lib/test-store";
 
 export async function POST(req: NextRequest) {
   const traceId = `vr_${Date.now()}`;
@@ -21,7 +22,29 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const transaction = await getPaymentTransactionById(transactionId);
+    // Check in-memory test store first
+    const testTx = getTestTransactionStatus(transactionId);
+    if (testTx) {
+      updateTestTransactionStatus(transactionId, "paid");
+      console.log(`[${traceId}] Test transaction verified as paid`);
+      return NextResponse.json({
+        success: true,
+        status: "paid",
+        isTest: true,
+      });
+    }
+
+    // Check Supabase
+    let transaction;
+    try {
+      transaction = await getPaymentTransactionById(transactionId);
+    } catch (err) {
+      console.error(`[${traceId}] Supabase check failed:`, err);
+      return NextResponse.json(
+        { error: "Gagal memverifikasi pembayaran" },
+        { status: 500 }
+      );
+    }
 
     if (!transaction) {
       return NextResponse.json(

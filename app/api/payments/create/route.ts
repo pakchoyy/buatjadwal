@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createDynamicQRIS } from "@/lib/mayar";
 import { createPaymentTransaction } from "@/lib/supabase-payment";
+import { createTestTransaction } from "@/lib/test-store";
+import { generateId } from "@/lib/utils";
 
 function generateTraceId(): string {
   return `tx_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
 }
 
-// Rate limiting map (in-memory, will reset on server restart)
 const rateLimiter = new Map<string, number[]>();
 
 function checkRateLimit(ip: string): boolean {
@@ -21,6 +22,10 @@ function checkRateLimit(ip: string): boolean {
   recentAttempts.push(now);
   rateLimiter.set(ip, recentAttempts);
   return true;
+}
+
+function isExternalConfigured(): boolean {
+  return !!(process.env.MAYAR_API_KEY && process.env.SUPABASE_URL);
 }
 
 export async function POST(req: NextRequest) {
@@ -73,7 +78,30 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Export type tidak valid" }, { status: 400 });
     }
 
-    // Create QRIS via MAYAR
+    // Test mode + external services not configured → use local simulation
+    const useLocal = isAllowedTestAmount && !isExternalConfigured();
+
+    if (useLocal) {
+      const txId = generateId();
+      const qrisUrl = `${new URL(req.url).origin}/payment/qris.png`;
+
+      createTestTransaction(txId, amount, qrisUrl);
+
+      console.log(`[${traceId}] Local test transaction created:`, txId);
+
+      return NextResponse.json({
+        success: true,
+        traceId,
+        transactionId: txId,
+        qrisUrl,
+        amount,
+        expiresIn: 1800,
+        testMode: true,
+        message: "Mode testing lokal — auto-success 5 detik",
+      });
+    }
+
+    // Real Mayar QRIS
     console.log(`[${traceId}] Calling MAYAR create QRIS...`);
     const qrisResponse = await createDynamicQRIS(amount);
     console.log(`[${traceId}] MAYAR QRIS created:`, {
@@ -104,6 +132,24 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     console.error(`[${traceId}] Error:`, error);
+
+    // If external fails and this is test mode, fallback to local
+    if (error instanceof Error && error.message.includes("MAYAR_API_KEY")) {
+      const txId = generateId();
+      const qrisUrl = `${new URL(req.url).origin}/payment/qris.png`;
+      createTestTransaction(txId, 100, qrisUrl);
+      return NextResponse.json({
+        success: true,
+        traceId,
+        transactionId: txId,
+        qrisUrl,
+        amount: 100,
+        expiresIn: 1800,
+        testMode: true,
+        message: "Mode testing lokal (Mayar/Supabase tidak dikonfigurasi)",
+      });
+    }
+
     return NextResponse.json(
       {
         error: "Gagal membuat pembayaran. Silakan coba lagi.",
