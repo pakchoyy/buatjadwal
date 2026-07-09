@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Clock, X, ShieldCheck, Download } from "lucide-react";
 import Button from "@/components/ui/Button";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
@@ -26,33 +26,38 @@ export default function QRISDisplay({
   onExpired,
 }: QRISDisplayProps) {
   const [timeLeft, setTimeLeft] = useState(expiresIn);
-  const [isChecking, setIsChecking] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
 
-  // Countdown timer
+  // Use refs for callbacks so polling/countdown never restart on re-render
+  const onSuccessRef = useRef(onSuccess);
+  const onExpiredRef = useRef(onExpired);
+  useEffect(() => { onSuccessRef.current = onSuccess; });
+  useEffect(() => { onExpiredRef.current = onExpired; });
+
+  // Countdown timer — never restarts
   useEffect(() => {
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
           clearInterval(timer);
-          onExpired();
+          onExpiredRef.current();
           return 0;
         }
         return prev - 1;
       });
     }, 1000);
-
     return () => clearInterval(timer);
-  }, [onExpired]);
+  }, []);
 
-// Poll payment status every 2 seconds
+  // Poll payment status every 2 seconds — never restarts
   useEffect(() => {
     let cancelled = false;
+    let polling = false;
 
     const checkStatus = async () => {
-      if (isChecking || cancelled) return;
-      setIsChecking(true);
+      if (polling || cancelled) return;
+      polling = true;
       try {
         const response = await fetch(`/api/payments/status/${transactionId}`);
         const data = await response.json();
@@ -60,22 +65,19 @@ export default function QRISDisplay({
 
         if (data.status === "paid") {
           cancelled = true;
-          onSuccess();
+          onSuccessRef.current();
         } else if (data.status === "expired") {
           cancelled = true;
-          onExpired();
+          onExpiredRef.current();
         }
       } catch (error) {
         console.error("Error checking payment status:", error);
       } finally {
-        if (!cancelled) setIsChecking(false);
+        if (!cancelled) polling = false;
       }
     };
 
-    // Initial check after 1 second
     const initialTimer = setTimeout(checkStatus, 1000);
-
-    // Then check every 2 seconds
     const interval = setInterval(checkStatus, 2000);
 
     return () => {
@@ -83,7 +85,7 @@ export default function QRISDisplay({
       clearTimeout(initialTimer);
       clearInterval(interval);
     };
-  }, [transactionId, onSuccess, onExpired]);
+  }, [transactionId]);
 
   const handleManualVerify = async () => {
     if (isVerifying) return;
