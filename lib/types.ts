@@ -13,7 +13,7 @@ export interface ExportMetadata {
   day?: Day;
 }
 
-export type ScheduleGenerateMode = "spread" | "compact";
+export type ScheduleGenerateMode = "spread" | "compact" | "block";
 
 // ==================== ENTITIES ====================
 

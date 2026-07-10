@@ -207,8 +207,18 @@ export default function GeneratePage() {
                   value: "compact",
                   label: "Rapatkan jam - jam mapel sama diusahakan berurutan",
                 },
+                {
+                  value: "block",
+                  label: "Blok berurutan - 2-3 jam mapel yang sama diusahakan nempel",
+                },
               ]}
-              helperText="Pilih Sebar merata untuk jadwal yang lebih longgar, atau Rapatkan jam kalau ingin mapel yang sama tampil lebih berdekatan."
+              helperText={
+                generateMode === "spread"
+                  ? "Mode aman untuk jadwal yang longgar dan seimbang."
+                  : generateMode === "compact"
+                    ? "Mode ini menjaga mapel yang sama lebih berdekatan di hari yang sama."
+                    : "Mode ini cocok untuk mapel 2-3 jam supaya tampil berurutan dalam satu blok."
+              }
             />
           </div>
         </div>

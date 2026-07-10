@@ -46,6 +46,7 @@ export class Scheduler {
   private classes: Class[];
   private scheduleEntries: Map<string, ScheduleEntry>; // key: timeSlotId-classId
   private teacherSchedule: Map<string, Set<string>>; // teacherId -> Set<timeSlotId>
+  private lastScheduledSlotByAllocation: Map<string, TimeSlot>;
 
   constructor(schoolId: string, mode: ScheduleGenerateMode = "spread") {
     this.schoolId = schoolId;
@@ -57,6 +58,7 @@ export class Scheduler {
     this.classes = LocalDB.listClasses(schoolId);
     this.scheduleEntries = new Map();
     this.teacherSchedule = new Map();
+    this.lastScheduledSlotByAllocation = new Map();
   }
 
   /**
@@ -130,6 +132,7 @@ export class Scheduler {
     // For now, we just reset internal state
     this.scheduleEntries.clear();
     this.teacherSchedule.clear();
+    this.lastScheduledSlotByAllocation.clear();
   }
 
   /**
@@ -190,6 +193,23 @@ export class Scheduler {
       }
     }
 
+    if (this.mode === "block") {
+      return ticketsCopy.sort((a, b) => {
+        const aHours = teacherHours.get(a.teacherId) || 0;
+        const bHours = teacherHours.get(b.teacherId) || 0;
+
+        if (bHours !== aHours) {
+          return bHours - aHours;
+        }
+
+        if (a.allocationId !== b.allocationId) {
+          return a.allocationId.localeCompare(b.allocationId);
+        }
+
+        return a.className.localeCompare(b.className);
+      });
+    }
+
     if (this.mode === "compact") {
       return ticketsCopy.sort((a, b) => {
         const aKey = `${a.teacherId}-${a.classId}-${a.subjectId}`;
@@ -236,9 +256,7 @@ export class Scheduler {
     }
 
     // Pick first available slot (can be improved with better heuristic)
-    const slot = this.mode === "compact"
-      ? availableSlots[0]
-      : availableSlots[0];
+    const slot = availableSlots[0];
 
     // Create schedule entry
     const entry: ScheduleEntry = {
@@ -255,6 +273,10 @@ export class Scheduler {
     // Save to internal map
     const key = `${slot.id}-${ticket.classId}`;
     this.scheduleEntries.set(key, entry);
+
+    if (this.mode === "block") {
+      this.lastScheduledSlotByAllocation.set(ticket.allocationId, slot);
+    }
 
     // Mark teacher as busy at this time slot
     if (!this.teacherSchedule.has(ticket.teacherId)) {
@@ -331,6 +353,20 @@ export class Scheduler {
 
           if (nearest) {
             score += Math.max(0, 8 - nearest.distance * 2);
+          }
+        }
+      } else if (this.mode === "block") {
+        const lastSlot = this.lastScheduledSlotByAllocation.get(ticket.allocationId);
+        if (lastSlot) {
+          const sameDay = lastSlot.day === slot.day;
+          const gap = Math.abs(lastSlot.slotNumber - slot.slotNumber);
+
+          if (sameDay && gap === 1) {
+            score += 15;
+          } else if (sameDay && gap === 2) {
+            score += 8;
+          } else if (sameDay) {
+            score += 2;
           }
         }
       }
