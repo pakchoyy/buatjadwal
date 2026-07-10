@@ -10,9 +10,10 @@ import { AlertCircle, Eye, Info, Lightbulb, RotateCcw, Sparkles, Trash2 } from "
 import Button from "@/components/ui/Button";
 import Alert from "@/components/ui/Alert";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
+import Select from "@/components/ui/Select";
 import { LocalDB } from "@/lib/db";
 import { Scheduler, clearSchedule } from "@/lib/scheduler";
-import { AlertState } from "@/lib/types";
+import { AlertState, ScheduleGenerateMode } from "@/lib/types";
 import { Analytics, trackError } from "@/lib/analytics";
 
 export default function GeneratePage() {
@@ -20,6 +21,7 @@ export default function GeneratePage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [showRegenConfirm, setShowRegenConfirm] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [generateMode, setGenerateMode] = useState<ScheduleGenerateMode>("spread");
   const [alert, setAlert] = useState<AlertState>({
     show: false,
     type: "info",
@@ -36,7 +38,7 @@ export default function GeneratePage() {
     const startTime = Date.now();
 
     try {
-      const scheduler = new Scheduler(school.id);
+      const scheduler = new Scheduler(school.id, generateMode);
       const scheduleResult = scheduler.generateSchedule();
       setResult(scheduleResult);
 
@@ -189,6 +191,25 @@ export default function GeneratePage() {
                 memberi laporan untuk ditangani manual.
               </p>
             </div>
+          </div>
+
+          <div className="mt-5">
+            <Select
+              label="Aturan Generate"
+              value={generateMode}
+              onChange={(e) => setGenerateMode(e.target.value as ScheduleGenerateMode)}
+              options={[
+                {
+                  value: "spread",
+                  label: "Sebar merata - jam dipisah supaya fleksibel",
+                },
+                {
+                  value: "compact",
+                  label: "Rapatkan jam - jam mapel sama diusahakan berurutan",
+                },
+              ]}
+              helperText="Pilih Sebar merata untuk jadwal yang lebih longgar, atau Rapatkan jam kalau ingin mapel yang sama tampil lebih berdekatan."
+            />
           </div>
         </div>
 

@@ -9,6 +9,7 @@ import {
   TimeSlot,
   ScheduleEntry,
   Class,
+  ScheduleGenerateMode,
 } from "./types";
 import { generateId } from "./utils";
 
@@ -39,14 +40,16 @@ interface ScheduleResult {
 
 export class Scheduler {
   private schoolId: string;
+  private mode: ScheduleGenerateMode;
   private allocations: TeachingAllocation[];
   private timeSlots: TimeSlot[];
   private classes: Class[];
   private scheduleEntries: Map<string, ScheduleEntry>; // key: timeSlotId-classId
   private teacherSchedule: Map<string, Set<string>>; // teacherId -> Set<timeSlotId>
 
-  constructor(schoolId: string) {
+  constructor(schoolId: string, mode: ScheduleGenerateMode = "spread") {
     this.schoolId = schoolId;
+    this.mode = mode;
     this.allocations = LocalDB.listTeachingAllocations(schoolId);
     this.timeSlots = LocalDB.listTimeSlots(schoolId).filter(
       (slot) => !slot.isBreak
@@ -187,6 +190,26 @@ export class Scheduler {
       }
     }
 
+    if (this.mode === "compact") {
+      return ticketsCopy.sort((a, b) => {
+        const aKey = `${a.teacherId}-${a.classId}-${a.subjectId}`;
+        const bKey = `${b.teacherId}-${b.classId}-${b.subjectId}`;
+
+        const aHours = teacherHours.get(a.teacherId) || 0;
+        const bHours = teacherHours.get(b.teacherId) || 0;
+
+        if (bHours !== aHours) {
+          return bHours - aHours;
+        }
+
+        if (aKey !== bKey) {
+          return aKey.localeCompare(bKey);
+        }
+
+        return 0;
+      });
+    }
+
     // Sort: teachers with most hours first, then random within same count
     return ticketsCopy.sort((a, b) => {
       const aHours = teacherHours.get(a.teacherId) || 0;
@@ -213,7 +236,9 @@ export class Scheduler {
     }
 
     // Pick first available slot (can be improved with better heuristic)
-    const slot = availableSlots[0];
+    const slot = this.mode === "compact"
+      ? availableSlots[0]
+      : availableSlots[0];
 
     // Create schedule entry
     const entry: ScheduleEntry = {
@@ -276,12 +301,39 @@ export class Scheduler {
         return entry && entry.subjectId === ticket.subjectId;
       });
 
-      if (hasSameSubjectToday) {
+      if (this.mode === "compact") {
+        if (hasSameSubjectToday) {
+          score += 12; // Prefer same subject to stay together
+        }
+      } else if (hasSameSubjectToday) {
         score -= 10; // Penalize same subject on same day
       }
 
       // Prefer earlier slots (morning)
       score += (12 - slot.slotNumber) * 0.5;
+
+      if (this.mode === "compact") {
+        const sameDayEntries = this.timeSlots
+          .filter((s) => s.day === slot.day)
+          .map((s) => this.scheduleEntries.get(`${s.id}-${ticket.classId}`))
+          .filter((entry): entry is ScheduleEntry => !!entry && entry.subjectId === ticket.subjectId);
+
+        if (sameDayEntries.length > 0) {
+          const nearest = sameDayEntries.reduce((best, entry) => {
+            const entrySlot = this.timeSlots.find((s) => s.id === entry.timeSlotId);
+            if (!entrySlot) return best;
+            const distance = Math.abs(entrySlot.slotNumber - slot.slotNumber);
+            if (best === null || distance < best.distance) {
+              return { distance, slotNumber: entrySlot.slotNumber };
+            }
+            return best;
+          }, null as null | { distance: number; slotNumber: number });
+
+          if (nearest) {
+            score += Math.max(0, 8 - nearest.distance * 2);
+          }
+        }
+      }
 
       return { slot, score };
     });

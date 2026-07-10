@@ -13,6 +13,8 @@ export interface ExportMetadata {
   day?: Day;
 }
 
+export type ScheduleGenerateMode = "spread" | "compact";
+
 // ==================== ENTITIES ====================
 
 export interface School {
